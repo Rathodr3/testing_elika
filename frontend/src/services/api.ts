@@ -4,19 +4,29 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export interface JobApplication {
   _id?: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  experience: string;
-  coverLetter: string;
-  linkedinUrl: string;
-  jobId: string;
-  jobTitle: string;
-  company: string;
-  resumeUrl?: string;
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected';
+  position: string;
+  department: string;
+  experienceLevel: string;
+  yearsOfExperience: number;
+  skills: string[];
+  previousCompany?: string;
+  coverLetter?: string;
+  resumeFilename?: string;
+  resumePath?: string;
+  status: 'submitted' | 'under-review' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
+  applicationDate: string;
   createdAt: string;
   updatedAt: string;
+  // Computed properties for backwards compatibility
+  name?: string;
+  jobTitle?: string;
+  company?: string;
+  experience?: string;
+  resumeUrl?: string;
 }
 
 export interface Job {
@@ -30,23 +40,37 @@ export interface Job {
   description: string;
   requirements: string[];
   isActive: boolean;
+  postedDate: string;
+  applicantsCount: number;
   createdAt: string;
 }
+
+// Enhanced error handling
+const handleAPIError = async (response: Response) => {
+  if (!response.ok) {
+    let errorMessage = 'An error occurred';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorMessage;
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+  return response;
+};
 
 // Job Applications API
 export const applicationAPI = {
   // Submit new application
   submit: async (formData: FormData): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/applications`, {
+      const response = await fetch(`${API_BASE_URL}/api/job-applications`, {
         method: 'POST',
         body: formData,
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to submit application');
-      }
-      
+      await handleAPIError(response);
       return await response.json();
     } catch (error) {
       console.error('Application submission error:', error);
@@ -57,17 +81,26 @@ export const applicationAPI = {
   // Get all applications (admin)
   getAll: async (): Promise<JobApplication[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/applications`, {
+      const response = await fetch(`${API_BASE_URL}/api/job-applications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch applications');
-      }
+      await handleAPIError(response);
+      const result = await response.json();
       
-      return await response.json();
+      // Transform the data to add computed properties for backwards compatibility
+      const applications = (result.data || result).map((app: JobApplication) => ({
+        ...app,
+        name: `${app.firstName} ${app.lastName}`,
+        jobTitle: app.position,
+        company: app.previousCompany || app.department,
+        experience: `${app.yearsOfExperience} years`,
+        resumeUrl: app.resumePath ? `${API_BASE_URL}/api/job-applications/${app._id}/resume` : undefined
+      }));
+      
+      return applications;
     } catch (error) {
       console.error('Fetch applications error:', error);
       throw error;
@@ -77,16 +110,13 @@ export const applicationAPI = {
   // Get applications for specific job
   getByJob: async (jobId: string): Promise<JobApplication[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/applications/${jobId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/job-applications?jobId=${jobId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch job applications');
-      }
-      
+      await handleAPIError(response);
       return await response.json();
     } catch (error) {
       console.error('Fetch job applications error:', error);
@@ -97,7 +127,7 @@ export const applicationAPI = {
   // Update application status
   updateStatus: async (applicationId: string, status: string): Promise<{ success: boolean }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/job-applications/${applicationId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -106,10 +136,7 @@ export const applicationAPI = {
         body: JSON.stringify({ status }),
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to update application status');
-      }
-      
+      await handleAPIError(response);
       return await response.json();
     } catch (error) {
       console.error('Update status error:', error);
@@ -125,14 +152,12 @@ export const jobsAPI = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/jobs`);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch jobs');
-      }
-      
+      await handleAPIError(response);
       return await response.json();
     } catch (error) {
       console.error('Fetch jobs error:', error);
-      throw error;
+      // Return fallback data if API fails
+      return [];
     }
   },
 
@@ -141,10 +166,7 @@ export const jobsAPI = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch job');
-      }
-      
+      await handleAPIError(response);
       return await response.json();
     } catch (error) {
       console.error('Fetch job error:', error);
@@ -153,9 +175,9 @@ export const jobsAPI = {
   }
 };
 
-// Admin authentication (for future use)
+// Admin authentication
 export const authAPI = {
-  login: async (email: string, password: string): Promise<{ token: string; user: any }> => {
+  login: async (email: string, password: string): Promise<{ success: boolean; token: string; user: any }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
@@ -165,12 +187,13 @@ export const authAPI = {
         body: JSON.stringify({ email, password }),
       });
       
-      if (!response.ok) {
-        throw new Error('Login failed');
+      await handleAPIError(response);
+      const data = await response.json();
+      
+      if (data.success && data.token) {
+        localStorage.setItem('adminToken', data.token);
       }
       
-      const data = await response.json();
-      localStorage.setItem('adminToken', data.token);
       return data;
     } catch (error) {
       console.error('Login error:', error);
@@ -180,5 +203,24 @@ export const authAPI = {
 
   logout: () => {
     localStorage.removeItem('adminToken');
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem('adminToken');
+  }
+};
+
+// Health check API
+export const healthAPI = {
+  check: async (): Promise<{ status: string; timestamp: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/health`);
+      await handleAPIError(response);
+      return await response.json();
+    } catch (error) {
+      console.error('Health check error:', error);
+      throw error;
+    }
   }
 };

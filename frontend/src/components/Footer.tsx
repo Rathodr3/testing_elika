@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   MapPin, 
@@ -10,8 +10,13 @@ import {
   Facebook,
   ArrowRight
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const { toast } = useToast();
+
   const footerLinks = {
     company: [
       { label: 'About Us', href: '/about' },
@@ -41,6 +46,57 @@ const Footer = () => {
 
   const handleLinkClick = () => {
     window.scrollTo(0, 0);
+  };
+
+  const validateEmail = (email: string) => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: "Email is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      // Simulate subscription
+      console.log('Footer newsletter subscription:', { email });
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      toast({
+        title: "Successfully subscribed!",
+        description: "Thank you for subscribing to our newsletter.",
+      });
+
+      setEmail('');
+
+    } catch (error) {
+      console.error('Footer newsletter subscription error:', error);
+      toast({
+        title: "Subscription failed",
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   return (
@@ -141,17 +197,32 @@ const Footer = () => {
               Subscribe to our newsletter for the latest updates and insights.
             </p>
             
-            <div className="space-y-3">
+            <form onSubmit={handleSubscribe} className="space-y-3">
               <input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
               />
-              <button className="w-full bg-primary hover:bg-primary-600 text-white px-4 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center">
-                Subscribe
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <button 
+                type="submit"
+                disabled={isSubscribing}
+                className="w-full bg-primary hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 flex items-center justify-center"
+              >
+                {isSubscribing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    Subscribing...
+                  </>
+                ) : (
+                  <>
+                    Subscribe
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

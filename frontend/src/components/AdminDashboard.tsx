@@ -29,9 +29,12 @@ const AdminDashboard = () => {
 
   const fetchApplications = async () => {
     try {
+      setLoading(true);
       const data = await applicationAPI.getAll();
+      console.log('Fetched applications:', data);
       setApplications(data);
     } catch (error) {
+      console.error('Error fetching applications:', error);
       toast({
         title: "Error fetching applications",
         description: "Please try again later",
@@ -47,10 +50,12 @@ const AdminDashboard = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(app => 
-        app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.company.toLowerCase().includes(searchTerm.toLowerCase())
+        app.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.department.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -76,6 +81,7 @@ const AdminDashboard = () => {
         description: `Application marked as ${newStatus}`,
       });
     } catch (error) {
+      console.error('Error updating status:', error);
       toast({
         title: "Error updating status",
         description: "Please try again later",
@@ -86,9 +92,11 @@ const AdminDashboard = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'reviewed': return 'bg-blue-100 text-blue-800';
-      case 'accepted': return 'bg-green-100 text-green-800';
+      case 'submitted': return 'bg-yellow-100 text-yellow-800';
+      case 'under-review': return 'bg-blue-100 text-blue-800';
+      case 'shortlisted': return 'bg-purple-100 text-purple-800';
+      case 'interviewed': return 'bg-orange-100 text-orange-800';
+      case 'hired': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -96,19 +104,21 @@ const AdminDashboard = () => {
 
   const exportToCSV = () => {
     const csvData = filteredApplications.map(app => ({
-      Name: app.name,
+      Name: app.name || `${app.firstName} ${app.lastName}`,
       Email: app.email,
       Phone: app.phone,
-      'Job Title': app.jobTitle,
-      Company: app.company,
-      Experience: app.experience,
+      Position: app.position,
+      Department: app.department,
+      'Experience Level': app.experienceLevel,
+      'Years of Experience': app.yearsOfExperience,
+      'Previous Company': app.previousCompany || '',
       Status: app.status,
-      'Applied Date': new Date(app.createdAt).toLocaleDateString()
+      'Applied Date': new Date(app.applicationDate || app.createdAt).toLocaleDateString()
     }));
 
     const csvContent = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
+      ...csvData.map(row => Object.values(row).map(value => `"${value}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -117,6 +127,7 @@ const AdminDashboard = () => {
     a.href = url;
     a.download = 'job_applications.csv';
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -145,23 +156,23 @@ const AdminDashboard = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600">
-              {applications.filter(app => app.status === 'pending').length}
+              {applications.filter(app => app.status === 'submitted').length}
             </div>
-            <div className="text-sm text-accent">Pending Review</div>
+            <div className="text-sm text-accent">Submitted</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {applications.filter(app => app.status === 'accepted').length}
+              {applications.filter(app => app.status === 'hired').length}
             </div>
-            <div className="text-sm text-accent">Accepted</div>
+            <div className="text-sm text-accent">Hired</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">
-              {applications.filter(app => app.status === 'reviewed').length}
+              {applications.filter(app => app.status === 'under-review').length}
             </div>
             <div className="text-sm text-accent">Under Review</div>
           </CardContent>
@@ -174,7 +185,7 @@ const AdminDashboard = () => {
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="flex-1">
               <Input
-                placeholder="Search by name, email, job title, or company..."
+                placeholder="Search by name, email, position, or department..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
@@ -186,9 +197,11 @@ const AdminDashboard = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="reviewed">Reviewed</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="submitted">Submitted</SelectItem>
+                <SelectItem value="under-review">Under Review</SelectItem>
+                <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                <SelectItem value="interviewed">Interviewed</SelectItem>
+                <SelectItem value="hired">Hired</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
@@ -209,8 +222,15 @@ const AdminDashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="text-lg font-semibold text-secondary-800">{application.name}</h3>
-                      <p className="text-primary font-medium">{application.jobTitle} at {application.company}</p>
+                      <h3 className="text-lg font-semibold text-secondary-800">
+                        {application.name || `${application.firstName} ${application.lastName}`}
+                      </h3>
+                      <p className="text-primary font-medium">
+                        {application.position} - {application.department}
+                      </p>
+                      {application.previousCompany && (
+                        <p className="text-sm text-accent">Previous: {application.previousCompany}</p>
+                      )}
                     </div>
                     <Badge className={getStatusColor(application.status)}>
                       {application.status}
@@ -228,14 +248,18 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
-                      {new Date(application.createdAt).toLocaleDateString()}
+                      {new Date(application.applicationDate || application.createdAt).toLocaleDateString()}
                     </div>
                   </div>
 
-                  {application.experience && (
-                    <p className="text-sm text-accent mb-2">
-                      <strong>Experience:</strong> {application.experience}
-                    </p>
+                  <div className="text-sm text-accent mb-2">
+                    <strong>Experience:</strong> {application.experienceLevel} - {application.yearsOfExperience} years
+                  </div>
+                  
+                  {application.skills && application.skills.length > 0 && (
+                    <div className="text-sm text-accent mb-2">
+                      <strong>Skills:</strong> {application.skills.join(', ')}
+                    </div>
                   )}
                 </div>
 
@@ -263,13 +287,15 @@ const AdminDashboard = () => {
                     value={application.status}
                     onValueChange={(value) => updateApplicationStatus(application._id!, value)}
                   >
-                    <SelectTrigger className="w-full lg:w-32">
+                    <SelectTrigger className="w-full lg:w-36">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="accepted">Accepted</SelectItem>
+                      <SelectItem value="submitted">Submitted</SelectItem>
+                      <SelectItem value="under-review">Under Review</SelectItem>
+                      <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                      <SelectItem value="interviewed">Interviewed</SelectItem>
+                      <SelectItem value="hired">Hired</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                   </Select>

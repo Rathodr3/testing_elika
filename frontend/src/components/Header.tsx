@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Search, Phone, ChevronDown } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import ThemeToggle from './ThemeToggle';
 import SearchDialog from './SearchDialog';
@@ -12,6 +12,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +36,11 @@ const Header = () => {
   };
 
   const isHomePage = location.pathname === '/';
+
+  const handleContactClick = () => {
+    navigate('/contact');
+    window.scrollTo(0, 0);
+  };
 
   return (
     <>
@@ -95,7 +101,10 @@ const Header = () => {
               
               <ThemeToggle />
               
-              <Button className="bg-gradient-to-r from-primary via-purple-600 to-blue-600 hover:from-primary-600 hover:via-purple-700 hover:to-blue-700 text-white px-8 py-3 h-auto font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+              <Button 
+                onClick={handleContactClick}
+                className="bg-gradient-to-r from-primary via-purple-600 to-blue-600 hover:from-primary-600 hover:via-purple-700 hover:to-blue-700 text-white px-8 py-3 h-auto font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
+              >
                 <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 <Phone className="h-4 w-4 mr-2" />
                 <span className="relative z-10">Contact Us</span>
@@ -146,7 +155,10 @@ const Header = () => {
                 </div>
                 <Button 
                   className="w-full bg-gradient-to-r from-primary via-purple-600 to-blue-600 hover:from-primary-600 hover:via-purple-700 hover:to-blue-700 text-white font-semibold py-4 rounded-xl shadow-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    handleContactClick();
+                  }}
                 >
                   <Phone className="h-4 w-4 mr-2" />
                   Contact Us

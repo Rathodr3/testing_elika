@@ -13,6 +13,10 @@ const Services = () => {
     window.scrollTo(0, 0);
   };
 
+  const handleContactClick = () => {
+    window.scrollTo(0, 0);
+  };
+
   const mainServices = [
     {
       icon: Users,
@@ -217,20 +221,23 @@ const Services = () => {
           </div>
         </section>
 
-          {/* Contact Section */}
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-secondary-800 mb-4">
-                Let's Talk About Your Needs
-              </h3>
-              <p className="text-lg text-accent mb-6">
-                See how our innovative engineering services can bring value to your project.
-              </p>
-              <Link to="/contact" onClick={handleContactClick}>
-                <Button size="lg" className="hover:scale-105 transition-transform duration-300">
-                  Contact Us Today
-                </Button>
-              </Link>
+        {/* Contact Section */}
+        <section className="py-20 lg:py-32">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 max-w-4xl mx-auto">
+                <h3 className="text-2xl font-bold text-secondary-800 mb-4">
+                  Let's Talk About Your Needs
+                </h3>
+                <p className="text-lg text-accent mb-6">
+                  See how our innovative engineering services can bring value to your project.
+                </p>
+                <Link to="/contact" onClick={handleContactClick}>
+                  <Button size="lg" className="hover:scale-105 transition-transform duration-300">
+                    Contact Us Today
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>

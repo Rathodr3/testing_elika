@@ -10,6 +10,8 @@ require('dotenv').config();
 
 // Import routes
 const jobApplicationRoutes = require('./routes/jobApplications');
+const jobRoutes = require('./routes/jobs');
+const authRoutes = require('./routes/auth');
 const healthRoutes = require('./routes/health');
 
 const app = express();
@@ -48,9 +50,11 @@ if (process.env.NODE_ENV !== 'production') {
 // Static files for uploaded resumes
 app.use('/uploads', express.static('uploads'));
 
-// Routes
+// Routes - Updated to match frontend API expectations
 app.use('/api/health', healthRoutes);
-app.use('/api/job-applications', jobApplicationRoutes);
+app.use('/api/applications', jobApplicationRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
