@@ -1,62 +1,121 @@
-
-const Joi = require('joi');
-
-const jobApplicationSchema = Joi.object({
-  firstName: Joi.string().min(1).max(50).required().messages({
-    'string.empty': 'First name is required',
-    'string.max': 'First name cannot exceed 50 characters'
-  }),
-  lastName: Joi.string().min(1).max(50).required().messages({
-    'string.empty': 'Last name is required',
-    'string.max': 'Last name cannot exceed 50 characters'
-  }),
-  email: Joi.string().email().required().messages({
-    'string.email': 'Please enter a valid email address',
-    'string.empty': 'Email is required'
-  }),
-  phone: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).required().messages({
-    'string.pattern.base': 'Please enter a valid phone number',
-    'string.empty': 'Phone number is required'
-  }),
-  position: Joi.string().min(1).required().messages({
-    'string.empty': 'Position is required'
-  }),
-  department: Joi.string().valid('Engineering', 'Consulting', 'Training', 'Software Development', 'Management').required().messages({
-    'any.only': 'Please select a valid department',
-    'string.empty': 'Department is required'
-  }),
-  experienceLevel: Joi.string().valid('Entry Level', 'Mid Level', 'Senior Level', 'Executive').required().messages({
-    'any.only': 'Please select a valid experience level',
-    'string.empty': 'Experience level is required'
-  }),
-  yearsOfExperience: Joi.number().integer().min(0).max(50).required().messages({
-    'number.base': 'Years of experience must be a number',
-    'number.min': 'Years of experience cannot be negative',
-    'number.max': 'Years of experience cannot exceed 50',
-    'any.required': 'Years of experience is required'
-  }),
-  skills: Joi.string().allow('').optional(),
-  previousCompany: Joi.string().allow('').optional(),
-  coverLetter: Joi.string().max(2000).allow('').optional().messages({
-    'string.max': 'Cover letter cannot exceed 2000 characters'
-  })
-});
-
 const validateJobApplication = (req, res, next) => {
-  const { error } = jobApplicationSchema.validate(req.body);
-  
-  if (error) {
-    const errors = error.details.map(detail => detail.message);
+  const { firstName, lastName, email, phone, position, department, experienceLevel, yearsOfExperience } = req.body;
+  const errors = [];
+
+  // Validate required fields
+  if (!firstName || typeof firstName !== 'string' || firstName.trim().length < 2) {
+    errors.push('First name is required and must be at least 2 characters');
+  }
+
+  if (!lastName || typeof lastName !== 'string' || lastName.trim().length < 2) {
+    errors.push('Last name is required and must be at least 2 characters');
+  }
+
+  if (!email || typeof email !== 'string') {
+    errors.push('Email is required');
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      errors.push('Please provide a valid email address');
+    }
+  }
+
+  if (!phone || typeof phone !== 'string' || !/^\d+$/.test(phone)) {
+    errors.push('Phone number is required and must contain only digits');
+  }
+
+  if (!position || typeof position !== 'string' || position.trim().length < 2) {
+    errors.push('Position is required and must be at least 2 characters');
+  }
+
+  if (!department || typeof department !== 'string') {
+    errors.push('Department is required');
+  }
+
+  if (!experienceLevel || typeof experienceLevel !== 'string') {
+    errors.push('Experience Level is required');
+  }
+
+  if (!yearsOfExperience || isNaN(parseInt(yearsOfExperience))) {
+    errors.push('Years of Experience is required and must be a number');
+  }
+
+  // Validate field lengths
+  if (firstName && firstName.length > 50) {
+    errors.push('First name must be less than 50 characters');
+  }
+
+  if (lastName && lastName.length > 50) {
+    errors.push('Last name must be less than 50 characters');
+  }
+
+  if (position && position.length > 100) {
+    errors.push('Position must be less than 100 characters');
+  }
+
+  if (errors.length > 0) {
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
       errors: errors
     });
   }
-  
+
+  next();
+};
+
+// Validate contact form data
+const validateContactForm = (req, res, next) => {
+  const { name, email, subject, message } = req.body;
+  const errors = [];
+
+  // Validate required fields
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    errors.push('Name is required and must be at least 2 characters');
+  }
+
+  if (!email || typeof email !== 'string') {
+    errors.push('Email is required');
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      errors.push('Please provide a valid email address');
+    }
+  }
+
+  if (!subject || typeof subject !== 'string' || subject.trim().length < 3) {
+    errors.push('Subject is required and must be at least 3 characters');
+  }
+
+  if (!message || typeof message !== 'string' || message.trim().length < 10) {
+    errors.push('Message is required and must be at least 10 characters');
+  }
+
+  // Validate field lengths
+  if (name && name.length > 100) {
+    errors.push('Name must be less than 100 characters');
+  }
+
+  if (subject && subject.length > 200) {
+    errors.push('Subject must be less than 200 characters');
+  }
+
+  if (message && message.length > 2000) {
+    errors.push('Message must be less than 2000 characters');
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: errors
+    });
+  }
+
   next();
 };
 
 module.exports = {
-  validateJobApplication
+  validateJobApplication,
+  validateContactForm
 };

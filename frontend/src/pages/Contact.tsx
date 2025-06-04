@@ -27,20 +27,20 @@ const Contact = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast({ title: "Name is required", variant: "destructive" });
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
+      toast({ title: "Name must be at least 2 characters", variant: "destructive" });
       return false;
     }
     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
       toast({ title: "Valid email is required", variant: "destructive" });
       return false;
     }
-    if (!formData.subject.trim()) {
-      toast({ title: "Subject is required", variant: "destructive" });
+    if (!formData.subject.trim() || formData.subject.trim().length < 3) {
+      toast({ title: "Subject must be at least 3 characters", variant: "destructive" });
       return false;
     }
-    if (!formData.message.trim()) {
-      toast({ title: "Message is required", variant: "destructive" });
+    if (!formData.message.trim() || formData.message.trim().length < 10) {
+      toast({ title: "Message must be at least 10 characters", variant: "destructive" });
       return false;
     }
     return true;
@@ -54,31 +54,41 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate form submission
-      console.log('Contact form submitted:', formData);
+      console.log('Submitting contact form:', formData);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Message sent successfully!",
-        description: "We'll get back to you within 24 hours.",
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        company: '',
-        subject: '',
-        message: ''
-      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Message sent successfully!",
+          description: "We'll get back to you within 24 hours.",
+        });
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          company: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        throw new Error(result.message || 'Failed to send message');
+      }
       
     } catch (error) {
       console.error('Contact form error:', error);
       toast({
         title: "Failed to send message",
-        description: "Please try again later or contact us directly.",
+        description: error instanceof Error ? error.message : "Please try again later or contact us directly.",
         variant: "destructive"
       });
     } finally {

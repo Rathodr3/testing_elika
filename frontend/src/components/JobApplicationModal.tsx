@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, X, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { applicationAPI } from '@/services/api';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -18,10 +20,16 @@ interface JobApplicationModalProps {
 
 const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobApplicationModalProps) => {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
-    experience: '',
+    position: jobTitle,
+    department: 'Engineering',
+    experienceLevel: 'Entry Level',
+    yearsOfExperience: 0,
+    skills: '',
+    previousCompany: '',
     coverLetter: '',
     linkedinUrl: ''
   });
@@ -31,6 +39,10 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -45,10 +57,10 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
         });
         return;
       }
-      if (!file.type.includes('pdf') && !file.type.includes('doc')) {
+      if (!file.type.includes('pdf') && !file.type.includes('doc') && !file.type.includes('text')) {
         toast({
           title: "Invalid file type",
-          description: "Please upload a PDF or DOC file",
+          description: "Please upload a PDF, DOC, or TXT file",
           variant: "destructive"
         });
         return;
@@ -62,8 +74,12 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast({ title: "Name is required", variant: "destructive" });
+    if (!formData.firstName.trim()) {
+      toast({ title: "First name is required", variant: "destructive" });
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      toast({ title: "Last name is required", variant: "destructive" });
       return false;
     }
     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
@@ -74,8 +90,8 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
       toast({ title: "Phone number is required", variant: "destructive" });
       return false;
     }
-    if (!resume) {
-      toast({ title: "Resume is required", variant: "destructive" });
+    if (!formData.position.trim()) {
+      toast({ title: "Position is required", variant: "destructive" });
       return false;
     }
     return true;
@@ -89,41 +105,71 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
     setIsSubmitting(true);
     
     try {
-      // Simulate form submission since backend is not connected
-      console.log('Job Application Submitted:', {
-        ...formData,
-        jobId,
-        jobTitle,
-        company,
-        resumeName: resume?.name,
-        resumeSize: resume?.size
-      });
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      toast({
-        title: "Application submitted successfully!",
-        description: "We'll review your application and get back to you soon.",
-      });
+      // Create FormData object for file upload
+      const submitData = new FormData();
       
-      onClose();
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        experience: '',
-        coverLetter: '',
-        linkedinUrl: ''
+      // Add all form fields
+      submitData.append('firstName', formData.firstName);
+      submitData.append('lastName', formData.lastName);
+      submitData.append('email', formData.email);
+      submitData.append('phone', formData.phone);
+      submitData.append('position', formData.position);
+      submitData.append('department', formData.department);
+      submitData.append('experienceLevel', formData.experienceLevel);
+      submitData.append('yearsOfExperience', formData.yearsOfExperience.toString());
+      submitData.append('skills', formData.skills);
+      submitData.append('previousCompany', formData.previousCompany);
+      submitData.append('coverLetter', formData.coverLetter);
+      
+      // Add resume file if present
+      if (resume) {
+        submitData.append('resume', resume);
+      }
+
+      console.log('Submitting job application:', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        position: formData.position,
+        department: formData.department,
+        resumeName: resume?.name
       });
-      setResume(null);
+
+      // Submit to backend API
+      const result = await applicationAPI.submit(submitData);
+
+      if (result.success) {
+        toast({
+          title: "Application submitted successfully!",
+          description: "We'll review your application and get back to you soon.",
+        });
+        
+        onClose();
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          position: jobTitle,
+          department: 'Engineering',
+          experienceLevel: 'Entry Level',
+          yearsOfExperience: 0,
+          skills: '',
+          previousCompany: '',
+          coverLetter: '',
+          linkedinUrl: ''
+        });
+        setResume(null);
+      } else {
+        throw new Error(result.message || 'Submission failed');
+      }
 
     } catch (error) {
       console.error('Application submission error:', error);
       toast({
         title: "Submission failed",
-        description: "Please try again later or contact support.",
+        description: error instanceof Error ? error.message : "Please try again later or contact support.",
         variant: "destructive"
       });
     } finally {
@@ -144,16 +190,30 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
         <form onSubmit={handleSubmit} className="space-y-6 mt-6">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name">Full Name *</Label>
+              <Label htmlFor="firstName">First Name *</Label>
               <Input
-                id="name"
-                name="name"
-                value={formData.name}
+                id="firstName"
+                name="firstName"
+                value={formData.firstName}
                 onChange={handleInputChange}
                 required
                 className="mt-1"
               />
             </div>
+            <div>
+              <Label htmlFor="lastName">Last Name *</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                required
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="email">Email Address *</Label>
               <Input
@@ -166,9 +226,6 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
                 className="mt-1"
               />
             </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="phone">Phone Number *</Label>
               <Input
@@ -180,33 +237,94 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
                 className="mt-1"
               />
             </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="linkedinUrl">LinkedIn Profile (Optional)</Label>
+              <Label htmlFor="position">Position *</Label>
               <Input
-                id="linkedinUrl"
-                name="linkedinUrl"
-                value={formData.linkedinUrl}
+                id="position"
+                name="position"
+                value={formData.position}
                 onChange={handleInputChange}
-                placeholder="https://linkedin.com/in/yourprofile"
+                required
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="department">Department *</Label>
+              <Select value={formData.department} onValueChange={(value) => handleSelectChange('department', value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Consulting">Consulting</SelectItem>
+                  <SelectItem value="Training">Training</SelectItem>
+                  <SelectItem value="Software Development">Software Development</SelectItem>
+                  <SelectItem value="Management">Management</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="experienceLevel">Experience Level *</Label>
+              <Select value={formData.experienceLevel} onValueChange={(value) => handleSelectChange('experienceLevel', value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Entry Level">Entry Level</SelectItem>
+                  <SelectItem value="Mid Level">Mid Level</SelectItem>
+                  <SelectItem value="Senior Level">Senior Level</SelectItem>
+                  <SelectItem value="Executive">Executive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="yearsOfExperience">Years of Experience *</Label>
+              <Input
+                id="yearsOfExperience"
+                name="yearsOfExperience"
+                type="number"
+                min="0"
+                max="50"
+                value={formData.yearsOfExperience}
+                onChange={(e) => setFormData(prev => ({ ...prev, yearsOfExperience: parseInt(e.target.value) || 0 }))}
+                required
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="skills">Skills (comma-separated)</Label>
+              <Input
+                id="skills"
+                name="skills"
+                value={formData.skills}
+                onChange={handleInputChange}
+                placeholder="e.g., React, Node.js, Python"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="previousCompany">Previous Company</Label>
+              <Input
+                id="previousCompany"
+                name="previousCompany"
+                value={formData.previousCompany}
+                onChange={handleInputChange}
                 className="mt-1"
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="experience">Years of Experience</Label>
-            <Input
-              id="experience"
-              name="experience"
-              value={formData.experience}
-              onChange={handleInputChange}
-              placeholder="e.g., 5 years"
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="resume">Resume/CV *</Label>
+            <Label htmlFor="resume">Resume/CV</Label>
             <div className="mt-1">
               {!resume ? (
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -215,12 +333,12 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
                     <p className="mb-2 text-sm text-gray-500">
                       <span className="font-semibold">Click to upload</span> your resume
                     </p>
-                    <p className="text-xs text-gray-500">PDF or DOC (MAX. 5MB)</p>
+                    <p className="text-xs text-gray-500">PDF, DOC, or TXT (MAX. 5MB)</p>
                   </div>
                   <input
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.txt"
                     onChange={handleFileChange}
                   />
                 </label>

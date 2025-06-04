@@ -65,7 +65,7 @@ export const applicationAPI = {
   // Submit new application
   submit: async (formData: FormData): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/job-applications`, {
+      const response = await fetch(`${API_BASE_URL}/api/applications`, {
         method: 'POST',
         body: formData,
       });
@@ -81,7 +81,7 @@ export const applicationAPI = {
   // Get all applications (admin)
   getAll: async (): Promise<JobApplication[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/job-applications`, {
+      const response = await fetch(`${API_BASE_URL}/api/applications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
@@ -97,7 +97,7 @@ export const applicationAPI = {
         jobTitle: app.position,
         company: app.previousCompany || app.department,
         experience: `${app.yearsOfExperience} years`,
-        resumeUrl: app.resumePath ? `${API_BASE_URL}/api/job-applications/${app._id}/resume` : undefined
+        resumeUrl: app.resumePath ? `${API_BASE_URL}/api/applications/${app._id}/resume` : undefined
       }));
       
       return applications;
@@ -110,7 +110,7 @@ export const applicationAPI = {
   // Get applications for specific job
   getByJob: async (jobId: string): Promise<JobApplication[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/job-applications?jobId=${jobId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/applications?jobId=${jobId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
@@ -127,7 +127,7 @@ export const applicationAPI = {
   // Update application status
   updateStatus: async (applicationId: string, status: string): Promise<{ success: boolean }> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/job-applications/${applicationId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,18 +177,27 @@ export const jobsAPI = {
 
 // Admin authentication
 export const authAPI = {
-  login: async (email: string, password: string): Promise<{ success: boolean; token: string; user: any }> => {
+  login: async (email: string, password: string): Promise<{ success: boolean; token?: string; user?: any; message?: string }> => {
     try {
+      console.log('Attempting login to:', `${API_BASE_URL}/api/auth/login`);
+      
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
       
-      await handleAPIError(response);
+      clearTimeout(timeoutId);
+      
       const data = await response.json();
+      console.log('Login response:', data);
       
       if (data.success && data.token) {
         localStorage.setItem('adminToken', data.token);
@@ -197,6 +206,70 @@ export const authAPI = {
       return data;
     } catch (error) {
       console.error('Login error:', error);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout. Please check if the backend server is running on port 5000.');
+      }
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Cannot connect to backend server. Please ensure the server is running on http://localhost:5000');
+      }
+      
+      throw new Error('Failed to connect to server. Please check if the backend server is running.');
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      
+      await handleAPIError(response);
+      return await response.json();
+    } catch (error) {
+      console.error('Change password error:', error);
+      throw error;
+    }
+  },
+
+  forgotPassword: async (email: string): Promise<{ success: boolean; message: string; resetToken?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      await handleAPIError(response);
+      return await response.json();
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
+  },
+
+  resetPassword: async (resetToken: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resetToken, newPassword }),
+      });
+      
+      await handleAPIError(response);
+      return await response.json();
+    } catch (error) {
+      console.error('Reset password error:', error);
       throw error;
     }
   },
@@ -220,6 +293,34 @@ export const healthAPI = {
       return await response.json();
     } catch (error) {
       console.error('Health check error:', error);
+      throw error;
+    }
+  }
+};
+
+// Contact form API
+export const contactAPI = {
+  // Submit contact form
+  submit: async (formData: {
+    name: string;
+    email: string;
+    company?: string;
+    subject: string;
+    message: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      await handleAPIError(response);
+      return await response.json();
+    } catch (error) {
+      console.error('Contact form submission error:', error);
       throw error;
     }
   }
