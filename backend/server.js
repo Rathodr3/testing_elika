@@ -46,7 +46,13 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? ['https://your-domain.com', 'https://www.your-domain.com']
+      ? [
+          'https://your-domain.com', 
+          'https://www.your-domain.com',
+          // Add your actual Lightsail domain here
+          'https://your-lightsail-ip',
+          'http://your-lightsail-ip'
+        ]
       : [
           'http://localhost:3000', 
           'http://localhost:5173', 
@@ -61,7 +67,7 @@ const corsOptions = {
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
-      callback(null, true); // Allow all origins in development
+      callback(null, process.env.NODE_ENV !== 'production'); // Allow all origins in development
     }
   },
   credentials: true,
@@ -81,6 +87,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Logging
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
 }
 
 // Static files for uploaded resumes
@@ -119,24 +127,28 @@ app.use('*', (req, res) => {
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/elika-engineering', {
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/elika-engineering';
+console.log('Connecting to MongoDB:', mongoUri.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
+
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
 .then(() => {
-  console.log('Connected to MongoDB');
+  console.log('✅ Connected to MongoDB');
 })
 .catch((error) => {
-  console.error('MongoDB connection error:', error);
+  console.error('❌ MongoDB connection error:', error);
   process.exit(1);
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`API accessible at: http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 API accessible at: http://localhost:${PORT}/api`);
+  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
 });
 
 module.exports = app;
