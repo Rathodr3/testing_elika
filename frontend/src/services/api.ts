@@ -1,6 +1,32 @@
+
 // API service layer for MERN backend integration
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// Add health check on module load
+const checkBackendHealth = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/health`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      console.log('✅ Backend server is running and accessible');
+    } else {
+      console.warn('⚠️ Backend server responded with status:', response.status);
+    }
+  } catch (error) {
+    console.error('❌ Backend server is not accessible:', error);
+    console.log('💡 Make sure the backend server is running on port 5000');
+    console.log('💡 Run: cd backend && npm install && npm start');
+  }
+};
+
+// Check backend health on module load
+checkBackendHealth();
 
 export interface JobApplication {
   _id?: string;
@@ -45,16 +71,23 @@ export interface Job {
   createdAt: string;
 }
 
-// Enhanced error handling
+// Enhanced error handling with better logging
 const handleAPIError = async (response: Response) => {
   if (!response.ok) {
     let errorMessage = 'An error occurred';
     try {
       const errorData = await response.json();
       errorMessage = errorData.message || errorMessage;
+      console.error('API Error Response:', errorData);
     } catch {
       errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     }
+    console.error('API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+      message: errorMessage
+    });
     throw new Error(errorMessage);
   }
   return response;
@@ -65,20 +98,23 @@ export const applicationAPI = {
   // Submit new application
   submit: async (formData: FormData): Promise<{ success: boolean; message: string }> => {
     try {
+      console.log('Submitting application to:', `${API_BASE_URL}/api/applications`);
+      
       const response = await fetch(`${API_BASE_URL}/api/applications`, {
         method: 'POST',
         body: formData,
       });
       
       await handleAPIError(response);
-      return await response.json();
+      const result = await response.json();
+      console.log('Application submission successful:', result);
+      return result;
     } catch (error) {
       console.error('Application submission error:', error);
       throw error;
     }
   },
 
-  // Get all applications (admin)
   getAll: async (): Promise<JobApplication[]> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/applications`, {
@@ -107,7 +143,6 @@ export const applicationAPI = {
     }
   },
 
-  // Get applications for specific job
   getByJob: async (jobId: string): Promise<JobApplication[]> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/applications?jobId=${jobId}`, {
@@ -124,7 +159,6 @@ export const applicationAPI = {
     }
   },
 
-  // Update application status
   updateStatus: async (applicationId: string, status: string): Promise<{ success: boolean }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/status`, {
@@ -175,7 +209,7 @@ export const jobsAPI = {
   }
 };
 
-// Admin authentication
+// Admin authentication with better error handling
 export const authAPI = {
   login: async (email: string, password: string): Promise<{ success: boolean; token?: string; user?: any; message?: string }> => {
     try {
@@ -298,9 +332,8 @@ export const healthAPI = {
   }
 };
 
-// Contact form API
+// Contact form API with improved error handling
 export const contactAPI = {
-  // Submit contact form
   submit: async (formData: {
     name: string;
     email: string;
@@ -309,6 +342,8 @@ export const contactAPI = {
     message: string;
   }): Promise<{ success: boolean; message: string }> => {
     try {
+      console.log('Submitting contact form to:', `${API_BASE_URL}/api/contact`);
+      
       const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: {
@@ -318,7 +353,9 @@ export const contactAPI = {
       });
       
       await handleAPIError(response);
-      return await response.json();
+      const result = await response.json();
+      console.log('Contact form submission successful:', result);
+      return result;
     } catch (error) {
       console.error('Contact form submission error:', error);
       throw error;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Phone, Mail, Clock, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { contactAPI } from '@/services/api';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -56,15 +56,7 @@ const Contact = () => {
     try {
       console.log('Submitting contact form:', formData);
       
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
+      const result = await contactAPI.submit(formData);
 
       if (result.success) {
         toast({

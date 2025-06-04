@@ -53,7 +53,8 @@ const corsOptions = {
           'http://localhost:8080',
           'http://127.0.0.1:3000',
           'http://127.0.0.1:5173',
-          'http://127.0.0.1:8080'
+          'http://127.0.0.1:8080',
+          'https://4177b37d-8ded-4e57-9ee3-e5b285304af7.lovableproject.com'
         ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
