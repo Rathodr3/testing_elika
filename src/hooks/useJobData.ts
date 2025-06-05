@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { jobsAPI } from '@/services/api';
 
@@ -34,11 +33,18 @@ export const useJobData = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch jobs from the admin jobs API
-        const jobsData = await jobsAPI.getPublic();
+        // Fetch jobs from the public jobs API
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/jobs/public`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch jobs');
+        }
+        
+        const jobsData = await response.json();
+        console.log('Jobs fetched:', jobsData);
         
         // Transform the data to match the expected format
-        const transformedJobs: JobData[] = jobsData.map(job => ({
+        const transformedJobs: JobData[] = jobsData.map((job: any) => ({
           id: job._id,
           title: job.title,
           company: job.company?.name || 'Unknown Company',
@@ -59,8 +65,6 @@ export const useJobData = () => {
       } catch (err) {
         console.error('Error fetching jobs:', err);
         setError('Failed to load jobs. Please try again later.');
-        
-        // Fallback to empty array if API fails
         setJobs([]);
       } finally {
         setLoading(false);

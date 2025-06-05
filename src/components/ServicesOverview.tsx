@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Cog, Users, GraduationCap } from 'lucide-react';
+import { Cog, Users, GraduationCap, Monitor } from 'lucide-react';
 import Section from './Section';
 import SectionHeader from './SectionHeader';
 import Grid from './Grid';
@@ -34,6 +34,13 @@ const ServicesOverview = () => {
       description: 'Continuous learning drives growth, adaptability, and sustained success in today\'s evolving landscape.',
       image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop',
       features: ['Skills Assessment', 'Custom Training', 'Certification Programs']
+    },
+    {
+      icon: Monitor,
+      title: 'IT Services',
+      description: 'Comprehensive technology solutions including software development, cloud services, and digital transformation.',
+      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=250&fit=crop',
+      features: ['Software Development', 'Cloud Solutions', 'Digital Transformation']
     }
   ];
 
@@ -42,10 +49,10 @@ const ServicesOverview = () => {
       <SectionHeader
         subtitle="BRINGING CHANGE TO THE ENGINEERING SERVICES INDUSTRY"
         title="Comprehensive Engineering Solutions"
-        description="At Elika Engineering Pvt. Ltd., we are dedicated to providing innovative and reliable solutions that support businesses across IT, Automobile, and Engineering sectors. From specialized management solutions to cutting-edge engineering services, we aim to be your strategic partner in achieving success and efficiency in every project."
+        description="At Elika Engineering Pvt Ltd, we are dedicated to providing innovative and reliable solutions that support businesses across IT, Automobile, and Engineering sectors. From specialized management solutions to cutting-edge engineering services, we aim to be your strategic partner in achieving success and efficiency in every project."
       />
 
-      <Grid cols={3} gap="lg" className="mb-16">
+      <Grid cols={4} gap="lg" className="mb-16">
         {services.map((service, index) => (
           <div key={index} className="group">
             <EnhancedCard

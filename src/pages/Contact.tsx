@@ -265,15 +265,20 @@ const Contact = () => {
                     ))}
                   </div>
                   
-                  {/* Map Placeholder */}
+                  {/* Google Maps Embed */}
                   <Card className="border-0 shadow-lg bg-white mt-8">
                     <CardContent className="p-0">
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center">
-                        <div className="text-center">
-                          <MapPin className="h-12 w-12 text-primary mx-auto mb-2" />
-                          <p className="text-secondary-800 font-medium">Interactive Map</p>
-                          <p className="text-accent text-sm">Location: Tech District</p>
-                        </div>
+                      <div className="aspect-video rounded-lg overflow-hidden">
+                        <iframe
+                          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3780.7502873337403!2d73.79771740313663!3d18.630298200000016!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b90627906177%3A0x238bf014a51bc20e!2sSonigara%20Corp!5e0!3m2!1sen!2sin!4v1748434759679!5m2!1sen!2sin"
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title="Elika Engineering Office Location"
+                        />
                       </div>
                     </CardContent>
                   </Card>

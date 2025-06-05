@@ -28,7 +28,10 @@ const AboutUs = () => {
       icon: Handshake,
       title: 'Commitment',
       description: 'Dedicated to excellence and unwavering in our promise to deliver quality results.'
-    },
+    }
+  ];
+
+  const additionalValues = [
     {
       icon: Shield,
       title: 'Integrity',
@@ -92,7 +95,7 @@ const AboutUs = () => {
                     About Our Company
                   </div>
                   <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-                    About <span className="text-primary">Elika Engineering</span>
+                    About <span className="text-primary">Elika Engineering Pvt Ltd</span>
                   </h1>
                   <div className="space-y-6 text-lg text-gray-700 mb-8">
                     <p className="text-2xl text-primary font-semibold">
@@ -102,7 +105,7 @@ const AboutUs = () => {
                       That's how we bring talent and clients together in the demanding world of engineering excellence.
                     </p>
                     <p>
-                      With 8 years of experience in Engineering Industries, we successfully deliver excellent support to our customers. Elika Engineering Pvt. Ltd. is a young and dynamic team delivering Human Resource, IT/Non-IT Engineering services, and Training solutions.
+                      With 8 years of experience in Engineering Industries, we successfully deliver excellent support to our customers. Elika Engineering Pvt Ltd is a young and dynamic team delivering Human Resource, IT/Non-IT Engineering services, and Training solutions.
                     </p>
                   </div>
 
@@ -252,9 +255,10 @@ const AboutUs = () => {
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {/* First 4 values */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                 {values.map((value, index) => (
-                  <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden">
+                  <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden w-full">
                     <CardContent className="p-8">
                       <div className="w-20 h-20 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
                         <value.icon className="h-10 w-10 text-primary" />
@@ -264,6 +268,23 @@ const AboutUs = () => {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+
+              {/* Additional 3 values - centered */}
+              <div className="flex justify-center">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl">
+                  {additionalValues.map((value, index) => (
+                    <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden w-full">
+                      <CardContent className="p-8">
+                        <div className="w-20 h-20 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                          <value.icon className="h-10 w-10 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase">{value.title}</h3>
+                        <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

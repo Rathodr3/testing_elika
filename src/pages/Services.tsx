@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, GraduationCap, Code, Database, Wrench, UserPlus, BookOpen, Award, ArrowRight, CheckCircle, Mail } from 'lucide-react';
+import { Users, Settings, GraduationCap, Code, Database, Wrench, UserPlus, BookOpen, Award, ArrowRight, CheckCircle, Mail, Monitor } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Services = () => {
@@ -58,6 +58,18 @@ const Services = () => {
         'Software Proficiency',
         'Industry-Specific Programs'
       ]
+    },
+    {
+      icon: Monitor,
+      title: 'IT Services',
+      subtitle: 'Comprehensive technology solutions for modern business needs',
+      description: 'Elika Engineering Pvt Ltd delivers comprehensive IT services designed to streamline your technology infrastructure and drive digital transformation. From software development and system integration to cloud solutions and cybersecurity, we provide end-to-end technology services that help businesses operate efficiently and securely in todays digital landscape.',
+      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=500&h=300&fit=crop',
+      features: [
+        'Software Development',
+        'Cloud Solutions',
+        'Cybersecurity Services'
+      ]
     }
   ];
 
@@ -66,7 +78,7 @@ const Services = () => {
       <Header />
       <main className="pt-6">
         {/* Hero Section */}
-        <section className="py-20 lg:py-32 relative overflow-hidden min-h-screen flex items-center justify-center">
+        <section className="py-12 lg:py-16 relative overflow-hidden min-h-screen flex items-center justify-center">
           {/* Background Image with Overlay */}
           <div className="absolute inset-0">
             <div 
@@ -115,7 +127,7 @@ const Services = () => {
         </section>
 
         {/* Services Tagline */}
-        <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
+        <section className="py-8 lg:py-12 bg-white relative overflow-hidden">
           {/* Background Elements */}
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,91,255,0.1),transparent_60%)]"></div>
@@ -144,13 +156,15 @@ const Services = () => {
 
         {/* Main Services */}
         {mainServices.map((service, index) => (
-          <section key={index} className={`py-20 lg:py-32 ${index % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}>
+          <section key={index} className={`py-8 lg:py-12 ${index % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}>
             <div className="container mx-auto px-4 lg:px-8">
               <div className="max-w-7xl mx-auto">
                 {/* Service Header */}
-                <div className="text-center mb-16">
-                  <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-                    {service.subtitle}
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary/20 via-primary/15 to-purple-600/15 text-primary rounded-full text-lg font-bold mb-6 border-2 border-primary/30 shadow-lg">
+                    <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent text-xl font-extrabold">
+                      {service.subtitle}
+                    </span>
                   </div>
                 </div>
 
@@ -161,7 +175,7 @@ const Services = () => {
                       <h3 className="text-3xl lg:text-4xl font-bold text-gray-900">{service.title}</h3>
                     </div>
                     
-                    <p className="text-lg text-gray-600 leading-relaxed mb-8">
+                    <p className="text-lg text-gray-600 leading-relaxed mb-8 text-justify">
                       {service.description}
                     </p>
 
@@ -179,19 +193,19 @@ const Services = () => {
                         <Card className="border-0 shadow-lg bg-white">
                           <CardContent className="p-6">
                             <h4 className="font-bold text-gray-900 mb-2">Permanent Staffing</h4>
-                            <p className="text-gray-600 text-sm">{service.details.permanent}</p>
+                            <p className="text-gray-600 text-sm text-justify">{service.details.permanent}</p>
                           </CardContent>
                         </Card>
                         <Card className="border-0 shadow-lg bg-white">
                           <CardContent className="p-6">
                             <h4 className="font-bold text-gray-900 mb-2">Contractual Staffing</h4>
-                            <p className="text-gray-600 text-sm">{service.details.contract}</p>
+                            <p className="text-gray-600 text-sm text-justify">{service.details.contract}</p>
                           </CardContent>
                         </Card>
                         <Card className="border-0 shadow-lg bg-white">
                           <CardContent className="p-6">
                             <h4 className="font-bold text-gray-900 mb-2">Recruitment Process Outsourcing (RPO)</h4>
-                            <p className="text-gray-600 text-sm">{service.details.rpo}</p>
+                            <p className="text-gray-600 text-sm text-justify">{service.details.rpo}</p>
                           </CardContent>
                         </Card>
                       </div>
@@ -212,10 +226,10 @@ const Services = () => {
         ))}
 
         {/* Service Features Grid */}
-        <section className="py-20 lg:py-32 bg-gray-50">
+        <section className="py-8 lg:py-12 bg-gray-50">
           <div className="container mx-auto px-4 lg:px-8">
             <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-20">
+              <div className="text-center mb-16">
                 <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
                   Why Choose Us
                 </div>
@@ -276,7 +290,7 @@ const Services = () => {
         </section>
 
         {/* Contact CTA Section */}
-        <section className="py-20 lg:py-32 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden">
+        <section className="py-12 lg:py-16 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden">
           {/* Background Elements */}
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(59,130,246,0.3),transparent_60%)]"></div>

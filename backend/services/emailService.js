@@ -14,14 +14,14 @@ const createTransporter = () => {
   });
 };
 
-// Send email notification to admin when new application is received
+// Send email notification to careers team when new application is received
 const sendApplicationEmail = async (application, resumeFile) => {
   try {
     const transporter = createTransporter();
     
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
+      to: process.env.CAREERS_EMAIL || 'careers@elikaengineering.com', // Use careers email for job applications
       subject: `New Job Application - ${application.position}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -71,7 +71,7 @@ const sendApplicationEmail = async (application, resumeFile) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Admin notification email sent:', info.messageId);
+    console.log('Admin notification email sent to careers team:', info.messageId);
     return info;
 
   } catch (error) {
@@ -155,14 +155,14 @@ const sendConfirmationEmail = async (application) => {
   }
 };
 
-// Send email notification to admin when contact form is submitted
+// Send email notification to info team when contact form is submitted
 const sendContactEmail = async (contactData) => {
   try {
     const transporter = createTransporter();
     
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
+      to: process.env.ADMIN_EMAIL || 'info@elikaengineering.com', // Use info email for contact forms
       subject: `New Contact Form Submission - ${contactData.subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -197,7 +197,7 @@ const sendContactEmail = async (contactData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Contact form notification email sent:', info.messageId);
+    console.log('Contact form notification email sent to info team:', info.messageId);
     return info;
 
   } catch (error) {

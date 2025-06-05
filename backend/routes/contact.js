@@ -19,7 +19,7 @@ router.post('/', validateContactForm, async (req, res) => {
 
     console.log('Contact form submitted:', contactData);
 
-    // Send email notifications
+    // Send email notifications to info@elikaengineering.com
     try {
       await sendContactEmail(contactData);
       await sendContactConfirmation(contactData);

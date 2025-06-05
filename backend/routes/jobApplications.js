@@ -74,7 +74,7 @@ router.post('/', upload.single('resume'), validateJobApplication, async (req, re
     const jobApplication = new JobApplication(applicationData);
     await jobApplication.save();
 
-    // Send email notifications
+    // Send email notifications to careers@elikaengineering.com
     try {
       await sendApplicationEmail(jobApplication, req.file);
       await sendConfirmationEmail(jobApplication);
