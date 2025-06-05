@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, GraduationCap, Code, Database, Wrench, UserPlus, BookOpen, Award } from 'lucide-react';
+import { Users, Settings, GraduationCap, Code, Database, Wrench, UserPlus, BookOpen, Award, ArrowRight, CheckCircle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Services = () => {
@@ -62,36 +62,81 @@ const Services = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="pt-24">
+      <main className="pt-6">
         {/* Hero Section */}
-        <section className="py-20 lg:py-32 bg-gradient-to-br from-secondary-800 via-secondary-700 to-secondary-900 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-          <div className="container mx-auto px-4 lg:px-8 relative">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6">
-                Our <span className="text-yellow-400">Services</span>
-              </h1>
-              <p className="text-xl text-gray-300 leading-relaxed mb-8 max-w-3xl mx-auto">
-                Industry leading Specialists in Business Consulting, Human Resource Services, & Engineering Solutions
-              </p>
+        <section className="py-20 lg:py-32 relative overflow-hidden min-h-screen flex items-center justify-center">
+          {/* Background Image with Overlay */}
+          <div className="absolute inset-0">
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: 'url(/lovable-uploads/2a81bc1b-64f5-46f8-92a7-3ba18e9c50a0.png)',
+              }}
+            ></div>
+            <div className="absolute inset-0 bg-white/85"></div>
+          </div>
+
+          {/* Background Elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,91,255,0.1),transparent_60%)]"></div>
+            <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_60%)]"></div>
+            
+            {/* Geometric Shapes */}
+            <div className="absolute top-10 left-10 w-24 h-24 border-2 border-primary/20 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-3xl rotate-45"></div>
+            <div className="absolute top-1/2 right-10 w-16 h-16 bg-primary/5 rounded-full"></div>
+            <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-primary/20 rounded-full"></div>
+            <div className="absolute bottom-1/4 right-1/3 w-12 h-12 bg-purple-400/10 rounded-full blur-sm"></div>
+          </div>
+
+          <div className="container mx-auto px-4 lg:px-8 relative z-10">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center">
+                <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
+                  Our Services
+                </div>
+                <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 mb-8 leading-tight">
+                  <span className="text-primary">Services</span> We Offer
+                </h1>
+                <div className="space-y-6 text-lg text-gray-700 mb-8 max-w-4xl mx-auto">
+                  <p className="text-2xl text-primary font-semibold">
+                    Industry leading Specialists in Business Consulting, Human Resource Services, & Engineering Solutions
+                  </p>
+                  <p>
+                    Welcome to our world of innovation and expertise. Dive into a realm where business consulting, human 
+                    resource services, and engineering solutions converge to redefine possibilities.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Services Introduction */}
-        <section className="py-20 lg:py-32">
-          <div className="container mx-auto px-4 lg:px-8">
+        {/* Services Tagline */}
+        <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,91,255,0.1),transparent_60%)]"></div>
+            <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_60%)]"></div>
+            
+            {/* Geometric Shapes */}
+            <div className="absolute top-10 left-10 w-24 h-24 border-2 border-primary/20 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-3xl rotate-45"></div>
+            <div className="absolute top-1/2 right-10 w-16 h-16 bg-primary/5 rounded-full"></div>
+            <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-primary/20 rounded-full"></div>
+            <div className="absolute bottom-1/4 right-1/3 w-12 h-12 bg-purple-400/10 rounded-full blur-sm"></div>
+          </div>
+
+          <div className="container mx-auto px-4 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl lg:text-5xl font-bold text-secondary-800 mb-8">
-                Explore our services
+              <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-8 leading-tight">
+                Explore our 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-600 to-blue-600"> services</span>
               </h2>
-              <p className="text-lg text-accent leading-relaxed">
-                Welcome to our world of innovation and expertise. Dive into a realm where business consulting, human 
-                resource services, and engineering solutions converge to redefine possibilities. Explore our suite of services 
-                meticulously crafted to empower your ventures, optimize operations, and engineer success. Let's embark on a 
-                journey of discovery together.
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Explore our suite of services meticulously crafted to empower your ventures, optimize operations, and engineer success.
               </p>
             </div>
           </div>
@@ -99,13 +144,13 @@ const Services = () => {
 
         {/* Main Services */}
         {mainServices.map((service, index) => (
-          <section key={index} className={`py-20 lg:py-32 ${index % 2 === 1 ? 'bg-muted/30' : ''}`}>
+          <section key={index} className={`py-20 lg:py-32 ${index % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}>
             <div className="container mx-auto px-4 lg:px-8">
-              <div className="max-w-6xl mx-auto">
+              <div className="max-w-7xl mx-auto">
                 {/* Service Header */}
                 <div className="text-center mb-16">
-                  <div className="bg-primary text-white py-3 px-6 rounded-lg inline-block mb-6">
-                    <p className="font-bold">{service.subtitle}</p>
+                  <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
+                    {service.subtitle}
                   </div>
                 </div>
 
@@ -113,10 +158,10 @@ const Services = () => {
                   <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
                     <div className="flex items-center mb-6">
                       <service.icon className="w-12 h-12 text-primary mr-4" />
-                      <h3 className="text-3xl lg:text-4xl font-bold text-secondary-800">{service.title}</h3>
+                      <h3 className="text-3xl lg:text-4xl font-bold text-gray-900">{service.title}</h3>
                     </div>
                     
-                    <p className="text-lg text-accent leading-relaxed mb-8">
+                    <p className="text-lg text-gray-600 leading-relaxed mb-8">
                       {service.description}
                     </p>
 
@@ -124,25 +169,31 @@ const Services = () => {
                       {service.features.map((feature, featureIndex) => (
                         <div key={featureIndex} className="flex items-center">
                           <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
-                          <span className="font-semibold text-secondary-800">{feature}</span>
+                          <span className="font-semibold text-gray-900">{feature}</span>
                         </div>
                       ))}
                     </div>
 
                     {service.details && (
                       <div className="mt-8 space-y-4">
-                        <div className="bg-white rounded-lg p-6 shadow-lg">
-                          <h4 className="font-bold text-secondary-800 mb-2">Permanent Staffing</h4>
-                          <p className="text-accent text-sm">{service.details.permanent}</p>
-                        </div>
-                        <div className="bg-white rounded-lg p-6 shadow-lg">
-                          <h4 className="font-bold text-secondary-800 mb-2">Contractual Staffing</h4>
-                          <p className="text-accent text-sm">{service.details.contract}</p>
-                        </div>
-                        <div className="bg-white rounded-lg p-6 shadow-lg">
-                          <h4 className="font-bold text-secondary-800 mb-2">Recruitment Process Outsourcing (RPO)</h4>
-                          <p className="text-accent text-sm">{service.details.rpo}</p>
-                        </div>
+                        <Card className="border-0 shadow-lg bg-white">
+                          <CardContent className="p-6">
+                            <h4 className="font-bold text-gray-900 mb-2">Permanent Staffing</h4>
+                            <p className="text-gray-600 text-sm">{service.details.permanent}</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="border-0 shadow-lg bg-white">
+                          <CardContent className="p-6">
+                            <h4 className="font-bold text-gray-900 mb-2">Contractual Staffing</h4>
+                            <p className="text-gray-600 text-sm">{service.details.contract}</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="border-0 shadow-lg bg-white">
+                          <CardContent className="p-6">
+                            <h4 className="font-bold text-gray-900 mb-2">Recruitment Process Outsourcing (RPO)</h4>
+                            <p className="text-gray-600 text-sm">{service.details.rpo}</p>
+                          </CardContent>
+                        </Card>
                       </div>
                     )}
                   </div>
@@ -151,7 +202,7 @@ const Services = () => {
                     <img 
                       src={service.image} 
                       alt={service.title}
-                      className="rounded-2xl shadow-2xl w-full h-[400px] object-cover"
+                      className="rounded-3xl shadow-xl w-full h-[400px] object-cover"
                     />
                   </div>
                 </div>
@@ -161,19 +212,22 @@ const Services = () => {
         ))}
 
         {/* Service Features Grid */}
-        <section className="py-20 lg:py-32 bg-gradient-to-br from-gray-50 to-white">
+        <section className="py-20 lg:py-32 bg-gray-50">
           <div className="container mx-auto px-4 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl lg:text-5xl font-bold text-secondary-800 mb-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-20">
+                <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
+                  Why Choose Us
+                </div>
+                <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-8">
                   Why Choose Our Services?
                 </h2>
-                <p className="text-xl text-accent max-w-4xl mx-auto leading-relaxed">
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                   We deliver comprehensive solutions that drive growth, optimize operations, and ensure lasting success.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[
                   {
                     icon: Code,
@@ -206,13 +260,13 @@ const Services = () => {
                     description: 'Rigorous quality control processes ensuring excellence in every project delivery.'
                   }
                 ].map((feature, index) => (
-                  <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white card-hover">
-                    <CardContent className="p-8 text-center">
-                      <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-6">
-                        <feature.icon className="h-8 w-8 text-primary" />
+                  <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden">
+                    <CardContent className="p-8">
+                      <div className="w-20 h-20 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <feature.icon className="h-10 w-10 text-primary" />
                       </div>
-                      <h3 className="text-xl font-bold text-secondary-800 mb-4">{feature.title}</h3>
-                      <p className="text-accent leading-relaxed">{feature.description}</p>
+                      <h3 className="text-xl font-bold text-gray-900 mb-4">{feature.title}</h3>
+                      <p className="text-gray-600 leading-relaxed">{feature.description}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -221,22 +275,104 @@ const Services = () => {
           </div>
         </section>
 
-        {/* Contact Section */}
-        <section className="py-20 lg:py-32">
-          <div className="container mx-auto px-4 lg:px-8">
-            <div className="text-center">
-              <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 max-w-4xl mx-auto">
-                <h3 className="text-2xl font-bold text-secondary-800 mb-4">
-                  Let's Talk About Your Needs
-                </h3>
-                <p className="text-lg text-accent mb-6">
-                  See how our innovative engineering services can bring value to your project.
-                </p>
-                <Link to="/contact" onClick={handleContactClick}>
-                  <Button size="lg" className="hover:scale-105 transition-transform duration-300">
-                    Contact Us Today
-                  </Button>
-                </Link>
+        {/* Contact CTA Section */}
+        <section className="py-20 lg:py-32 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(59,130,246,0.3),transparent_60%)]"></div>
+            <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.3),transparent_60%)]"></div>
+            
+            {/* Geometric Shapes */}
+            <div className="absolute top-20 left-20 w-32 h-32 border-2 border-white/10 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-32 right-20 w-24 h-24 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl rotate-45"></div>
+            <div className="absolute top-1/2 left-10 w-16 h-16 bg-white/5 rounded-full"></div>
+            <div className="absolute top-1/4 right-1/4 w-8 h-8 bg-blue-400/30 rounded-full"></div>
+            <div className="absolute bottom-1/4 left-1/3 w-12 h-12 bg-purple-400/20 rounded-full blur-sm"></div>
+          </div>
+
+          <div className="container mx-auto px-4 lg:px-8 relative z-10">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid lg:grid-cols-2 gap-16 items-center">
+                {/* Left Content */}
+                <div>
+                  <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white/90 mb-6">
+                    Get In Touch
+                  </div>
+                  
+                  <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                    Let's Talk About Your
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400"> Needs</span>
+                  </h2>
+                  
+                  <p className="text-xl text-white/80 mb-8 leading-relaxed">
+                    See how our innovative engineering services can bring value to your project and help you achieve your goals with excellence and efficiency.
+                  </p>
+
+                  {/* Key Benefits */}
+                  <div className="space-y-4 mb-8">
+                    {[
+                      "Expert Engineering Consultation",
+                      "Tailored Solutions for Your Needs", 
+                      "8+ Years of Industry Experience",
+                      "500+ Successful Projects Delivered"
+                    ].map((benefit, index) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-white/90 text-lg">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Contact Actions */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Link to="/contact" onClick={handleContactClick}>
+                      <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 h-auto text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                        Contact Us Today
+                        <ArrowRight className="ml-2 w-5 h-5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Right Side - Contact Card */}
+                <div className="relative">
+                  <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 lg:p-10 border border-white/20 shadow-2xl">
+                    <div className="text-center mb-8">
+                      <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <Mail className="w-10 h-10 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-3">Let's Connect</h3>
+                      <p className="text-white/70 text-lg">Ready to discuss your service needs?</p>
+                    </div>
+
+                    {/* Contact Options */}
+                    <div className="space-y-6">
+                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <Mail className="w-6 h-6 text-blue-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold text-lg mb-1">Email Us</h4>
+                            <p className="text-white/70">contact@elikaengineering.com</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 text-center">
+                      <p className="text-white/60 text-sm">
+                        Trusted by 50+ companies worldwide
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Floating Elements */}
+                  <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 rounded-full blur-xl"></div>
+                  <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-2xl"></div>
+                </div>
               </div>
             </div>
           </div>

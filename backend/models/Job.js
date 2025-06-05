@@ -2,45 +2,58 @@
 const mongoose = require('mongoose');
 
 const jobSchema = new mongoose.Schema({
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
+  },
   title: {
     type: String,
-    required: [true, 'Job title is required'],
-    trim: true,
-    maxlength: [100, 'Job title cannot exceed 100 characters']
-  },
-  company: {
-    type: String,
-    required: [true, 'Company name is required'],
-    trim: true,
-    maxlength: [100, 'Company name cannot exceed 100 characters']
+    required: true,
+    trim: true
   },
   location: {
     type: String,
-    required: [true, 'Location is required'],
+    required: true,
     trim: true
   },
-  type: {
+  employmentType: {
     type: String,
-    enum: ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship'],
-    required: [true, 'Job type is required']
+    enum: ['full-time', 'part-time', 'contract', 'temporary', 'internship'],
+    required: true
   },
-  experience: {
+  domain: {
     type: String,
-    required: [true, 'Experience level is required']
+    required: true,
+    trim: true
   },
-  salary: {
+  workMode: {
     type: String,
-    required: [true, 'Salary range is required']
+    enum: ['remote', 'on-site', 'hybrid'],
+    required: true
+  },
+  experienceLevel: {
+    type: String,
+    enum: ['entry', 'mid', 'senior', 'lead', 'executive'],
+    required: true
+  },
+  minExperience: {
+    type: Number,
+    required: true,
+    min: 0
   },
   description: {
     type: String,
-    required: [true, 'Job description is required'],
-    maxlength: [2000, 'Description cannot exceed 2000 characters']
+    trim: true
   },
   requirements: [{
     type: String,
     trim: true
   }],
+  salary: {
+    type: String,
+    trim: true
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -56,10 +69,5 @@ const jobSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-
-// Index for efficient queries
-jobSchema.index({ isActive: 1, postedDate: -1 });
-jobSchema.index({ company: 1 });
-jobSchema.index({ type: 1 });
 
 module.exports = mongoose.model('Job', jobSchema);

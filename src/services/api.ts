@@ -1,3 +1,4 @@
+
 // API service layer for MERN backend integration
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -65,18 +66,56 @@ export interface JobApplication {
 
 export interface Job {
   _id: string;
+  company: {
+    _id: string;
+    name: string;
+    logo?: string;
+  };
   title: string;
-  company: string;
   location: string;
-  type: string;
-  experience: string;
-  salary: string;
-  description: string;
+  employmentType: string;
+  domain: string;
+  workMode: string;
+  experienceLevel: string;
+  minExperience: number;
+  description?: string;
   requirements: string[];
+  salary?: string;
   isActive: boolean;
   postedDate: string;
   applicantsCount: number;
   createdAt: string;
+}
+
+export interface User {
+  _id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  role: 'admin' | 'hr_manager' | 'recruiter' | 'viewer';
+  isActive: boolean;
+  permissions: {
+    users: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    companies: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    jobs: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    applications: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Company {
+  _id?: string;
+  name: string;
+  logo?: string;
+  description?: string;
+  contactEmail: string;
+  phoneNumber: string;
+  website?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Enhanced error handling with better logging
@@ -189,16 +228,33 @@ export const applicationAPI = {
 
 // Jobs API
 export const jobsAPI = {
-  // Get all active jobs
-  getAll: async (): Promise<Job[]> => {
+  // Get all active jobs for public
+  getPublic: async (): Promise<Job[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/jobs`);
+      const response = await fetch(`${API_BASE_URL}/jobs/public`);
       
       await handleAPIError(response);
       return await response.json();
     } catch (error) {
+      console.error('Fetch public jobs error:', error);
+      return [];
+    }
+  },
+
+  // Get all jobs (admin)
+  getAll: async (): Promise<Job[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data || result;
+    } catch (error) {
       console.error('Fetch jobs error:', error);
-      // Return fallback data if API fails
       return [];
     }
   },
@@ -209,9 +265,221 @@ export const jobsAPI = {
       const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
       
       await handleAPIError(response);
-      return await response.json();
+      const result = await response.json();
+      return result.data || result;
     } catch (error) {
       console.error('Fetch job error:', error);
+      throw error;
+    }
+  },
+
+  // Create new job
+  create: async (jobData: any): Promise<Job> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify(jobData),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Create job error:', error);
+      throw error;
+    }
+  },
+
+  // Update job
+  update: async (jobId: string, jobData: any): Promise<Job> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify(jobData),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Update job error:', error);
+      throw error;
+    }
+  },
+
+  // Delete job
+  delete: async (jobId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+    } catch (error) {
+      console.error('Delete job error:', error);
+      throw error;
+    }
+  }
+};
+
+// Users API
+export const usersAPI = {
+  getAll: async (): Promise<User[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data || result;
+    } catch (error) {
+      console.error('Fetch users error:', error);
+      throw error;
+    }
+  },
+
+  create: async (userData: any): Promise<User> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Create user error:', error);
+      throw error;
+    }
+  },
+
+  update: async (userId: string, userData: any): Promise<User> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (userId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+    } catch (error) {
+      console.error('Delete user error:', error);
+      throw error;
+    }
+  }
+};
+
+// Companies API
+export const companiesAPI = {
+  getAll: async (): Promise<Company[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/companies`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data || result;
+    } catch (error) {
+      console.error('Fetch companies error:', error);
+      throw error;
+    }
+  },
+
+  create: async (companyData: any): Promise<Company> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/companies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify(companyData),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Create company error:', error);
+      throw error;
+    }
+  },
+
+  update: async (companyId: string, companyData: any): Promise<Company> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify(companyData),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Update company error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (companyId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+    } catch (error) {
+      console.error('Delete company error:', error);
       throw error;
     }
   }

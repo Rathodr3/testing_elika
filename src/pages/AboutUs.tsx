@@ -1,10 +1,11 @@
+
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Target, Award, Heart, Lightbulb, Eye, Handshake, Shield, UserCheck, Globe, ArrowRight, Play, CheckCircle, Star, TrendingUp, Mail } from 'lucide-react';
+import { Users, Target, Award, Heart, Lightbulb, Eye, Handshake, Shield, UserCheck, Globe, ArrowRight, CheckCircle, Star, TrendingUp, Mail } from 'lucide-react';
 
 const AboutUs = () => {
   const values = [
@@ -79,7 +80,7 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="pt-24">
+      <main className="pt-6">
         {/* Hero Section */}
         <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
           <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -103,17 +104,6 @@ const AboutUs = () => {
                     <p>
                       With 8 years of experience in Engineering Industries, we successfully deliver excellent support to our customers. Elika Engineering Pvt. Ltd. is a young and dynamic team delivering Human Resource, IT/Non-IT Engineering services, and Training solutions.
                     </p>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                    <Button size="lg" className="bg-primary hover:bg-primary-600 text-white px-8 py-4 h-auto text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                      <Play className="mr-2 w-5 h-5" />
-                      Watch Our Story
-                    </Button>
-                    <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 h-auto text-lg font-semibold rounded-xl hover:scale-105 transition-all duration-300">
-                      Get Started
-                      <ArrowRight className="ml-2 w-5 h-5" />
-                    </Button>
                   </div>
 
                   {/* Achievement Stats */}
@@ -172,13 +162,30 @@ const AboutUs = () => {
           </div>
         </section>
 
-        {/* Mission Banner */}
-        <section className="py-16 lg:py-24 bg-gradient-to-r from-primary via-purple-600 to-blue-600">
-          <div className="container mx-auto px-4 lg:px-8">
+        {/* Mission Banner - Updated Design */}
+        <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,91,255,0.1),transparent_60%)]"></div>
+            <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_60%)]"></div>
+            
+            {/* Geometric Shapes */}
+            <div className="absolute top-10 left-10 w-24 h-24 border-2 border-primary/20 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-3xl rotate-45"></div>
+            <div className="absolute top-1/2 right-10 w-16 h-16 bg-primary/5 rounded-full"></div>
+            <div className="absolute top-1/4 left-1/4 w-8 h-8 bg-primary/20 rounded-full"></div>
+            <div className="absolute bottom-1/4 right-1/3 w-12 h-12 bg-purple-400/10 rounded-full blur-sm"></div>
+          </div>
+
+          <div className="container mx-auto px-4 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl lg:text-6xl font-bold text-white mb-8">
-                Make your impact with Higher "AIM"
+              <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-8 leading-tight">
+                Make your impact with 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-600 to-blue-600"> Higher "AIM"</span>
               </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Achieving excellence through innovation, dedication, and strategic vision in every engineering solution we deliver.
+              </p>
             </div>
           </div>
         </section>
@@ -359,10 +366,6 @@ const AboutUs = () => {
                       Get Started Today
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
-                    <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-8 py-4 h-auto text-lg font-semibold rounded-xl hover:scale-105 transition-all duration-300">
-                      <Play className="mr-2 w-5 h-5" />
-                      Schedule a Call
-                    </Button>
                   </div>
                 </div>
 
@@ -387,30 +390,6 @@ const AboutUs = () => {
                           <div>
                             <h4 className="text-white font-semibold text-lg mb-1">Email Us</h4>
                             <p className="text-white/70">contact@elikaengineering.com</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                            <Play className="w-6 h-6 text-purple-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-white font-semibold text-lg mb-1">Book a Call</h4>
-                            <p className="text-white/70">Schedule a consultation</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-green-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-white font-semibold text-lg mb-1">Quick Response</h4>
-                            <p className="text-white/70">Get reply within 24 hours</p>
                           </div>
                         </div>
                       </div>
