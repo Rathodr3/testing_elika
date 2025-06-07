@@ -7,17 +7,20 @@ const router = express.Router();
 // Get all active jobs for public (careers page)
 router.get('/public', async (req, res) => {
   try {
+    console.log('Fetching public jobs...');
     const jobs = await Job.find({ isActive: true })
-      .populate('company', 'name logo')
+      .populate('company', 'name logo description')
       .sort({ postedDate: -1 })
       .lean();
     
+    console.log(`Found ${jobs.length} active jobs`);
     res.json(jobs);
   } catch (error) {
     console.error('Get public jobs error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch jobs'
+      message: 'Failed to fetch jobs',
+      error: error.message
     });
   }
 });
@@ -25,10 +28,12 @@ router.get('/public', async (req, res) => {
 // Get all jobs (admin)
 router.get('/', async (req, res) => {
   try {
+    console.log('Fetching all jobs for admin...');
     const jobs = await Job.find()
       .populate('company', 'name logo')
       .sort({ createdAt: -1 });
     
+    console.log(`Found ${jobs.length} total jobs`);
     res.json({
       success: true,
       data: jobs
@@ -37,7 +42,8 @@ router.get('/', async (req, res) => {
     console.error('Get jobs error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch jobs'
+      message: 'Failed to fetch jobs',
+      error: error.message
     });
   }
 });
@@ -63,7 +69,8 @@ router.get('/:id', async (req, res) => {
     console.error('Get job error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch job'
+      message: 'Failed to fetch job',
+      error: error.message
     });
   }
 });
@@ -71,6 +78,8 @@ router.get('/:id', async (req, res) => {
 // Create new job
 router.post('/', async (req, res) => {
   try {
+    console.log('Creating new job:', req.body);
+    
     // Verify company exists
     const company = await Company.findById(req.body.company);
     if (!company) {
@@ -86,6 +95,7 @@ router.post('/', async (req, res) => {
     // Populate company details
     await job.populate('company', 'name logo');
     
+    console.log('Job created successfully:', job._id);
     res.status(201).json({
       success: true,
       message: 'Job created successfully',
@@ -95,7 +105,8 @@ router.post('/', async (req, res) => {
     console.error('Create job error:', error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Failed to create job'
+      message: error.message || 'Failed to create job',
+      error: error.message
     });
   }
 });
@@ -116,6 +127,7 @@ router.put('/:id', async (req, res) => {
       });
     }
     
+    console.log('Job updated successfully:', job._id);
     res.json({
       success: true,
       message: 'Job updated successfully',
@@ -125,7 +137,8 @@ router.put('/:id', async (req, res) => {
     console.error('Update job error:', error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Failed to update job'
+      message: error.message || 'Failed to update job',
+      error: error.message
     });
   }
 });
@@ -142,6 +155,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
+    console.log('Job deleted successfully:', req.params.id);
     res.json({
       success: true,
       message: 'Job deleted successfully'
@@ -150,7 +164,8 @@ router.delete('/:id', async (req, res) => {
     console.error('Delete job error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete job'
+      message: 'Failed to delete job',
+      error: error.message
     });
   }
 });

@@ -38,14 +38,18 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Create user - password will be hashed by the pre-save middleware
+    // Hash password manually before creating user
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // Create user with hashed password
     const user = new User({
       firstName,
       lastName,
       email,
       phoneNumber,
       role,
-      password // Will be hashed automatically
+      password: hashedPassword
     });
     
     await user.save();
@@ -54,6 +58,7 @@ router.post('/', async (req, res) => {
     const userResponse = user.toObject();
     delete userResponse.password;
     
+    console.log('User created successfully:', userResponse.email);
     res.status(201).json({
       success: true,
       message: 'User created successfully',
@@ -77,6 +82,7 @@ router.put('/:id', async (req, res) => {
     if (password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(password, salt);
+      console.log('Password updated for user:', req.params.id);
     }
     
     const user = await User.findByIdAndUpdate(

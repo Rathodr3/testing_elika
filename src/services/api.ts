@@ -1,4 +1,3 @@
-
 // API service layer for MERN backend integration
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -36,6 +35,8 @@ const checkBackendHealth = async () => {
 
 // Check backend health on module load
 checkBackendHealth();
+
+// ... keep existing code (interfaces and types)
 
 export interface JobApplication {
   _id?: string;
@@ -485,7 +486,7 @@ export const companiesAPI = {
   }
 };
 
-// Admin authentication with better error handling
+// Enhanced admin authentication with better error handling and user support
 export const authAPI = {
   login: async (email: string, password: string): Promise<{ success: boolean; token?: string; user?: any; message?: string }> => {
     try {
@@ -511,6 +512,9 @@ export const authAPI = {
       
       if (data.success && data.token) {
         localStorage.setItem('adminToken', data.token);
+        console.log('Login successful for:', data.user?.email || email);
+      } else {
+        console.log('Login failed:', data.message);
       }
       
       return data;
@@ -542,7 +546,9 @@ export const authAPI = {
       });
       
       await handleAPIError(response);
-      return await response.json();
+      const result = await response.json();
+      console.log('Password change result:', result);
+      return result;
     } catch (error) {
       console.error('Change password error:', error);
       throw error;
@@ -587,11 +593,14 @@ export const authAPI = {
 
   logout: () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('userInfo');
+    console.log('User logged out');
   },
 
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('adminToken');
+    const token = localStorage.getItem('adminToken');
+    return !!token;
   }
 };
 

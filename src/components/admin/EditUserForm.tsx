@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { usersAPI, User } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface EditUserFormProps {
   user: User;
@@ -24,17 +25,48 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
     phoneNumber: user.phoneNumber,
     role: user.role as UserRole,
     isActive: user.isActive,
-    permissions: user.permissions
+    permissions: user.permissions,
+    password: '',
+    confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if passwords match when password is being changed
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password mismatch",
+        description: "Passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       setLoading(true);
-      await usersAPI.update(user._id!, formData);
+      
+      // Create update data
+      const updateData: any = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        role: formData.role,
+        isActive: formData.isActive,
+        permissions: formData.permissions
+      };
+      
+      // Only include password if it's being changed
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+      
+      await usersAPI.update(user._id!, updateData);
       toast({
         title: "User updated successfully",
         description: `${formData.firstName} ${formData.lastName} has been updated`,
@@ -166,6 +198,53 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
           onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !!checked }))}
         />
         <Label htmlFor="isActive">Active User</Label>
+      </div>
+
+      {/* Password Change Section */}
+      <div className="border-t pt-4">
+        <h4 className="font-medium mb-3">Change Password (Optional)</h4>
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="password">New Password</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="Leave blank to keep current password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                placeholder="Confirm new password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div>

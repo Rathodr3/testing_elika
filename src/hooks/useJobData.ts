@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { jobsAPI } from '@/services/api';
 
@@ -16,15 +17,84 @@ export interface JobData {
   applicantsCount: number;
   posted: string;
   applicants: string;
+  employmentType: string;
+  workMode: string;
+  experienceLevel: string;
+}
+
+// Enhanced fallback sample jobs data when backend is not available
+const fallbackJobs: JobData[] = [
+  {
+    id: '1',
+    title: 'Senior Software Engineer',
+    company: 'Elika Engineering Pvt Ltd',
+    location: 'Bangalore',
+    type: 'Full-time • Hybrid',
+    experience: 'Senior (5+ years)',
+    salary: '₹15-25 LPA',
+    description: 'Join our dynamic team to build scalable software solutions using React, Node.js, and cloud technologies. Work on cutting-edge projects that impact millions of users worldwide.',
+    requirements: [
+      '5+ years of experience in software development',
+      'Strong proficiency in React and Node.js',
+      'Experience with cloud platforms (AWS/Azure)',
+      'Strong problem-solving skills',
+      'Excellent communication skills'
+    ],
+    isActive: true,
+    postedDate: '2024-01-15',
+    applicantsCount: 12,
+    posted: '15 days ago',
+    applicants: '12 applicants',
+    employmentType: 'full-time',
+    workMode: 'hybrid',
+    experienceLevel: 'senior'
+  },
+  {
+    id: '2',
+    title: 'Mechanical Design Engineer',
+    company: 'Elika Engineering Pvt Ltd',
+    location: 'Chennai',
+    type: 'Full-time • On-site',
+    experience: 'Mid (3+ years)',
+    salary: '₹8-15 LPA',
+    description: 'Design and develop automotive components using CAD software and work on innovative manufacturing processes. Collaborate with cross-functional teams to deliver high-quality products.',
+    requirements: [
+      '3+ years of experience in mechanical design',
+      'Proficiency in CAD software (SolidWorks, AutoCAD)',
+      'Knowledge of manufacturing processes',
+      "Bachelor's degree in Mechanical Engineering",
+      'Strong analytical skills'
+    ],
+    isActive: true,
+    postedDate: '2024-01-10',
+    applicantsCount: 8,
+    posted: '20 days ago',
+    applicants: '8 applicants',
+    employmentType: 'full-time',
+    workMode: 'on-site',
+    experienceLevel: 'mid'
+  }
+];
+
+interface SearchFilters {
+  query: string;
+  location: string;
+  company: string;
+  experience: string;
+  workMode: string;
 }
 
 export const useJobData = () => {
   const [jobs, setJobs] = useState<JobData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [jobType, setJobType] = useState('All');
-  const [experience, setExperience] = useState('All');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    query: '',
+    location: '',
+    company: '',
+    experience: '',
+    workMode: ''
+  });
   const [displayedJobs, setDisplayedJobs] = useState(6);
 
   useEffect(() => {
@@ -33,39 +103,51 @@ export const useJobData = () => {
         setLoading(true);
         setError(null);
         
+        console.log('Fetching jobs from API...');
+        
         // Fetch jobs from the public jobs API
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/jobs/public`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch jobs');
-        }
-        
-        const jobsData = await response.json();
-        console.log('Jobs fetched:', jobsData);
+        const jobsData = await jobsAPI.getPublic();
+        console.log('Raw jobs data:', jobsData);
         
         // Transform the data to match the expected format
-        const transformedJobs: JobData[] = jobsData.map((job: any) => ({
-          id: job._id,
-          title: job.title,
-          company: job.company?.name || 'Unknown Company',
-          location: job.location,
-          type: `${job.employmentType} • ${job.workMode}`,
-          experience: `${job.experienceLevel} (${job.minExperience}+ years)`,
-          salary: job.salary || 'Competitive',
-          description: job.description || 'No description available',
-          requirements: job.requirements || [],
-          isActive: job.isActive,
-          postedDate: job.postedDate || job.createdAt,
-          applicantsCount: job.applicantsCount || 0,
-          posted: new Date(job.postedDate || job.createdAt).toLocaleDateString(),
-          applicants: `${job.applicantsCount || 0} applicants`
-        }));
+        const transformedJobs: JobData[] = jobsData.map((job: any) => {
+          console.log('Transforming job:', job);
+          return {
+            id: job._id,
+            title: job.title,
+            company: job.company?.name || 'Elika Engineering Pvt Ltd',
+            location: job.location,
+            type: `${job.employmentType} • ${job.workMode}`,
+            experience: `${job.experienceLevel} (${job.minExperience}+ years)`,
+            salary: job.salary || 'Competitive',
+            description: job.description || 'No description available',
+            requirements: job.requirements || [],
+            isActive: job.isActive,
+            postedDate: job.postedDate || job.createdAt,
+            applicantsCount: job.applicantsCount || 0,
+            posted: new Date(job.postedDate || job.createdAt).toLocaleDateString(),
+            applicants: `${job.applicantsCount || 0} applicants`,
+            employmentType: job.employmentType,
+            workMode: job.workMode,
+            experienceLevel: job.experienceLevel
+          };
+        });
 
-        setJobs(transformedJobs);
+        console.log('Transformed jobs:', transformedJobs);
+        
+        // Use transformed jobs if available, otherwise fallback to sample data
+        if (transformedJobs.length > 0) {
+          setJobs(transformedJobs);
+          console.log('Using API jobs data');
+        } else {
+          setJobs(fallbackJobs);
+          console.log('API returned empty array, using fallback jobs data');
+        }
       } catch (err) {
         console.error('Error fetching jobs:', err);
-        setError('Failed to load jobs. Please try again later.');
-        setJobs([]);
+        console.log('Using fallback jobs data due to error');
+        setError('Backend server not available. Showing sample jobs.');
+        setJobs(fallbackJobs);
       } finally {
         setLoading(false);
       }
@@ -76,38 +158,50 @@ export const useJobData = () => {
 
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
-      const matchesJobType = jobType === 'All' || job.type.toLowerCase().includes(jobType.toLowerCase());
-      const matchesExperience = experience === 'All' || job.experience.toLowerCase().includes(experience.toLowerCase());
-      const matchesSearch = searchTerm === '' || 
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.location.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      return matchesJobType && matchesExperience && matchesSearch;
-    });
-  }, [jobs, jobType, experience, searchTerm]);
+      const matchesQuery = searchFilters.query === '' || 
+        job.title.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
+        job.company.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
+        job.location.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
+        job.description.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
+        job.requirements.some(req => req.toLowerCase().includes(searchFilters.query.toLowerCase()));
 
-  const jobsToShow = filteredJobs.slice(0, displayedJobs);
-  const hasMoreJobs = displayedJobs < filteredJobs.length;
+      const matchesLocation = searchFilters.location === '' ||
+        job.location.toLowerCase().includes(searchFilters.location.toLowerCase());
+
+      const matchesCompany = searchFilters.company === '' ||
+        job.company.toLowerCase().includes(searchFilters.company.toLowerCase());
+
+      const matchesExperience = searchFilters.experience === '' ||
+        job.experienceLevel === searchFilters.experience;
+
+      const matchesWorkMode = searchFilters.workMode === '' ||
+        job.workMode === searchFilters.workMode;
+      
+      return matchesQuery && matchesLocation && matchesCompany && matchesExperience && matchesWorkMode;
+    });
+  }, [jobs, searchFilters]);
+
+  const handleSearch = (filters: SearchFilters) => {
+    setSearchFilters(filters);
+    setDisplayedJobs(6); // Reset displayed jobs when searching
+  };
 
   const handleLoadMore = () => {
     setDisplayedJobs(prev => prev + 6);
+  };
+
+  const refetch = () => {
+    window.location.reload();
   };
 
   return { 
     jobs, 
     loading, 
     error, 
-    refetch: () => window.location.reload(),
-    jobType,
-    setJobType,
-    experience,
-    setExperience,
-    searchTerm,
-    setSearchTerm,
+    refetch,
+    searchFilters,
+    handleSearch,
     filteredJobs,
-    jobsToShow,
-    hasMoreJobs,
     displayedJobs,
     handleLoadMore
   };

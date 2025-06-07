@@ -57,7 +57,7 @@ const Header = () => {
               <div className="h-14 lg:h-16 transition-all duration-300 group-hover:scale-105">
                 <img 
                   src="/lovable-uploads/c165ae58-6d23-491a-a7a2-cd97233eb6f3.png" 
-                  alt="Elika Engineering Private Limited"
+                  alt="Elika Engineering Pvt Ltd"
                   className="h-full w-auto object-contain filter brightness-110"
                 />
               </div>

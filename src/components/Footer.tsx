@@ -110,7 +110,7 @@ const Footer = () => {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">E</span>
               </div>
-              <span className="font-bold text-xl">Elika Engineering</span>
+              <span className="font-bold text-xl">Elika Engineering Pvt Ltd</span>
             </div>
             
             <p className="text-gray-300 leading-relaxed mb-6">
@@ -232,7 +232,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-gray-400 text-sm">
-              © 2024 Elika Engineering. All rights reserved.
+              © 2024 Elika Engineering Pvt Ltd. All rights reserved.
             </div>
             
             <div className="flex items-center space-x-6">

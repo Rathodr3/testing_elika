@@ -69,35 +69,8 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving - Fix for new user login issue
-userSchema.pre('save', async function(next) {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Also handle password hashing for findOneAndUpdate operations
-userSchema.pre('findOneAndUpdate', async function(next) {
-  const update = this.getUpdate();
-  
-  if (update.password) {
-    try {
-      const salt = await bcrypt.genSalt(10);
-      update.password = await bcrypt.hash(update.password, salt);
-    } catch (error) {
-      return next(error);
-    }
-  }
-  
-  next();
-});
+// Remove automatic password hashing middleware to prevent double hashing
+// Password hashing is now handled in the routes manually
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {

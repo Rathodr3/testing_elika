@@ -29,18 +29,33 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
     setLoading(true);
 
     try {
-      console.log('Attempting login...');
+      console.log('Attempting login for:', email);
       const response = await authAPI.login(email, password);
       console.log('Login response received:', response);
       
       if (response.success) {
+        // Store additional user info if available
+        if (response.user) {
+          localStorage.setItem('userInfo', JSON.stringify(response.user));
+        }
+        
         toast({
           title: "Login successful",
-          description: "Welcome to the admin dashboard",
+          description: `Welcome ${response.user?.firstName || 'back'} to the admin dashboard`,
         });
         onLoginSuccess();
       } else {
-        setError(response.message || 'Invalid credentials. Please try again.');
+        const errorMessage = response.message || 'Invalid credentials. Please check your email and password.';
+        setError(errorMessage);
+        
+        // Provide specific help for common issues
+        if (errorMessage.includes('Invalid credentials')) {
+          toast({
+            title: "Login Failed",
+            description: "Please check your email and password. If you're a new user, make sure your account is activated.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -54,6 +69,12 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
           description: "Please ensure the backend server is running on port 5000",
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Login Error",
+          description: "Please check your credentials and try again",
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
@@ -65,16 +86,16 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-secondary-800">
+          <CardTitle className="text-2xl font-bold text-secondary-800 dark:text-white">
             Admin Login
           </CardTitle>
-          <p className="text-sm text-accent">
+          <p className="text-sm text-accent dark:text-gray-400">
             Sign in to access the admin dashboard
           </p>
         </CardHeader>
@@ -94,7 +115,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@elikaengineering.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -150,10 +171,13 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
           </div>
 
           <div className="mt-6 text-center space-y-2">
-            <p className="text-xs text-gray-500">
-              Demo credentials: admin@elikaengineering.com / admin123
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Demo admin: admin@elikaengineering.com / admin123
             </p>
-            <p className="text-xs text-orange-600">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Or use credentials provided by your administrator
+            </p>
+            <p className="text-xs text-orange-600 dark:text-orange-400">
               Note: Backend server must be running on port 5000
             </p>
           </div>

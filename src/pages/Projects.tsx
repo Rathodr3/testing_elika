@@ -5,7 +5,6 @@ import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
 import JobApplicationModal from '@/components/JobApplicationModal';
 import JobHero from '@/components/JobHero';
-import JobFilters from '@/components/JobFilters';
 import JobCard from '@/components/JobCard';
 import { Button } from '@/components/ui/button';
 import { useJobData } from '@/hooks/useJobData';
@@ -21,17 +20,10 @@ const Projects = () => {
   const jobsRef = useRef<HTMLDivElement>(null);
 
   const {
-    jobType,
-    setJobType,
-    experience,
-    setExperience,
-    searchTerm,
-    setSearchTerm,
     filteredJobs,
-    jobsToShow,
-    hasMoreJobs,
     displayedJobs,
-    handleLoadMore
+    handleLoadMore,
+    handleSearch
   } = useJobData();
 
   // Animation effect for elements
@@ -73,50 +65,33 @@ const Projects = () => {
     setSavedJobs(newSavedJobs);
   };
 
-  const handleBrowseAllJobs = () => {
+  const handleJobSearch = (filters: {
+    query: string;
+    location: string;
+    company: string;
+    experience: string;
+    workMode: string;
+  }) => {
+    handleSearch(filters);
+    
+    // Scroll to jobs section after search
     if (jobsRef.current) {
       jobsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const handleUploadResume = () => {
-    // Create a file input element
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,.doc,.docx';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        console.log('Resume uploaded:', file.name);
-        // Handle file upload logic here
-      }
-    };
-    input.click();
-  };
+  const jobsToShow = filteredJobs.slice(0, displayedJobs);
+  const hasMoreJobs = displayedJobs < filteredJobs.length;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <main className="pt-20">
         {/* Hero Section */}
-        <JobHero 
-          onBrowseJobs={handleBrowseAllJobs}
-          onUploadResume={handleUploadResume}
-        />
-
-        {/* Filters Section */}
-        <JobFilters
-          jobType={jobType}
-          setJobType={setJobType}
-          experience={experience}
-          setExperience={setExperience}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          resultsCount={filteredJobs.length}
-        />
+        <JobHero onSearch={handleJobSearch} />
 
         {/* Jobs Listing */}
-        <section className="py-16 lg:py-24" ref={jobsRef}>
+        <section className="py-16 lg:py-24 bg-gray-50 dark:bg-gray-900" ref={jobsRef}>
           <div className="container mx-auto px-4 lg:px-8">
             <div className="max-w-6xl mx-auto">
               <div className="fade-in-up mb-8">
@@ -146,7 +121,7 @@ const Projects = () => {
                 <div className="fade-in-up text-center mt-12">
                   <Button 
                     variant="outline" 
-                    className="border-primary text-primary hover:bg-primary/10"
+                    className="border-primary text-primary hover:bg-primary/10 dark:border-primary dark:text-primary"
                     onClick={handleLoadMore}
                   >
                     Load More Jobs ({filteredJobs.length - displayedJobs} remaining)
@@ -158,7 +133,7 @@ const Projects = () => {
               {filteredJobs.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-lg text-gray-500 dark:text-gray-400">
-                    No jobs found matching your criteria. Try adjusting your filters.
+                    No jobs found matching your criteria. Try adjusting your search filters.
                   </p>
                 </div>
               )}
