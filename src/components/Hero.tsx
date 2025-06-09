@@ -62,7 +62,7 @@ const Hero = () => {
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-8 animate-fade-in">
               <Star className="w-4 h-4 mr-2 fill-current" />
-              Engineering Excellence Since 2024
+              Engineering Excellence Since 2023
             </div>
 
             {/* Main Headline */}
@@ -115,15 +115,11 @@ const Hero = () => {
               className="fade-in-up delay-400 flex gap-8"
             >
               <div>
-                <div className="text-3xl font-bold text-gray-900">500+</div>
-                <div className="text-sm text-gray-600">Projects Completed</div>
+                <div className="text-3xl font-bold text-gray-900">10+</div>
+                <div className="text-sm text-gray-600">Satisfied Clients</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-gray-900">50+</div>
-                <div className="text-sm text-gray-600">Happy Clients</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900">98%</div>
+                <div className="text-3xl font-bold text-gray-900">90%</div>
                 <div className="text-sm text-gray-600">Success Rate</div>
               </div>
             </div>

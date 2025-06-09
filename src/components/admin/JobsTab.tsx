@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2, Building2, MapPin, Clock } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import CreateJobForm from './CreateJobForm';
+import EditJobForm from './EditJobForm';
 import { jobsAPI, Job } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +18,8 @@ const JobsTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -58,6 +61,11 @@ const JobsTab = () => {
     setFilteredJobs(filtered);
   };
 
+  const handleEditJob = (job: Job) => {
+    setEditingJob(job);
+    setShowEditDialog(true);
+  };
+
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return;
 
@@ -76,6 +84,12 @@ const JobsTab = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setEditingJob(null);
+    fetchJobs();
   };
 
   if (loading) {
@@ -175,7 +189,11 @@ const JobsTab = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditJob(job)}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
@@ -199,6 +217,22 @@ const JobsTab = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Job Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Job</DialogTitle>
+          </DialogHeader>
+          {editingJob && (
+            <EditJobForm 
+              job={editingJob}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setShowEditDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

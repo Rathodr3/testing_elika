@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2, Building2, Globe, Mail, Phone } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import CreateCompanyForm from './CreateCompanyForm';
+import EditCompanyForm from './EditCompanyForm';
 import { companiesAPI, Company } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +18,8 @@ const CompaniesTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,6 +60,11 @@ const CompaniesTab = () => {
     setFilteredCompanies(filtered);
   };
 
+  const handleEditCompany = (company: Company) => {
+    setEditingCompany(company);
+    setShowEditDialog(true);
+  };
+
   const handleDeleteCompany = async (companyId: string) => {
     if (!confirm('Are you sure you want to delete this company?')) return;
 
@@ -75,6 +83,12 @@ const CompaniesTab = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setEditingCompany(null);
+    fetchCompanies();
   };
 
   if (loading) {
@@ -189,7 +203,11 @@ const CompaniesTab = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditCompany(company)}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
@@ -213,6 +231,22 @@ const CompaniesTab = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Company Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Company</DialogTitle>
+          </DialogHeader>
+          {editingCompany && (
+            <EditCompanyForm 
+              company={editingCompany}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setShowEditDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

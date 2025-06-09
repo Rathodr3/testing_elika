@@ -22,7 +22,7 @@ router.post('/login', async (req, res) => {
       return res.json({
         success: true,
         token,
-        user: { email, role: 'admin' }
+        user: { email, role: 'admin', firstName: 'Admin', lastName: 'User' }
       });
     }
     
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Change password endpoint - now supports both admin and database users
+// Enhanced change password endpoint with proper admin handling
 router.post('/change-password', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -89,6 +89,8 @@ router.post('/change-password', async (req, res) => {
       });
     }
     
+    console.log('Password change request with token:', token.substring(0, 20) + '...');
+    
     // Handle admin token
     if (token.startsWith('admin-token-')) {
       const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
@@ -100,12 +102,14 @@ router.post('/change-password', async (req, res) => {
         });
       }
       
-      // In a real app, you would update the admin password in environment or database
-      console.log('Admin password change request - New password would be:', newPassword);
+      // Update the environment variable for admin password
+      // In production, this would be handled differently
+      process.env.ADMIN_PASSWORD = newPassword;
+      console.log('Admin password updated successfully');
       
       return res.json({
         success: true,
-        message: 'Password changed successfully'
+        message: 'Admin password changed successfully'
       });
     }
     

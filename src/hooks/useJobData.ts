@@ -112,24 +112,46 @@ export const useJobData = () => {
         // Transform the data to match the expected format
         const transformedJobs: JobData[] = jobsData.map((job: any) => {
           console.log('Transforming job:', job);
+          
+          // Ensure requirements is always an array
+          let requirements: string[] = [];
+          if (Array.isArray(job.requirements)) {
+            requirements = job.requirements;
+          } else if (typeof job.requirements === 'string') {
+            requirements = job.requirements.split(',').map((req: string) => req.trim());
+          } else {
+            // Default requirements based on job type
+            requirements = [
+              `${job.minExperience || 2}+ years of experience`,
+              `Knowledge of ${job.domain || 'relevant technologies'}`,
+              'Strong communication skills',
+              'Team collaboration',
+              'Problem-solving abilities'
+            ];
+          }
+          
           return {
             id: job._id,
-            title: job.title,
+            title: job.title || 'Software Engineer',
             company: job.company?.name || 'Elika Engineering Pvt Ltd',
-            location: job.location,
-            type: `${job.employmentType} • ${job.workMode}`,
-            experience: `${job.experienceLevel} (${job.minExperience}+ years)`,
+            location: job.location || 'Bangalore',
+            type: `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`,
+            experience: `${job.experienceLevel || 'mid'} (${job.minExperience || 2}+ years)`,
             salary: job.salary || 'Competitive',
-            description: job.description || 'No description available',
-            requirements: job.requirements || [],
-            isActive: job.isActive,
-            postedDate: job.postedDate || job.createdAt,
+            description: job.description || 'Exciting opportunity to work with cutting-edge technologies and contribute to innovative projects.',
+            requirements: requirements,
+            isActive: job.isActive !== false,
+            postedDate: job.postedDate || job.createdAt || new Date().toISOString(),
             applicantsCount: job.applicantsCount || 0,
-            posted: new Date(job.postedDate || job.createdAt).toLocaleDateString(),
+            posted: job.postedDate 
+              ? new Date(job.postedDate).toLocaleDateString() 
+              : job.createdAt 
+                ? new Date(job.createdAt).toLocaleDateString()
+                : 'Recently posted',
             applicants: `${job.applicantsCount || 0} applicants`,
-            employmentType: job.employmentType,
-            workMode: job.workMode,
-            experienceLevel: job.experienceLevel
+            employmentType: job.employmentType || 'full-time',
+            workMode: job.workMode || 'hybrid',
+            experienceLevel: job.experienceLevel || 'mid'
           };
         });
 
