@@ -27,19 +27,21 @@ interface JobCardProps {
 }
 
 const JobCard = ({ job, index, savedJobs, onApply, onSave }: JobCardProps) => {
+  console.log('JobCard rendering with job:', job);
+  
   // Ensure all required fields have fallback values
   const safeJob = {
-    id: job.id || '',
-    title: job.title || 'Job Position',
-    company: job.company || 'Company',
-    location: job.location || 'Location',
-    type: job.type || 'Full-time',
-    experience: job.experience || 'Experience required',
-    salary: job.salary || 'Competitive',
-    description: job.description || 'No description available',
-    requirements: Array.isArray(job.requirements) ? job.requirements : [],
-    posted: job.posted || 'Recently posted',
-    applicants: job.applicants || '0 applicants'
+    id: job?.id || '',
+    title: job?.title || 'Job Position',
+    company: job?.company || 'Company',
+    location: job?.location || 'Location',
+    type: job?.type || 'Full-time',
+    experience: job?.experience || 'Experience required',
+    salary: job?.salary || 'Competitive',
+    description: job?.description || 'No description available',
+    requirements: Array.isArray(job?.requirements) ? job.requirements : [],
+    posted: job?.posted || 'Recently posted',
+    applicants: job?.applicants || '0 applicants'
   };
 
   return (

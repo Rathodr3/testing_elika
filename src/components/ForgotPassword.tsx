@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { authAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -33,6 +33,7 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
     setLoading(true);
 
     try {
+      console.log('Sending forgot password request for:', email);
       const response = await authAPI.forgotPassword(email);
       
       if (response.success) {
@@ -40,7 +41,14 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
         if (response.resetToken) {
           // In demo mode, auto-fill the reset token
           setResetToken(response.resetToken);
-          setStep('reset');
+          toast({
+            title: "Reset token generated",
+            description: "In production, this would be sent via email. For demo purposes, it's auto-filled.",
+          });
+          // Auto-advance to reset step after showing success
+          setTimeout(() => {
+            setStep('reset');
+          }, 2000);
         }
       } else {
         setError(response.message || 'Failed to send reset email');
@@ -70,6 +78,7 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
     setLoading(true);
 
     try {
+      console.log('Attempting password reset with token:', resetToken.substring(0, 20) + '...');
       const response = await authAPI.resetPassword(resetToken, newPassword);
       
       if (response.success) {
@@ -77,7 +86,16 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
           title: "Password reset successful",
           description: "Your password has been reset. You can now login with your new password.",
         });
-        onBack();
+        
+        // Clear sensitive data
+        setResetToken('');
+        setNewPassword('');
+        setConfirmPassword('');
+        
+        // Go back to login after short delay
+        setTimeout(() => {
+          onBack();
+        }, 1500);
       } else {
         setError(response.message || 'Failed to reset password');
       }
@@ -110,6 +128,7 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
             
             {success && (
               <Alert>
+                <CheckCircle className="h-4 w-4" />
                 <AlertDescription className="text-green-600">{success}</AlertDescription>
               </Alert>
             )}
@@ -149,18 +168,11 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
             </div>
           </form>
 
-          {resetToken && (
+          {resetToken && step === 'email' && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
               <p className="text-sm text-yellow-800">
-                <strong>Demo Mode:</strong> Reset token: {resetToken}
+                <strong>Demo Mode:</strong> Reset token generated. Advancing to password reset...
               </p>
-              <Button
-                size="sm"
-                className="mt-2"
-                onClick={() => setStep('reset')}
-              >
-                Continue to Reset Password
-              </Button>
             </div>
           )}
         </CardContent>
@@ -196,6 +208,9 @@ const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
               onChange={(e) => setResetToken(e.target.value)}
               required
             />
+            <p className="text-xs text-gray-500">
+              In production, this would be sent to your email
+            </p>
           </div>
 
           <div className="space-y-2">

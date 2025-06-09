@@ -91,6 +91,24 @@ const ApplicationsTab = () => {
     }
   };
 
+  const deleteApplication = async (applicationId: string) => {
+    try {
+      await applicationAPI.delete(applicationId);
+      setApplications(prev => prev.filter(app => app._id !== applicationId));
+      toast({
+        title: "Application deleted successfully",
+        description: "The application has been removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      toast({
+        title: "Error deleting application",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
+  };
+
   const exportToCSV = () => {
     const csvData = filteredApplications.map(app => ({
       Name: app.name || `${app.firstName} ${app.lastName}`,
@@ -169,6 +187,7 @@ const ApplicationsTab = () => {
             application={application}
             onEdit={handleEditApplication}
             onStatusUpdate={updateApplicationStatus}
+            onDelete={deleteApplication}
           />
         ))}
       </div>
@@ -189,7 +208,11 @@ const ApplicationsTab = () => {
           {editingApplication && (
             <EditApplicationForm
               application={editingApplication}
-              onSave={handleSaveApplication}
+              onSuccess={() => {
+                setShowEditDialog(false);
+                setEditingApplication(null);
+                fetchApplications();
+              }}
               onCancel={() => {
                 setShowEditDialog(false);
                 setEditingApplication(null);

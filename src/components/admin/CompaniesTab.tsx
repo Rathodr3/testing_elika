@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Building2, Globe, Mail, Phone } from 'lucide-react';
+import { Plus, Edit, Trash2, Building2, Globe, Mail, Phone, User } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import CreateCompanyForm from './CreateCompanyForm';
@@ -115,7 +115,7 @@ const CompaniesTab = () => {
                   Add Company
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create New Company</DialogTitle>
                 </DialogHeader>
@@ -142,6 +142,7 @@ const CompaniesTab = () => {
               <TableRow>
                 <TableHead>Company</TableHead>
                 <TableHead>Contact</TableHead>
+                <TableHead>Spokespersons</TableHead>
                 <TableHead>Website</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -179,6 +180,31 @@ const CompaniesTab = () => {
                         <Phone className="w-4 h-4 mr-2 text-gray-400" />
                         {company.phoneNumber}
                       </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-2">
+                      {company.spokespersons?.primary?.name && (
+                        <div className="flex items-center text-sm">
+                          <User className="w-4 h-4 mr-2 text-gray-400" />
+                          <div>
+                            <div className="font-medium">{company.spokespersons.primary.name}</div>
+                            <div className="text-xs text-gray-500">{company.spokespersons.primary.role}</div>
+                          </div>
+                        </div>
+                      )}
+                      {company.spokespersons?.secondary?.name && (
+                        <div className="flex items-center text-sm">
+                          <User className="w-4 h-4 mr-2 text-gray-400" />
+                          <div>
+                            <div className="font-medium">{company.spokespersons.secondary.name}</div>
+                            <div className="text-xs text-gray-500">{company.spokespersons.secondary.role}</div>
+                          </div>
+                        </div>
+                      )}
+                      {!company.spokespersons?.primary?.name && !company.spokespersons?.secondary?.name && (
+                        <span className="text-sm text-gray-400">No spokespersons</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -234,7 +260,7 @@ const CompaniesTab = () => {
 
       {/* Edit Company Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Company</DialogTitle>
           </DialogHeader>

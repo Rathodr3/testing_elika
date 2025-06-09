@@ -73,6 +73,31 @@ const fallbackJobs: JobData[] = [
     employmentType: 'full-time',
     workMode: 'on-site',
     experienceLevel: 'mid'
+  },
+  {
+    id: '3',
+    title: 'DevOps Engineer',
+    company: 'Elika Engineering Pvt Ltd',
+    location: 'Hyderabad',
+    type: 'Full-time • Remote',
+    experience: 'Mid (3+ years)',
+    salary: '₹12-20 LPA',
+    description: 'Implement CI/CD pipelines, manage cloud infrastructure, and ensure scalable deployment processes. Work with cutting-edge DevOps tools and technologies.',
+    requirements: [
+      '3+ years of DevOps experience',
+      'Proficiency in Docker and Kubernetes',
+      'Experience with AWS/Azure',
+      'Knowledge of CI/CD tools',
+      'Strong scripting skills'
+    ],
+    isActive: true,
+    postedDate: '2024-01-08',
+    applicantsCount: 15,
+    posted: '22 days ago',
+    applicants: '15 applicants',
+    employmentType: 'full-time',
+    workMode: 'remote',
+    experienceLevel: 'mid'
   }
 ];
 
@@ -85,7 +110,7 @@ interface SearchFilters {
 }
 
 export const useJobData = () => {
-  const [jobs, setJobs] = useState<JobData[]>([]);
+  const [jobs, setJobs] = useState<JobData[]>(fallbackJobs);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
@@ -103,71 +128,72 @@ export const useJobData = () => {
         setLoading(true);
         setError(null);
         
-        console.log('Fetching jobs from API...');
+        console.log('🔄 Fetching jobs from API...');
         
         // Fetch jobs from the public jobs API
         const jobsData = await jobsAPI.getPublic();
-        console.log('Raw jobs data:', jobsData);
+        console.log('📥 Raw jobs data received:', jobsData);
         
-        // Transform the data to match the expected format
-        const transformedJobs: JobData[] = jobsData.map((job: any) => {
-          console.log('Transforming job:', job);
-          
-          // Ensure requirements is always an array
-          let requirements: string[] = [];
-          if (Array.isArray(job.requirements)) {
-            requirements = job.requirements;
-          } else if (typeof job.requirements === 'string') {
-            requirements = job.requirements.split(',').map((req: string) => req.trim());
-          } else {
-            // Default requirements based on job type
-            requirements = [
-              `${job.minExperience || 2}+ years of experience`,
-              `Knowledge of ${job.domain || 'relevant technologies'}`,
-              'Strong communication skills',
-              'Team collaboration',
-              'Problem-solving abilities'
-            ];
-          }
-          
-          return {
-            id: job._id,
-            title: job.title || 'Software Engineer',
-            company: job.company?.name || 'Elika Engineering Pvt Ltd',
-            location: job.location || 'Bangalore',
-            type: `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`,
-            experience: `${job.experienceLevel || 'mid'} (${job.minExperience || 2}+ years)`,
-            salary: job.salary || 'Competitive',
-            description: job.description || 'Exciting opportunity to work with cutting-edge technologies and contribute to innovative projects.',
-            requirements: requirements,
-            isActive: job.isActive !== false,
-            postedDate: job.postedDate || job.createdAt || new Date().toISOString(),
-            applicantsCount: job.applicantsCount || 0,
-            posted: job.postedDate 
-              ? new Date(job.postedDate).toLocaleDateString() 
-              : job.createdAt 
-                ? new Date(job.createdAt).toLocaleDateString()
-                : 'Recently posted',
-            applicants: `${job.applicantsCount || 0} applicants`,
-            employmentType: job.employmentType || 'full-time',
-            workMode: job.workMode || 'hybrid',
-            experienceLevel: job.experienceLevel || 'mid'
-          };
-        });
+        if (Array.isArray(jobsData) && jobsData.length > 0) {
+          // Transform the data to match the expected format
+          const transformedJobs: JobData[] = jobsData.map((job: any) => {
+            console.log('🔄 Transforming job:', job);
+            
+            // Ensure requirements is always an array
+            let requirements: string[] = [];
+            if (Array.isArray(job.requirements)) {
+              requirements = job.requirements;
+            } else if (typeof job.requirements === 'string') {
+              requirements = job.requirements.split(',').map((req: string) => req.trim());
+            } else {
+              // Default requirements based on job type
+              requirements = [
+                `${job.minExperience || 2}+ years of experience`,
+                `Knowledge of ${job.domain || 'relevant technologies'}`,
+                'Strong communication skills',
+                'Team collaboration',
+                'Problem-solving abilities'
+              ];
+            }
+            
+            const transformedJob = {
+              id: job._id || job.id || `job-${Date.now()}-${Math.random()}`,
+              title: job.title || 'Software Engineer',
+              company: job.company?.name || 'Elika Engineering Pvt Ltd',
+              location: job.location || 'Bangalore',
+              type: `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`,
+              experience: `${job.experienceLevel || 'mid'} (${job.minExperience || 2}+ years)`,
+              salary: job.salary || 'Competitive',
+              description: job.description || 'Exciting opportunity to work with cutting-edge technologies and contribute to innovative projects.',
+              requirements: requirements,
+              isActive: job.isActive !== false,
+              postedDate: job.postedDate || job.createdAt || new Date().toISOString(),
+              applicantsCount: job.applicantsCount || 0,
+              posted: job.postedDate 
+                ? `${Math.ceil((new Date().getTime() - new Date(job.postedDate).getTime()) / (1000 * 60 * 60 * 24))} days ago`
+                : job.createdAt 
+                  ? `${Math.ceil((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days ago`
+                  : 'Recently posted',
+              applicants: `${job.applicantsCount || 0} applicants`,
+              employmentType: job.employmentType || 'full-time',
+              workMode: job.workMode || 'hybrid',
+              experienceLevel: job.experienceLevel || 'mid'
+            };
+            
+            console.log('✅ Transformed job:', transformedJob);
+            return transformedJob;
+          });
 
-        console.log('Transformed jobs:', transformedJobs);
-        
-        // Use transformed jobs if available, otherwise fallback to sample data
-        if (transformedJobs.length > 0) {
+          console.log('✅ All transformed jobs:', transformedJobs);
           setJobs(transformedJobs);
-          console.log('Using API jobs data');
+          console.log('✅ Using API jobs data');
         } else {
+          console.log('⚠️ API returned empty or invalid data, using fallback jobs');
           setJobs(fallbackJobs);
-          console.log('API returned empty array, using fallback jobs data');
         }
       } catch (err) {
-        console.error('Error fetching jobs:', err);
-        console.log('Using fallback jobs data due to error');
+        console.error('❌ Error fetching jobs:', err);
+        console.log('🔄 Using fallback jobs data due to error');
         setError('Backend server not available. Showing sample jobs.');
         setJobs(fallbackJobs);
       } finally {
@@ -179,7 +205,10 @@ export const useJobData = () => {
   }, []);
 
   const filteredJobs = useMemo(() => {
-    return jobs.filter(job => {
+    console.log('🔍 Filtering jobs with filters:', searchFilters);
+    console.log('🔍 Available jobs to filter:', jobs);
+    
+    const filtered = jobs.filter(job => {
       const matchesQuery = searchFilters.query === '' || 
         job.title.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
         job.company.toLowerCase().includes(searchFilters.query.toLowerCase()) ||
@@ -201,9 +230,13 @@ export const useJobData = () => {
       
       return matchesQuery && matchesLocation && matchesCompany && matchesExperience && matchesWorkMode;
     });
+    
+    console.log('🔍 Filtered jobs result:', filtered);
+    return filtered;
   }, [jobs, searchFilters]);
 
   const handleSearch = (filters: SearchFilters) => {
+    console.log('🔍 Setting search filters:', filters);
     setSearchFilters(filters);
     setDisplayedJobs(6); // Reset displayed jobs when searching
   };
@@ -215,6 +248,13 @@ export const useJobData = () => {
   const refetch = () => {
     window.location.reload();
   };
+
+  console.log('🏠 useJobData hook state:', { 
+    jobsCount: jobs.length, 
+    filteredJobsCount: filteredJobs.length, 
+    loading, 
+    error 
+  });
 
   return { 
     jobs, 

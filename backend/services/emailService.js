@@ -1,8 +1,15 @@
+
 const nodemailer = require('nodemailer');
 const path = require('path');
 
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
+  console.log('Creating email transporter with config:', {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    user: process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 5) + '***' : 'not set'
+  });
+  
   return nodemailer.createTransporter({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
@@ -158,6 +165,13 @@ const sendConfirmationEmail = async (application) => {
 // Send email notification to info team when contact form is submitted
 const sendContactEmail = async (contactData) => {
   try {
+    console.log('Attempting to send contact email with data:', {
+      name: contactData.name,
+      email: contactData.email,
+      subject: contactData.subject,
+      adminEmail: process.env.ADMIN_EMAIL
+    });
+    
     const transporter = createTransporter();
     
     const mailOptions = {
@@ -196,12 +210,25 @@ const sendContactEmail = async (contactData) => {
       replyTo: contactData.email
     };
 
+    console.log('Sending email with options:', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject
+    });
+
     const info = await transporter.sendMail(mailOptions);
-    console.log('Contact form notification email sent to info team:', info.messageId);
+    console.log('✅ Contact form notification email sent successfully:', info.messageId);
     return info;
 
   } catch (error) {
-    console.error('Error sending contact form notification email:', error);
+    console.error('❌ Error sending contact form notification email:', error);
+    console.error('Email config check:', {
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      userSet: !!process.env.EMAIL_USER,
+      passSet: !!process.env.EMAIL_PASS,
+      adminEmailSet: !!process.env.ADMIN_EMAIL
+    });
     throw error;
   }
 };
@@ -209,6 +236,8 @@ const sendContactEmail = async (contactData) => {
 // Send confirmation email to contact form submitter
 const sendContactConfirmation = async (contactData) => {
   try {
+    console.log('Attempting to send contact confirmation email to:', contactData.email);
+    
     const transporter = createTransporter();
     
     const mailOptions = {
@@ -271,11 +300,11 @@ const sendContactConfirmation = async (contactData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Contact confirmation email sent:', info.messageId);
+    console.log('✅ Contact confirmation email sent successfully:', info.messageId);
     return info;
 
   } catch (error) {
-    console.error('Error sending contact confirmation email:', error);
+    console.error('❌ Error sending contact confirmation email:', error);
     throw error;
   }
 };

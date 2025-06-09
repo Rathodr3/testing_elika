@@ -19,9 +19,9 @@ const ApplicationsStats = ({ applications }: ApplicationsStatsProps) => {
       <Card>
         <CardContent className="p-4">
           <div className="text-2xl font-bold text-yellow-600">
-            {applications.filter(app => app.status === 'submitted').length}
+            {applications.filter(app => app.status === 'pending').length}
           </div>
-          <div className="text-sm text-accent">Submitted</div>
+          <div className="text-sm text-accent">Pending</div>
         </CardContent>
       </Card>
       <Card>
@@ -35,7 +35,7 @@ const ApplicationsStats = ({ applications }: ApplicationsStatsProps) => {
       <Card>
         <CardContent className="p-4">
           <div className="text-2xl font-bold text-blue-600">
-            {applications.filter(app => app.status === 'under-review').length}
+            {applications.filter(app => app.status === 'reviewing').length}
           </div>
           <div className="text-sm text-accent">Under Review</div>
         </CardContent>

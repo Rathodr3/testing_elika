@@ -1,8 +1,10 @@
-
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const router = express.Router();
+
+// Store for reset tokens (in production, use Redis or database)
+const resetTokens = new Map();
 
 // Simple admin login with database user support
 router.post('/login', async (req, res) => {
@@ -163,7 +165,7 @@ router.post('/change-password', async (req, res) => {
   }
 });
 
-// Forgot password endpoint
+// Enhanced forgot password endpoint
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -172,7 +174,14 @@ router.post('/forgot-password', async (req, res) => {
     
     // Check if it's admin email
     if (email === adminEmail) {
-      const resetToken = 'reset-token-admin-' + Date.now();
+      const resetToken = 'reset-token-admin-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+      
+      // Store the reset token with expiry (30 minutes)
+      resetTokens.set(resetToken, {
+        email: adminEmail,
+        type: 'admin',
+        expires: Date.now() + (30 * 60 * 1000) // 30 minutes
+      });
       
       console.log('Admin password reset requested for:', email);
       console.log('Reset token (would be sent via email):', resetToken);
@@ -194,7 +203,15 @@ router.post('/forgot-password', async (req, res) => {
     }
     
     // Generate reset token for database user
-    const resetToken = 'reset-token-user-' + Date.now() + '-' + user._id;
+    const resetToken = 'reset-token-user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    
+    // Store the reset token with user ID and expiry
+    resetTokens.set(resetToken, {
+      userId: user._id.toString(),
+      email: user.email,
+      type: 'user',
+      expires: Date.now() + (30 * 60 * 1000) // 30 minutes
+    });
     
     console.log('User password reset requested for:', email);
     console.log('Reset token (would be sent via email):', resetToken);
@@ -214,39 +231,65 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Reset password endpoint
+// Enhanced reset password endpoint
 router.post('/reset-password', async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
     
-    if (!resetToken || !resetToken.startsWith('reset-token-')) {
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token and new password are required'
+      });
+    }
+    
+    // Check if token exists and is valid
+    const tokenData = resetTokens.get(resetToken);
+    if (!tokenData) {
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired reset token'
       });
     }
     
+    // Check if token has expired
+    if (Date.now() > tokenData.expires) {
+      resetTokens.delete(resetToken);
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token has expired'
+      });
+    }
+    
     // Handle admin reset
-    if (resetToken.includes('admin')) {
+    if (tokenData.type === 'admin') {
       console.log('Admin password reset with token:', resetToken);
-      console.log('New admin password would be:', newPassword);
+      console.log('Updating admin password to:', newPassword);
+      
+      // Update the environment variable for admin password
+      // Note: This only works for the current process. In production, 
+      // you'd want to update a secure configuration store
+      process.env.ADMIN_PASSWORD = newPassword;
+      
+      // Remove the used token
+      resetTokens.delete(resetToken);
+      
+      console.log('Admin password updated successfully');
       
       return res.json({
         success: true,
-        message: 'Password reset successfully'
+        message: 'Admin password reset successfully'
       });
     }
     
     // Handle user reset
-    if (resetToken.includes('user')) {
-      const tokenParts = resetToken.split('-');
-      const userId = tokenParts[tokenParts.length - 1];
-      
-      const user = await User.findById(userId);
+    if (tokenData.type === 'user') {
+      const user = await User.findById(tokenData.userId);
       if (!user) {
+        resetTokens.delete(resetToken);
         return res.status(400).json({
           success: false,
-          message: 'Invalid reset token'
+          message: 'User not found'
         });
       }
       
@@ -254,7 +297,13 @@ router.post('/reset-password', async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
       
-      await User.findByIdAndUpdate(userId, { password: hashedPassword });
+      await User.findByIdAndUpdate(tokenData.userId, { 
+        password: hashedPassword,
+        updatedAt: new Date()
+      });
+      
+      // Remove the used token
+      resetTokens.delete(resetToken);
       
       console.log('User password reset successfully for:', user.email);
       
@@ -266,7 +315,7 @@ router.post('/reset-password', async (req, res) => {
     
     return res.status(400).json({
       success: false,
-      message: 'Invalid reset token'
+      message: 'Invalid token type'
     });
     
   } catch (error) {
@@ -274,6 +323,34 @@ router.post('/reset-password', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to reset password'
+    });
+  }
+});
+
+// Add endpoint to validate reset tokens
+router.post('/validate-reset-token', async (req, res) => {
+  try {
+    const { resetToken } = req.body;
+    
+    const tokenData = resetTokens.get(resetToken);
+    if (!tokenData || Date.now() > tokenData.expires) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      email: tokenData.email
+    });
+    
+  } catch (error) {
+    console.error('Validate reset token error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to validate token'
     });
   }
 });

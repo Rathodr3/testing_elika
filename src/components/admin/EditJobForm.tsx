@@ -18,14 +18,14 @@ interface EditJobFormProps {
 const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [formData, setFormData] = useState({
-    company: typeof job.company === 'object' ? job.company._id : job.company,
-    title: job.title,
-    location: job.location,
-    employmentType: job.employmentType,
-    domain: job.domain,
-    workMode: job.workMode,
-    experienceLevel: job.experienceLevel,
-    minExperience: job.minExperience,
+    company: typeof job.company === 'object' ? job.company._id : job.company || '',
+    title: job.title || '',
+    location: job.location || '',
+    employmentType: job.employmentType || 'full-time',
+    domain: job.domain || '',
+    workMode: job.workMode || 'remote',
+    experienceLevel: job.experienceLevel || 'entry',
+    minExperience: job.minExperience || 0,
     description: job.description || '',
     requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : '',
     salary: job.salary || '',
@@ -142,7 +142,7 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="employmentType">Employment Type *</Label>
-            <Select value={formData.employmentType} onValueChange={(value) => setFormData(prev => ({ ...prev, employmentType: value }))}>
+            <Select value={formData.employmentType} onValueChange={(value) => setFormData(prev => ({ ...prev, employmentType: value as 'full-time' | 'part-time' | 'contract' | 'temporary' | 'internship' }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -157,7 +157,7 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
           </div>
           <div>
             <Label htmlFor="workMode">Work Mode *</Label>
-            <Select value={formData.workMode} onValueChange={(value) => setFormData(prev => ({ ...prev, workMode: value }))}>
+            <Select value={formData.workMode} onValueChange={(value) => setFormData(prev => ({ ...prev, workMode: value as 'remote' | 'on-site' | 'hybrid' }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -173,7 +173,7 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="experienceLevel">Experience Level *</Label>
-            <Select value={formData.experienceLevel} onValueChange={(value) => setFormData(prev => ({ ...prev, experienceLevel: value }))}>
+            <Select value={formData.experienceLevel} onValueChange={(value) => setFormData(prev => ({ ...prev, experienceLevel: value as 'entry' | 'mid' | 'senior' | 'lead' | 'executive' }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

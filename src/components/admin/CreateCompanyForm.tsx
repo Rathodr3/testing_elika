@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { companiesAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,7 +12,7 @@ interface CreateCompanyFormProps {
   onSuccess: () => void;
 }
 
-const CreateCompanyForm = ({ onSuccess }: CreateCompanyFormProps) => {
+const CreateCompanyForm: React.FC<CreateCompanyFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     logo: '',
@@ -20,36 +20,69 @@ const CreateCompanyForm = ({ onSuccess }: CreateCompanyFormProps) => {
     contactEmail: '',
     phoneNumber: '',
     website: '',
-    isActive: true
+    spokespersons: {
+      primary: {
+        name: '',
+        role: '',
+        email: '',
+        contact: ''
+      },
+      secondary: {
+        name: '',
+        role: '',
+        email: '',
+        contact: ''
+      }
+    }
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSpokespersonChange = (type: 'primary' | 'secondary', field: string, value: string) => {
+    setFormData({
+      ...formData,
+      spokespersons: {
+        ...formData.spokespersons,
+        [type]: {
+          ...formData.spokespersons[type],
+          [field]: value
+        }
+      }
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.contactEmail || !formData.phoneNumber) {
       toast({
-        title: "Validation Error",
+        title: "Missing required fields",
         description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       await companiesAPI.create(formData);
       toast({
         title: "Company created successfully",
-        description: `${formData.name} has been added to the system`,
+        description: "The company has been added to the system",
       });
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating company:', error);
       toast({
         title: "Error creating company",
-        description: error.message || "Please try again later",
+        description: "Please try again later",
         variant: "destructive"
       });
     } finally {
@@ -58,84 +91,164 @@ const CreateCompanyForm = ({ onSuccess }: CreateCompanyFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="name">Company Name *</Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          required
-        />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="name">Company Name *</Label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="logo">Logo URL</Label>
+          <Input
+            id="logo"
+            name="logo"
+            value={formData.logo}
+            onChange={handleInputChange}
+            placeholder="https://example.com/logo.png"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="contactEmail">Contact Email *</Label>
+            <Input
+              id="contactEmail"
+              name="contactEmail"
+              type="email"
+              value={formData.contactEmail}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="phoneNumber">Phone Number *</Label>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="website">Website</Label>
+          <Input
+            id="website"
+            name="website"
+            value={formData.website}
+            onChange={handleInputChange}
+            placeholder="https://company.com"
+          />
+        </div>
+
+        {/* Primary Spokesperson */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Primary Spokesperson</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={formData.spokespersons.primary.name}
+                  onChange={(e) => handleSpokespersonChange('primary', 'name', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Input
+                  value={formData.spokespersons.primary.role}
+                  onChange={(e) => handleSpokespersonChange('primary', 'role', e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={formData.spokespersons.primary.email}
+                  onChange={(e) => handleSpokespersonChange('primary', 'email', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Contact</Label>
+                <Input
+                  value={formData.spokespersons.primary.contact}
+                  onChange={(e) => handleSpokespersonChange('primary', 'contact', e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Secondary Spokesperson */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Secondary Spokesperson</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={formData.spokespersons.secondary.name}
+                  onChange={(e) => handleSpokespersonChange('secondary', 'name', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Input
+                  value={formData.spokespersons.secondary.role}
+                  onChange={(e) => handleSpokespersonChange('secondary', 'role', e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={formData.spokespersons.secondary.email}
+                  onChange={(e) => handleSpokespersonChange('secondary', 'email', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Contact</Label>
+                <Input
+                  value={formData.spokespersons.secondary.contact}
+                  onChange={(e) => handleSpokespersonChange('secondary', 'contact', e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div>
-        <Label htmlFor="logo">Logo URL</Label>
-        <Input
-          id="logo"
-          type="url"
-          value={formData.logo}
-          onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
-          placeholder="https://example.com/logo.png"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          rows={3}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="contactEmail">Contact Email *</Label>
-        <Input
-          id="contactEmail"
-          type="email"
-          value={formData.contactEmail}
-          onChange={(e) => setFormData(prev => ({ ...prev, contactEmail: e.target.value }))}
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="phoneNumber">Phone Number *</Label>
-        <Input
-          id="phoneNumber"
-          value={formData.phoneNumber}
-          onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="website">Website</Label>
-        <Input
-          id="website"
-          type="url"
-          value={formData.website}
-          onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-          placeholder="https://www.company.com"
-        />
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="isActive"
-          checked={formData.isActive}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
-        />
-        <Label htmlFor="isActive">Active</Label>
-      </div>
-
-      <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={loading} className="flex-1">
-          {loading ? 'Creating...' : 'Create Company'}
-        </Button>
-      </div>
+      <Button type="submit" disabled={loading} className="w-full">
+        {loading ? 'Creating...' : 'Create Company'}
+      </Button>
     </form>
   );
 };

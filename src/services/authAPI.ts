@@ -2,13 +2,24 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
 
-export const authAPI = {
-  login: async (email: string, password: string): Promise<{ success: boolean; token?: string; user?: any; message?: string }> => {
+const handleAPIError = async (response: Response) => {
+  if (!response.ok) {
+    let errorMessage = 'An error occurred';
     try {
-      console.log('Attempting login to:', `${API_BASE_URL}/auth/login`);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorMessage;
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+  return response;
+};
+
+export const authAPI = {
+  login: async (email: string, password: string): Promise<{ success: boolean; user: any; token: string; message?: string }> => {
+    try {
+      console.log('Attempting login with:', { email, password: '***' });
       
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -16,39 +27,59 @@ export const authAPI = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-        signal: controller.signal,
       });
       
-      clearTimeout(timeoutId);
+      await handleAPIError(response);
+      const result = await response.json();
       
-      const data = await response.json();
-      console.log('Login response:', data);
+      console.log('Login response:', result);
       
-      if (data.success && data.token) {
-        localStorage.setItem('adminToken', data.token);
-        console.log('Login successful for:', data.user?.email || email);
-      } else {
-        console.log('Login failed:', data.message);
+      // Store token in localStorage
+      if (result.token) {
+        localStorage.setItem('adminToken', result.token);
+        localStorage.setItem('adminUser', JSON.stringify(result.user));
       }
       
-      return data;
+      return {
+        success: true,
+        user: result.user,
+        token: result.token,
+        message: result.message
+      };
     } catch (error) {
       console.error('Login error:', error);
-      
-      if (error.name === 'AbortError') {
-        throw new Error('Request timeout. Please check if the backend server is running.');
-      }
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        const serverUrl = import.meta.env.DEV ? 'http://localhost:5000' : 'your backend server';
-        throw new Error(`Cannot connect to backend server. Please ensure the server is running on ${serverUrl}`);
-      }
-      
-      throw new Error('Failed to connect to server. Please check if the backend server is running.');
+      throw error;
     }
   },
 
-  changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  getCurrentUser: async (): Promise<any> => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      return result.user;
+    } catch (error) {
+      // Fallback to stored user data if API call fails
+      const storedUser = localStorage.getItem('adminUser');
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+      console.error('Get current user error:', error);
+      throw error;
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'POST',
@@ -59,14 +90,13 @@ export const authAPI = {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to change password');
-      }
-      
+      await handleAPIError(response);
       const result = await response.json();
-      console.log('Password change result:', result);
-      return result;
+      
+      return {
+        success: true,
+        message: result.message || 'Password changed successfully'
+      };
     } catch (error) {
       console.error('Change password error:', error);
       throw error;
@@ -75,6 +105,8 @@ export const authAPI = {
 
   forgotPassword: async (email: string): Promise<{ success: boolean; message: string; resetToken?: string }> => {
     try {
+      console.log('Requesting password reset for:', email);
+      
       const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
@@ -83,20 +115,26 @@ export const authAPI = {
         body: JSON.stringify({ email }),
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send reset email');
-      }
+      await handleAPIError(response);
+      const result = await response.json();
       
-      return await response.json();
+      console.log('Forgot password response:', result);
+      
+      return {
+        success: true,
+        message: result.message || 'Reset email sent successfully',
+        resetToken: result.resetToken
+      };
     } catch (error) {
       console.error('Forgot password error:', error);
       throw error;
     }
   },
 
-  resetPassword: async (resetToken: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  resetPassword: async (resetToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
     try {
+      console.log('Resetting password with token:', resetToken.substring(0, 20) + '...');
+      
       const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
@@ -105,26 +143,51 @@ export const authAPI = {
         body: JSON.stringify({ resetToken, newPassword }),
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to reset password');
-      }
+      await handleAPIError(response);
+      const result = await response.json();
       
-      return await response.json();
+      console.log('Reset password response:', result);
+      
+      return {
+        success: true,
+        message: result.message || 'Password reset successfully'
+      };
     } catch (error) {
       console.error('Reset password error:', error);
       throw error;
     }
   },
 
-  logout: () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('userInfo');
-    console.log('User logged out');
+  validateResetToken: async (resetToken: string): Promise<{ success: boolean; message?: string; email?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/validate-reset-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resetToken }),
+      });
+      
+      await handleAPIError(response);
+      const result = await response.json();
+      
+      return {
+        success: true,
+        message: result.message,
+        email: result.email
+      };
+    } catch (error) {
+      console.error('Validate reset token error:', error);
+      throw error;
+    }
   },
 
   isAuthenticated: (): boolean => {
-    const token = localStorage.getItem('adminToken');
-    return !!token;
+    return !!localStorage.getItem('adminToken');
+  },
+
+  logout: (): void => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
   }
 };

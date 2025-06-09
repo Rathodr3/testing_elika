@@ -3,68 +3,96 @@ export interface JobApplication {
   _id?: string;
   firstName: string;
   lastName: string;
+  name?: string;
   email: string;
   phone: string;
   position: string;
   department: string;
   experienceLevel: string;
   yearsOfExperience: number;
-  skills: string[];
   previousCompany?: string;
+  skills: string[];
   coverLetter?: string;
-  resumeFilename?: string;
+  resumeFile?: File;
   resumePath?: string;
-  status: 'submitted' | 'under-review' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
-  applicationDate: string;
+  status: 'pending' | 'reviewing' | 'interviewed' | 'hired' | 'rejected';
+  applicationDate?: string;
   createdAt: string;
-  updatedAt: string;
-  // Computed properties for backwards compatibility
-  name?: string;
-  jobTitle?: string;
-  company?: string;
-  experience?: string;
-  resumeUrl?: string;
+  updatedAt?: string;
 }
 
 export interface Job {
-  _id: string;
-  company: {
+  _id?: string;
+  company?: string | {
     _id: string;
     name: string;
-    logo?: string;
   };
   title: string;
-  location: string;
-  employmentType: string;
   domain: string;
-  workMode: string;
-  experienceLevel: string;
+  location: string;
+  employmentType: 'full-time' | 'part-time' | 'contract' | 'temporary' | 'internship';
+  workMode: 'remote' | 'on-site' | 'hybrid';
+  experienceLevel: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
   minExperience: number;
-  description?: string;
+  description: string;
   requirements: string[];
+  responsibilities: string[];
+  benefits: string[];
   salary?: string;
+  salaryRange?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
   isActive: boolean;
-  postedDate: string;
-  applicantsCount: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface User {
   _id?: string;
   firstName: string;
   lastName: string;
+  name: string;
   email: string;
   phoneNumber: string;
   role: 'admin' | 'hr_manager' | 'recruiter' | 'viewer';
   isActive: boolean;
   permissions: {
-    users: { create: boolean; read: boolean; update: boolean; delete: boolean; };
-    companies: { create: boolean; read: boolean; update: boolean; delete: boolean; };
-    jobs: { create: boolean; read: boolean; update: boolean; delete: boolean; };
-    applications: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    users: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+    };
+    companies: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+    };
+    jobs: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+    };
+    applications: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+    };
   };
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+}
+
+export interface Spokesperson {
+  name: string;
+  role: string;
+  email: string;
+  contact: string;
 }
 
 export interface Company {
@@ -75,7 +103,19 @@ export interface Company {
   contactEmail: string;
   phoneNumber: string;
   website?: string;
+  spokespersons?: {
+    primary?: Spokesperson;
+    secondary?: Spokesperson;
+  };
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ContactFormData {
+  name: string;
+  email: string;
+  company?: string;
+  subject: string;
+  message: string;
 }

@@ -10,37 +10,26 @@ const handleAPIError = async (response: Response) => {
     try {
       const errorData = await response.json();
       errorMessage = errorData.message || errorMessage;
-      console.error('API Error Response:', errorData);
     } catch {
       errorMessage = `HTTP ${response.status}: ${response.statusText}`;
     }
-    console.error('API Error:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url,
-      message: errorMessage
-    });
     throw new Error(errorMessage);
   }
   return response;
 };
 
 export const applicationAPI = {
-  submit: async (formData: FormData): Promise<{ success: boolean; message: string }> => {
+  submit: async (formData: FormData): Promise<any> => {
     try {
-      console.log('Submitting application to:', `${API_BASE_URL}/applications`);
-      
       const response = await fetch(`${API_BASE_URL}/applications`, {
         method: 'POST',
         body: formData,
       });
       
       await handleAPIError(response);
-      const result = await response.json();
-      console.log('Application submission successful:', result);
-      return result;
+      return await response.json();
     } catch (error) {
-      console.error('Application submission error:', error);
+      console.error('Submit application error:', error);
       throw error;
     }
   },
@@ -55,62 +44,53 @@ export const applicationAPI = {
       
       await handleAPIError(response);
       const result = await response.json();
-      
-      const applications = (result.data || result).map((app: JobApplication) => ({
-        ...app,
-        name: `${app.firstName} ${app.lastName}`,
-        jobTitle: app.position,
-        company: app.previousCompany || app.department,
-        experience: `${app.yearsOfExperience} years`,
-        resumeUrl: app.resumePath ? `${API_BASE_URL}/applications/${app._id}/resume` : undefined
-      }));
-      
-      return applications;
+      return result.applications || result;
     } catch (error) {
-      console.error('Fetch applications error:', error);
+      console.error('Get applications error:', error);
       throw error;
     }
   },
 
-  getByJob: async (jobId: string): Promise<JobApplication[]> => {
+  getById: async (id: string): Promise<JobApplication> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/applications?jobId=${jobId}`, {
+      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       
       await handleAPIError(response);
-      return await response.json();
+      const result = await response.json();
+      return result.application || result;
     } catch (error) {
-      console.error('Fetch job applications error:', error);
+      console.error('Get application error:', error);
       throw error;
     }
   },
 
-  update: async (applicationId: string, applicationData: Partial<JobApplication>): Promise<JobApplication> => {
+  update: async (id: string, data: Partial<JobApplication>): Promise<JobApplication> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/applications/${applicationId}`, {
+      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
-        body: JSON.stringify(applicationData),
+        body: JSON.stringify(data),
       });
       
       await handleAPIError(response);
       const result = await response.json();
-      return result.data || result;
+      return result.application || result;
     } catch (error) {
       console.error('Update application error:', error);
       throw error;
     }
   },
 
-  updateStatus: async (applicationId: string, status: string): Promise<{ success: boolean }> => {
+  updateStatus: async (id: string, status: string): Promise<JobApplication> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -120,9 +100,26 @@ export const applicationAPI = {
       });
       
       await handleAPIError(response);
-      return await response.json();
+      const result = await response.json();
+      return result.application || result;
     } catch (error) {
       console.error('Update status error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+      });
+      
+      await handleAPIError(response);
+    } catch (error) {
+      console.error('Delete application error:', error);
       throw error;
     }
   }
