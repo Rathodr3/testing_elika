@@ -5,7 +5,7 @@ const jobSchema = new mongoose.Schema({
   company: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company',
-    required: true
+    required: false // Making it optional for now to handle string company names
   },
   title: {
     type: String,
@@ -88,5 +88,13 @@ jobSchema.index({ isActive: 1, postedDate: -1 });
 jobSchema.index({ company: 1 });
 jobSchema.index({ domain: 1 });
 jobSchema.index({ experienceLevel: 1 });
+
+// Ensure arrays are always arrays, even if undefined
+jobSchema.pre('save', function(next) {
+  if (!this.requirements) this.requirements = [];
+  if (!this.responsibilities) this.responsibilities = [];
+  if (!this.benefits) this.benefits = [];
+  next();
+});
 
 module.exports = mongoose.model('Job', jobSchema);

@@ -74,11 +74,11 @@ const jobApplicationSchema = new mongoose.Schema({
     type: String
   },
   
-  // Application Status
+  // Application Status - Updated to match frontend expectations
   status: {
     type: String,
-    enum: ['submitted', 'under-review', 'shortlisted', 'interviewed', 'hired', 'rejected'],
-    default: 'submitted'
+    enum: ['pending', 'reviewing', 'interviewed', 'hired', 'rejected', 'submitted', 'under-review', 'shortlisted'],
+    default: 'pending'
   },
   
   // Metadata
@@ -102,5 +102,14 @@ const jobApplicationSchema = new mongoose.Schema({
 jobApplicationSchema.index({ email: 1, position: 1 });
 jobApplicationSchema.index({ status: 1 });
 jobApplicationSchema.index({ applicationDate: -1 });
+
+// Virtual field to combine first and last name
+jobApplicationSchema.virtual('name').get(function() {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Ensure virtual fields are serialized
+jobApplicationSchema.set('toJSON', { virtuals: true });
+jobApplicationSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('JobApplication', jobApplicationSchema);

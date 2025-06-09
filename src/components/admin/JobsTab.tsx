@@ -33,8 +33,9 @@ import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { jobsAPI, Job } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { confirmAlert } from 'react-confirm-alert';
+import JobDetailsModal from './JobDetailsModal';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const jobSchema = z.object({
@@ -75,6 +76,9 @@ const JobsTab = () => {
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [detailsJob, setDetailsJob] = useState<Job | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,15 +87,20 @@ const JobsTab = () => {
 
   const fetchJobs = async () => {
     try {
+      setLoading(true);
+      console.log('🔍 Fetching jobs for admin dashboard...');
       const jobsData = await jobsAPI.getAll();
+      console.log('✅ Jobs fetched successfully:', jobsData);
       setJobs(jobsData);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
+      console.error('❌ Error fetching jobs:', error);
       toast({
         title: "Error fetching jobs",
-        description: "Failed to load jobs from the server.",
+        description: "Failed to load jobs from the server. Please check your connection.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -203,16 +212,33 @@ const JobsTab = () => {
     setOpenEditDialog(true);
   };
 
+  const handleViewDetails = (job: Job) => {
+    setDetailsJob(job);
+    setShowDetailsModal(true);
+  };
+
   const getCompanyName = (company: string | { _id: string; name: string } | undefined): string => {
     if (!company) return 'N/A';
     if (typeof company === 'string') return company;
     return company.name;
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Loading jobs...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Jobs</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Jobs Management</h2>
+          <p className="text-muted-foreground">Manage job postings and view applications</p>
+        </div>
         <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
           <DialogTrigger asChild>
             <Button variant="default">Create Job</Button>
@@ -506,13 +532,19 @@ const JobsTab = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleViewDetails(job)}
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(job)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
+                      <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(job._id as string, job.title)}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -520,8 +552,22 @@ const JobsTab = () => {
             ))}
           </TableBody>
         </Table>
+        
+        {jobs.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No jobs found. Create your first job posting!</p>
+          </div>
+        )}
       </div>
 
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        job={detailsJob}
+        open={showDetailsModal}
+        onOpenChange={setShowDetailsModal}
+      />
+
+      {/* Edit Dialog - keeping existing code structure */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
         <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
