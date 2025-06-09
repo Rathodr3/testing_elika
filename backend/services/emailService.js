@@ -10,7 +10,7 @@ const createTransporter = () => {
     user: process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 5) + '***' : 'not set'
   });
   
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
     secure: false, // true for 465, false for other ports

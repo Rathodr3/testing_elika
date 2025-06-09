@@ -20,7 +20,8 @@ const jobSchema = new mongoose.Schema({
   employmentType: {
     type: String,
     enum: ['full-time', 'part-time', 'contract', 'temporary', 'internship'],
-    required: true
+    required: true,
+    default: 'full-time'
   },
   domain: {
     type: String,
@@ -30,23 +31,35 @@ const jobSchema = new mongoose.Schema({
   workMode: {
     type: String,
     enum: ['remote', 'on-site', 'hybrid'],
-    required: true
+    required: true,
+    default: 'hybrid'
   },
   experienceLevel: {
     type: String,
     enum: ['entry', 'mid', 'senior', 'lead', 'executive'],
-    required: true
+    required: true,
+    default: 'mid'
   },
   minExperience: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
+    default: 0
   },
   description: {
     type: String,
+    required: true,
     trim: true
   },
   requirements: [{
+    type: String,
+    trim: true
+  }],
+  responsibilities: [{
+    type: String,
+    trim: true
+  }],
+  benefits: [{
     type: String,
     trim: true
   }],
@@ -69,5 +82,11 @@ const jobSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Indexes for better query performance
+jobSchema.index({ isActive: 1, postedDate: -1 });
+jobSchema.index({ company: 1 });
+jobSchema.index({ domain: 1 });
+jobSchema.index({ experienceLevel: 1 });
 
 module.exports = mongoose.model('Job', jobSchema);

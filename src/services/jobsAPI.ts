@@ -37,12 +37,26 @@ export const jobsAPI = {
   getPublic: async (): Promise<Job[]> => {
     try {
       console.log('🔍 Fetching public jobs...');
-      const response = await fetch(`${API_BASE_URL}/jobs/public`);
+      const response = await fetch(`${API_BASE_URL}/jobs/public`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       await handleAPIError(response);
       const jobs = await response.json();
       console.log('✅ Public jobs fetched:', jobs.length);
-      return Array.isArray(jobs) ? jobs : [];
+      
+      // Ensure we return an array
+      if (Array.isArray(jobs)) {
+        return jobs;
+      } else if (jobs.data && Array.isArray(jobs.data)) {
+        return jobs.data;
+      } else {
+        console.warn('⚠️ Unexpected job data format:', jobs);
+        return [];
+      }
     } catch (error) {
       console.error('❌ Fetch public jobs error:', error);
       return [];
@@ -53,29 +67,58 @@ export const jobsAPI = {
     try {
       console.log('🔍 Fetching all jobs (admin)...');
       const response = await fetch(`${API_BASE_URL}/jobs`, {
+        method: 'GET',
         headers: getAuthHeaders(),
       });
       
       await handleAPIError(response);
       const result = await response.json();
-      const jobs = result.data || result;
+      console.log('✅ Admin jobs response:', result);
+      
+      // Handle different response formats
+      let jobs = [];
+      if (Array.isArray(result)) {
+        jobs = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        jobs = result.data;
+      } else if (result.success && result.data && Array.isArray(result.data)) {
+        jobs = result.data;
+      } else {
+        console.warn('⚠️ Unexpected admin jobs format:', result);
+        jobs = [];
+      }
+      
       console.log('✅ Admin jobs fetched:', jobs.length);
-      return Array.isArray(jobs) ? jobs : [];
+      return jobs;
     } catch (error) {
-      console.error('❌ Fetch jobs error:', error);
+      console.error('❌ Fetch admin jobs error:', error);
       return [];
     }
   },
 
   getById: async (jobId: string): Promise<Job> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+      console.log('🔍 Fetching job by ID:', jobId);
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       await handleAPIError(response);
       const result = await response.json();
-      return result.data || result;
+      console.log('✅ Job fetched by ID:', result);
+      
+      if (result.data) {
+        return result.data;
+      } else if (result.success && result.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
-      console.error('❌ Fetch job error:', error);
+      console.error('❌ Fetch job by ID error:', error);
       throw error;
     }
   },
@@ -91,8 +134,15 @@ export const jobsAPI = {
       
       await handleAPIError(response);
       const result = await response.json();
-      console.log('✅ Job created:', result.data);
-      return result.data;
+      console.log('✅ Job created:', result);
+      
+      if (result.data) {
+        return result.data;
+      } else if (result.success && result.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Create job error:', error);
       throw error;
@@ -110,8 +160,15 @@ export const jobsAPI = {
       
       await handleAPIError(response);
       const result = await response.json();
-      console.log('✅ Job updated:', result.data);
-      return result.data;
+      console.log('✅ Job updated:', result);
+      
+      if (result.data) {
+        return result.data;
+      } else if (result.success && result.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Update job error:', error);
       throw error;

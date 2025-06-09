@@ -20,39 +20,65 @@ const ProtectedAdmin = () => {
   const [showChangePassword, setShowChangePassword] = useState(false);
 
   useEffect(() => {
-    // Check if user is already authenticated on component mount
-    const checkAuth = () => {
-      const isAuth = authAPI.isAuthenticated();
-      setIsAuthenticated(isAuth);
-      setLoading(false);
+    const checkAuth = async () => {
+      try {
+        console.log('🔍 Checking admin authentication...');
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+          console.log('❌ No admin token found');
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+
+        // Verify token is valid by calling getCurrentUser
+        const userData = await authAPI.getCurrentUser();
+        console.log('✅ Admin authentication verified:', userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('❌ Admin authentication failed:', error);
+        // Clear invalid token
+        localStorage.removeItem('adminToken');
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkAuth();
   }, []);
 
   const handleLoginSuccess = () => {
+    console.log('✅ Admin login successful');
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
+    console.log('🚪 Admin logout');
     authAPI.logout();
     setIsAuthenticated(false);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-accent">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
+    console.log('🔄 Showing admin login page');
     return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
 
+  console.log('✅ Showing admin dashboard');
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="text-lg font-semibold text-secondary-800">

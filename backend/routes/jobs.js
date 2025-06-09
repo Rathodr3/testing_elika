@@ -15,7 +15,18 @@ router.get('/public', async (req, res) => {
       .lean();
     
     console.log(`✅ Found ${jobs.length} active jobs for public`);
-    res.json(jobs);
+    
+    // Ensure consistent data structure
+    const formattedJobs = jobs.map(job => ({
+      ...job,
+      id: job._id,
+      company: job.company || { name: 'Unknown Company' },
+      requirements: Array.isArray(job.requirements) ? job.requirements : [],
+      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+      benefits: Array.isArray(job.benefits) ? job.benefits : []
+    }));
+    
+    res.json(formattedJobs);
   } catch (error) {
     console.error('❌ Get public jobs error:', error);
     res.status(500).json({
@@ -31,13 +42,25 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     console.log('🔍 Fetching all jobs for admin...');
     const jobs = await Job.find()
-      .populate('company', 'name logo description')
-      .sort({ createdAt: -1 });
+      .populate('company', 'name logo description contactEmail phoneNumber website')
+      .sort({ createdAt: -1 })
+      .lean();
     
     console.log(`✅ Found ${jobs.length} total jobs for admin`);
+    
+    // Ensure consistent data structure
+    const formattedJobs = jobs.map(job => ({
+      ...job,
+      id: job._id,
+      company: job.company || { name: 'Unknown Company' },
+      requirements: Array.isArray(job.requirements) ? job.requirements : [],
+      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+      benefits: Array.isArray(job.benefits) ? job.benefits : []
+    }));
+    
     res.json({
       success: true,
-      data: jobs
+      data: formattedJobs
     });
   } catch (error) {
     console.error('❌ Get jobs error:', error);
@@ -52,8 +75,10 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
 // Get single job by ID
 router.get('/:id', async (req, res) => {
   try {
+    console.log('🔍 Fetching job by ID:', req.params.id);
     const job = await Job.findById(req.params.id)
-      .populate('company', 'name logo description contactEmail phoneNumber website');
+      .populate('company', 'name logo description contactEmail phoneNumber website')
+      .lean();
     
     if (!job) {
       return res.status(404).json({
@@ -62,9 +87,20 @@ router.get('/:id', async (req, res) => {
       });
     }
     
+    // Ensure consistent data structure
+    const formattedJob = {
+      ...job,
+      id: job._id,
+      company: job.company || { name: 'Unknown Company' },
+      requirements: Array.isArray(job.requirements) ? job.requirements : [],
+      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+      benefits: Array.isArray(job.benefits) ? job.benefits : []
+    };
+    
+    console.log('✅ Job found:', formattedJob.title);
     res.json({
       success: true,
-      data: job
+      data: formattedJob
     });
   } catch (error) {
     console.error('❌ Get job error:', error);
@@ -79,28 +115,41 @@ router.get('/:id', async (req, res) => {
 // Create new job - requires authentication
 router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    console.log('🔧 Creating new job:', req.body);
+    console.log('🔧 Creating new job:', req.body.title);
     
     // Verify company exists
-    const company = await Company.findById(req.body.company);
-    if (!company) {
-      return res.status(400).json({
-        success: false,
-        message: 'Company not found'
-      });
+    if (req.body.company) {
+      const company = await Company.findById(req.body.company);
+      if (!company) {
+        return res.status(400).json({
+          success: false,
+          message: 'Company not found'
+        });
+      }
     }
     
-    const job = new Job(req.body);
+    // Ensure arrays are properly formatted
+    const jobData = {
+      ...req.body,
+      requirements: Array.isArray(req.body.requirements) ? req.body.requirements : [],
+      responsibilities: Array.isArray(req.body.responsibilities) ? req.body.responsibilities : [],
+      benefits: Array.isArray(req.body.benefits) ? req.body.benefits : []
+    };
+    
+    const job = new Job(jobData);
     await job.save();
     
     // Populate company details
-    await job.populate('company', 'name logo description');
+    await job.populate('company', 'name logo description contactEmail phoneNumber website');
     
     console.log('✅ Job created successfully:', job._id);
     res.status(201).json({
       success: true,
       message: 'Job created successfully',
-      data: job
+      data: {
+        ...job.toObject(),
+        id: job._id
+      }
     });
   } catch (error) {
     console.error('❌ Create job error:', error);
@@ -115,11 +164,21 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
 // Update job - requires authentication
 router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
+    console.log('🔧 Updating job:', req.params.id);
+    
+    // Ensure arrays are properly formatted
+    const updateData = {
+      ...req.body,
+      requirements: Array.isArray(req.body.requirements) ? req.body.requirements : [],
+      responsibilities: Array.isArray(req.body.responsibilities) ? req.body.responsibilities : [],
+      benefits: Array.isArray(req.body.benefits) ? req.body.benefits : []
+    };
+    
     const job = await Job.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
-    ).populate('company', 'name logo description');
+    ).populate('company', 'name logo description contactEmail phoneNumber website');
     
     if (!job) {
       return res.status(404).json({
@@ -132,7 +191,10 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     res.json({
       success: true,
       message: 'Job updated successfully',
-      data: job
+      data: {
+        ...job.toObject(),
+        id: job._id
+      }
     });
   } catch (error) {
     console.error('❌ Update job error:', error);
@@ -147,6 +209,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
 // Delete job - requires authentication
 router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
+    console.log('🗑️ Deleting job:', req.params.id);
     const job = await Job.findByIdAndDelete(req.params.id);
     
     if (!job) {
