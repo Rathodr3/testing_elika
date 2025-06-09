@@ -25,32 +25,44 @@ const handleAPIError = async (response: Response) => {
   return response;
 };
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('adminToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+};
+
 export const jobsAPI = {
   getPublic: async (): Promise<Job[]> => {
     try {
+      console.log('🔍 Fetching public jobs...');
       const response = await fetch(`${API_BASE_URL}/jobs/public`);
       
       await handleAPIError(response);
-      return await response.json();
+      const jobs = await response.json();
+      console.log('✅ Public jobs fetched:', jobs.length);
+      return Array.isArray(jobs) ? jobs : [];
     } catch (error) {
-      console.error('Fetch public jobs error:', error);
+      console.error('❌ Fetch public jobs error:', error);
       return [];
     }
   },
 
   getAll: async (): Promise<Job[]> => {
     try {
+      console.log('🔍 Fetching all jobs (admin)...');
       const response = await fetch(`${API_BASE_URL}/jobs`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
+        headers: getAuthHeaders(),
       });
       
       await handleAPIError(response);
       const result = await response.json();
-      return result.data || result;
+      const jobs = result.data || result;
+      console.log('✅ Admin jobs fetched:', jobs.length);
+      return Array.isArray(jobs) ? jobs : [];
     } catch (error) {
-      console.error('Fetch jobs error:', error);
+      console.error('❌ Fetch jobs error:', error);
       return [];
     }
   },
@@ -63,63 +75,61 @@ export const jobsAPI = {
       const result = await response.json();
       return result.data || result;
     } catch (error) {
-      console.error('Fetch job error:', error);
+      console.error('❌ Fetch job error:', error);
       throw error;
     }
   },
 
   create: async (jobData: any): Promise<Job> => {
     try {
+      console.log('🔧 Creating job:', jobData);
       const response = await fetch(`${API_BASE_URL}/jobs`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(jobData),
       });
       
       await handleAPIError(response);
       const result = await response.json();
+      console.log('✅ Job created:', result.data);
       return result.data;
     } catch (error) {
-      console.error('Create job error:', error);
+      console.error('❌ Create job error:', error);
       throw error;
     }
   },
 
   update: async (jobId: string, jobData: any): Promise<Job> => {
     try {
+      console.log('🔧 Updating job:', jobId, jobData);
       const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(jobData),
       });
       
       await handleAPIError(response);
       const result = await response.json();
+      console.log('✅ Job updated:', result.data);
       return result.data;
     } catch (error) {
-      console.error('Update job error:', error);
+      console.error('❌ Update job error:', error);
       throw error;
     }
   },
 
   delete: async (jobId: string): Promise<void> => {
     try {
+      console.log('🗑️ Deleting job:', jobId);
       const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
+        headers: getAuthHeaders(),
       });
       
       await handleAPIError(response);
+      console.log('✅ Job deleted:', jobId);
     } catch (error) {
-      console.error('Delete job error:', error);
+      console.error('❌ Delete job error:', error);
       throw error;
     }
   }

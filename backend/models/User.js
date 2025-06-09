@@ -1,6 +1,12 @@
 
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+
+const permissionSchema = new mongoose.Schema({
+  create: { type: Boolean, default: false },
+  read: { type: Boolean, default: false },
+  update: { type: Boolean, default: false },
+  delete: { type: Boolean, default: false }
+}, { _id: false });
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -17,91 +23,48 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    lowercase: true,
-    trim: true
-  },
-  phoneNumber: {
-    type: String,
-    required: true,
-    trim: true
+    trim: true,
+    lowercase: true
   },
   password: {
     type: String,
     required: true,
     minlength: 6
   },
+  phoneNumber: {
+    type: String,
+    trim: true
+  },
   role: {
     type: String,
     enum: ['admin', 'hr_manager', 'recruiter', 'viewer'],
     default: 'viewer'
   },
+  permissions: {
+    users: permissionSchema,
+    companies: permissionSchema,
+    jobs: permissionSchema,
+    applications: permissionSchema
+  },
   isActive: {
     type: Boolean,
     default: true
   },
-  permissions: {
-    users: {
-      create: { type: Boolean, default: false },
-      read: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
-    companies: {
-      create: { type: Boolean, default: false },
-      read: { type: Boolean, default: true },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
-    jobs: {
-      create: { type: Boolean, default: false },
-      read: { type: Boolean, default: true },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
-    applications: {
-      create: { type: Boolean, default: false },
-      read: { type: Boolean, default: true },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    }
+  lastLogin: {
+    type: Date
+  },
+  passwordResetToken: {
+    type: String
+  },
+  passwordResetExpires: {
+    type: Date
   }
 }, {
   timestamps: true
 });
 
-// Remove automatic password hashing middleware to prevent double hashing
-// Password hashing is now handled in the routes manually
-
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-// Set default permissions based on role
-userSchema.pre('save', function(next) {
-  if (this.role === 'admin') {
-    this.permissions = {
-      users: { create: true, read: true, update: true, delete: true },
-      companies: { create: true, read: true, update: true, delete: true },
-      jobs: { create: true, read: true, update: true, delete: true },
-      applications: { create: true, read: true, update: true, delete: true }
-    };
-  } else if (this.role === 'hr_manager') {
-    this.permissions = {
-      users: { create: false, read: true, update: false, delete: false },
-      companies: { create: true, read: true, update: true, delete: false },
-      jobs: { create: true, read: true, update: true, delete: true },
-      applications: { create: true, read: true, update: true, delete: false }
-    };
-  } else if (this.role === 'recruiter') {
-    this.permissions = {
-      users: { create: false, read: false, update: false, delete: false },
-      companies: { create: false, read: true, update: false, delete: false },
-      jobs: { create: true, read: true, update: true, delete: false },
-      applications: { create: false, read: true, update: true, delete: false }
-    };
-  }
-  next();
-});
+// Index for better query performance
+userSchema.index({ email: 1 });
+userSchema.index({ role: 1 });
 
 module.exports = mongoose.model('User', userSchema);

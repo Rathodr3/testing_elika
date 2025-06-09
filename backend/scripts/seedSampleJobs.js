@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 const Job = require('../models/Job');
 const Company = require('../models/Company');
+require('dotenv').config();
 
 const sampleJobs = [
   {
@@ -105,40 +106,48 @@ async function seedJobs() {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/elika-engineering');
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
 
-    // First, let's ensure we have at least one company
+    // First, ensure we have at least one company
     let company = await Company.findOne();
     if (!company) {
       company = new Company({
         name: 'Elika Engineering Pvt Ltd',
-        description: 'Leading engineering solutions provider',
+        description: 'Leading engineering solutions provider in India, specializing in innovative technology solutions across multiple domains.',
         contactEmail: 'hr@elikaengineering.com',
         phoneNumber: '+91-9876543210',
         website: 'https://elikaengineering.com',
+        address: 'Bangalore, India',
         isActive: true
       });
       await company.save();
-      console.log('Created default company');
+      console.log('✅ Created default company:', company.name);
+    } else {
+      console.log('✅ Using existing company:', company.name);
     }
 
     // Clear existing jobs
-    await Job.deleteMany({});
-    console.log('Cleared existing jobs');
+    const deletedCount = await Job.deleteMany({});
+    console.log(`🗑️ Cleared ${deletedCount.deletedCount} existing jobs`);
 
-    // Create sample jobs
+    // Create sample jobs with company reference
     const jobsToCreate = sampleJobs.map(job => ({
       ...job,
       company: company._id
     }));
 
     const createdJobs = await Job.insertMany(jobsToCreate);
-    console.log(`Created ${createdJobs.length} sample jobs`);
+    console.log(`✅ Created ${createdJobs.length} sample jobs successfully!`);
 
-    console.log('Sample jobs seeded successfully!');
+    // Log created jobs for verification
+    createdJobs.forEach((job, index) => {
+      console.log(`${index + 1}. ${job.title} - ${job.location} (${job.workMode})`);
+    });
+
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding jobs:', error);
+    console.error('❌ Error seeding jobs:', error);
+    console.error('Stack trace:', error.stack);
     process.exit(1);
   }
 }
