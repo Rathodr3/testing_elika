@@ -1,13 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { usersAPI, User } from '@/services/api';
+import { User, usersAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff } from 'lucide-react';
 
 interface EditUserFormProps {
   user: User;
@@ -15,65 +13,65 @@ interface EditUserFormProps {
   onCancel: () => void;
 }
 
-type UserRole = 'admin' | 'hr_manager' | 'recruiter' | 'viewer';
-
 const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
   const [formData, setFormData] = useState({
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    phoneNumber: user.phoneNumber,
-    role: user.role as UserRole,
-    isActive: user.isActive,
-    permissions: user.permissions,
-    password: '',
-    confirmPassword: ''
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    email: user.email || '',
+    phoneNumber: user.phoneNumber || '',
+    role: user.role || 'viewer' as const,
+    isActive: user.isActive !== false,
+    password: ''
   });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changePassword, setChangePassword] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if passwords match when password is being changed
-    if (formData.password && formData.password !== formData.confirmPassword) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phoneNumber) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
+        title: "Validation Error",
+        description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
     }
-    
+
+    if (changePassword && !formData.password) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a new password",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('🔧 Updating user with data:', formData);
       
-      // Create update data
-      const updateData: any = {
+      const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         role: formData.role,
         isActive: formData.isActive,
-        permissions: formData.permissions
+        ...(changePassword && formData.password && { password: formData.password })
       };
       
-      // Only include password if it's being changed
-      if (formData.password) {
-        updateData.password = formData.password;
-      }
-      
       await usersAPI.update(user._id!, updateData);
+      console.log('✅ User updated successfully');
+      
       toast({
         title: "User updated successfully",
         description: `${formData.firstName} ${formData.lastName} has been updated`,
       });
       onSuccess();
     } catch (error: any) {
-      console.error('Error updating user:', error);
+      console.error('❌ Error updating user:', error);
       toast({
         title: "Error updating user",
         description: error.message || "Please try again later",
@@ -84,59 +82,23 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
     }
   };
 
-  const handlePermissionChange = (section: string, action: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [section]: {
-          ...prev.permissions[section],
-          [action]: checked
-        }
-      }
+  const generatePassword = () => {
+    const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    setFormData(prev => ({ ...prev, password }));
+  };
+
+  const handleRoleChange = (value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      role: value as 'admin' | 'hr_manager' | 'recruiter' | 'viewer'
     }));
   };
 
-  const setRolePermissions = (role: UserRole) => {
-    let permissions;
-    if (role === 'admin') {
-      permissions = {
-        users: { create: true, read: true, update: true, delete: true },
-        companies: { create: true, read: true, update: true, delete: true },
-        jobs: { create: true, read: true, update: true, delete: true },
-        applications: { create: true, read: true, update: true, delete: true }
-      };
-    } else if (role === 'hr_manager') {
-      permissions = {
-        users: { create: false, read: true, update: false, delete: false },
-        companies: { create: true, read: true, update: true, delete: false },
-        jobs: { create: true, read: true, update: true, delete: true },
-        applications: { create: true, read: true, update: true, delete: false }
-      };
-    } else if (role === 'recruiter') {
-      permissions = {
-        users: { create: false, read: false, update: false, delete: false },
-        companies: { create: false, read: true, update: false, delete: false },
-        jobs: { create: true, read: true, update: true, delete: false },
-        applications: { create: false, read: true, update: true, delete: false }
-      };
-    } else {
-      permissions = {
-        users: { create: false, read: false, update: false, delete: false },
-        companies: { create: false, read: true, update: false, delete: false },
-        jobs: { create: false, read: true, update: false, delete: false },
-        applications: { create: false, read: true, update: false, delete: false }
-      };
-    }
-    
-    setFormData(prev => ({ ...prev, role, permissions }));
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-96 overflow-y-auto">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="firstName">First Name</Label>
+          <Label htmlFor="firstName">First Name *</Label>
           <Input
             id="firstName"
             value={formData.firstName}
@@ -145,7 +107,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
           />
         </div>
         <div>
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="lastName">Last Name *</Label>
           <Input
             id="lastName"
             value={formData.lastName}
@@ -156,7 +118,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email *</Label>
         <Input
           id="email"
           type="email"
@@ -167,7 +129,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="phoneNumber">Phone Number</Label>
+        <Label htmlFor="phoneNumber">Phone Number *</Label>
         <Input
           id="phoneNumber"
           value={formData.phoneNumber}
@@ -178,7 +140,7 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
 
       <div>
         <Label htmlFor="role">Role</Label>
-        <Select value={formData.role} onValueChange={setRolePermissions}>
+        <Select value={formData.role} onValueChange={handleRoleChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -200,77 +162,32 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
         <Label htmlFor="isActive">Active User</Label>
       </div>
 
-      {/* Password Change Section */}
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-3">Change Password (Optional)</h4>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="password">New Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Leave blank to keep current password"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
-            <div className="relative">
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="Confirm new password"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="changePassword"
+          checked={changePassword}
+          onCheckedChange={(checked) => setChangePassword(!!checked)}
+        />
+        <Label htmlFor="changePassword">Change Password</Label>
       </div>
 
-      <div>
-        <Label>Permissions</Label>
-        <div className="space-y-3 mt-2">
-          {Object.entries(formData.permissions).map(([section, actions]) => (
-            <div key={section} className="border p-3 rounded">
-              <h4 className="font-medium capitalize mb-2">{section}</h4>
-              <div className="grid grid-cols-4 gap-2">
-                {Object.entries(actions).map(([action, hasPermission]) => (
-                  <div key={action} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`${section}-${action}`}
-                      checked={hasPermission}
-                      onCheckedChange={(checked) => handlePermissionChange(section, action, !!checked)}
-                    />
-                    <Label htmlFor={`${section}-${action}`} className="text-sm capitalize">
-                      {action}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+      {changePassword && (
+        <div>
+          <Label htmlFor="password">New Password</Label>
+          <div className="flex gap-2">
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              placeholder="Enter new password"
+            />
+            <Button type="button" variant="outline" onClick={generatePassword}>
+              Generate
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex gap-2 pt-4">
         <Button type="submit" disabled={loading} className="flex-1">

@@ -19,28 +19,24 @@ const ServicesOverview = () => {
       title: 'Engineering Solutions',
       description: 'Unlocking innovative solutions for diverse client needs with cutting-edge technology and expertise.',
       image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=250&fit=crop',
-      features: ['Custom Development', 'System Integration', 'Technical Consulting']
     },
     {
       icon: Users,
       title: 'Human Resource Services', 
-      description: 'Effective recruitment is the key for high growth tech companies. We find the perfect talent for your team.',
+      description: 'Effective staff augmentation is the key for high growth tech companies. We find the perfect talent for your team.',
       image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=250&fit=crop',
-      features: ['Technical Hiring', 'Executive Search', 'Contract Staffing']
     },
     {
       icon: GraduationCap,
       title: 'Training & Development',
       description: 'Continuous learning drives growth, adaptability, and sustained success in today\'s evolving landscape.',
       image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop',
-      features: ['Skills Assessment', 'Custom Training', 'Certification Programs']
     },
     {
       icon: Monitor,
       title: 'IT Services',
       description: 'Comprehensive technology solutions including software development, cloud services, and digital transformation.',
       image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=250&fit=crop',
-      features: ['Software Development', 'Cloud Solutions', 'Digital Transformation']
     }
   ];
 
@@ -54,17 +50,16 @@ const ServicesOverview = () => {
 
       <Grid cols={4} gap="lg" className="mb-16">
         {services.map((service, index) => (
-          <div key={index} className="group">
+          <div key={index} className="group h-full flex flex-col justify-between">
             <EnhancedCard
               title={service.title}
               description={service.description}
               image={service.image}
               icon={service.icon}
-              features={service.features}
               buttonText=""
               className="h-full"
             />
-            <div className="mt-4">
+            <div className="mt-2">
               <Link to="/services" onClick={handleScrollToTop}>
                 <Button className="w-full">
                   Learn More

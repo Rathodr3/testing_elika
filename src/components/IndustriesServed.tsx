@@ -13,42 +13,36 @@ const IndustriesServed = () => {
       title: 'Information Technology',
       icon: Laptop,
       description: 'Software development, cloud solutions, and digital transformation services.',
-      projects: '150+ Projects',
       image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=200&fit=crop'
     },
     {
       title: 'Automobile Industry',
       icon: Car,
       description: 'Automotive engineering, design, and manufacturing solutions.',
-      projects: '85+ Projects',
       image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=200&fit=crop'
     },
     {
       title: 'Engineering & Manufacturing',
       icon: Cog,
       description: 'Industrial automation, process optimization, and manufacturing excellence.',
-      projects: '200+ Projects',
       image: 'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=400&h=200&fit=crop'
     },
     {
       title: 'Telecom Industry',
       icon: Smartphone,
       description: 'Network infrastructure, 5G solutions, and telecommunications services.',
-      projects: '75+ Projects',
       image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=200&fit=crop'
     },
     {
       title: 'Aerospace & Aviation',
       icon: Plane,
       description: 'Aerospace engineering, aviation systems, and defense technologies.',
-      projects: '45+ Projects',
-      image: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/health.jpg?w=400&h=200&fit=crop'
     },
     {
       title: 'Healthcare Industry',
       icon: Heart,
       description: 'Medical technology, healthcare IT, and biomedical engineering solutions.',
-      projects: '60+ Projects',
       image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=200&fit=crop'
     }
   ];

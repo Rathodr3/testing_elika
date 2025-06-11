@@ -6,6 +6,7 @@ import ChangePassword from './ChangePassword';
 import { authAPI } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { LogOut, Lock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,8 @@ const ProtectedAdmin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,29 +38,58 @@ const ProtectedAdmin = () => {
         // Verify token is valid by calling getCurrentUser
         const userData = await authAPI.getCurrentUser();
         console.log('✅ Admin authentication verified:', userData);
+        
+        setUserInfo(userData);
         setIsAuthenticated(true);
       } catch (error) {
         console.error('❌ Admin authentication failed:', error);
         // Clear invalid token
-        localStorage.removeItem('adminToken');
+        authAPI.logout();
         setIsAuthenticated(false);
+        
+        toast({
+          title: "Authentication Failed",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [toast]);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = async () => {
     console.log('✅ Admin login successful');
     setIsAuthenticated(true);
+    // Refresh user info after login
+    try {
+      const userData = await authAPI.getCurrentUser();
+      setUserInfo(userData);
+    } catch (error) {
+      console.error('Failed to get user info after login:', error);
+    }
   };
 
   const handleLogout = () => {
     console.log('🚪 Admin logout');
     authAPI.logout();
     setIsAuthenticated(false);
+    setUserInfo(null);
+    
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+  };
+
+  const handlePasswordChanged = () => {
+    setShowChangePassword(false);
+    toast({
+      title: "Password Updated",
+      description: "Your password has been changed successfully.",
+    });
   };
 
   if (loading) {
@@ -81,9 +113,16 @@ const ProtectedAdmin = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-lg font-semibold text-secondary-800">
-            Admin Dashboard
-          </h1>
+          <div>
+            <h1 className="text-lg font-semibold text-secondary-800">
+              Admin Dashboard
+            </h1>
+            {userInfo && (
+              <p className="text-sm text-gray-600">
+                Welcome, {userInfo.firstName} {userInfo.lastName} ({userInfo.role})
+              </p>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
               <DialogTrigger asChild>

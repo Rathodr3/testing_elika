@@ -1,23 +1,19 @@
 
 import React, { useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Play, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import Section from './Section';
 
 const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const elements = [
       { ref: titleRef, delay: 200 },
       { ref: subtitleRef, delay: 400 },
-      { ref: ctaRef, delay: 600 },
-      { ref: statsRef, delay: 800 }
+      { ref: statsRef, delay: 600 }
     ];
 
     const timer = setTimeout(() => {
@@ -32,10 +28,6 @@ const Hero = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  const handleNavigateClick = () => {
-    window.scrollTo(0, 0);
-  };
 
   return (
     <Section 
@@ -85,30 +77,6 @@ const Hero = () => {
               We transform businesses through innovative engineering solutions and strategic talent acquisition, delivering excellence at every step.
             </p>
 
-            {/* CTA Buttons */}
-            <div 
-              ref={ctaRef}
-              className="fade-in-up delay-300 flex flex-col sm:flex-row gap-4 mb-12"
-            >
-              <Link to="/about" onClick={handleNavigateClick}>
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white px-8 py-4 h-auto text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                >
-                  Get Started
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 h-auto text-lg font-semibold rounded-xl hover:scale-105 transition-all duration-300"
-              >
-                <Play className="mr-2 w-5 h-5" />
-                Watch Demo
-              </Button>
-            </div>
-
             {/* Stats */}
             <div 
               ref={statsRef}
@@ -156,11 +124,6 @@ const Hero = () => {
               </div>
 
               {/* Floating Elements */}
-              <div className="absolute -bottom-4 -left-4 bg-gradient-to-r from-primary to-purple-600 text-white p-4 rounded-2xl shadow-lg animate-bounce-gentle">
-                <div className="text-2xl font-bold">24/7</div>
-                <div className="text-sm">Support</div>
-              </div>
-
               <div className="absolute top-1/2 -left-8 bg-white rounded-full p-4 shadow-lg animate-pulse">
                 <Star className="w-6 h-6 text-yellow-500 fill-current" />
               </div>

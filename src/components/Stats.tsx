@@ -22,7 +22,7 @@ const Stats = () => {
       description: 'Trusted relationships built'
     },
     {
-      value: '99.5%',
+      value: '90%',
       label: 'Success Rate',
       description: 'Client satisfaction guaranteed'
     }

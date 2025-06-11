@@ -51,32 +51,17 @@ const AboutUs = () => {
 
   const achievements = [
     { number: "8+", label: "Years Experience", icon: TrendingUp },
-    { number: "500+", label: "Projects Completed", icon: CheckCircle },
-    { number: "50+", label: "Happy Clients", icon: Heart },
-    { number: "98%", label: "Success Rate", icon: Star }
+    { number: "10+", label: "Satisfied Clients", icon: Heart },
+    { number: "90%", label: "Success Rate", icon: Star }
   ];
 
   const teamMembers = [
     {
-      name: "Rajesh Kumar",
+      name: "Pankaj Watpade",
       position: "CEO & Founder",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
       description: "Visionary leader with 15+ years in engineering",
       expertise: "Strategic Leadership"
-    },
-    {
-      name: "Priya Sharma",
-      position: "CTO",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b631?w=300&h=300&fit=crop&crop=face",
-      description: "Technology expert driving innovation",
-      expertise: "Technical Innovation"
-    },
-    {
-      name: "Amit Patel",
-      position: "Head of Engineering",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face",
-      description: "Engineering excellence and quality assurance",
-      expertise: "Quality Assurance"
     }
   ];
 
@@ -145,8 +130,8 @@ const AboutUs = () => {
                       />
                       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-8 h-48 flex items-center justify-center text-white">
                         <div className="text-center">
-                          <div className="text-6xl font-bold mb-2">500+</div>
-                          <div className="font-semibold">Projects Delivered</div>
+                          <div className="text-6xl font-bold mb-2">10+</div>
+                          <div className="font-semibold">Satisfied Clients</div>
                         </div>
                       </div>
                     </div>
@@ -296,13 +281,13 @@ const AboutUs = () => {
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-20">
                 <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-                  Meet Our Team
+                  Our Leader
                 </div>
                 <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-8">
-                  Leadership Team
+                  Meet Our Founder
                 </h2>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  Experienced professionals driving innovation and excellence in engineering
+                  Leading with vision, innovation, and experience
                 </p>
               </div>
 

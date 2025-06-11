@@ -139,14 +139,28 @@ export const useJobData = () => {
           const transformedJobs: JobData[] = jobsData.map((job: any) => {
             console.log('🔄 Transforming job:', job);
             
-            // Ensure requirements is always an array
+            // Ensure requirements is always an array with better handling
             let requirements: string[] = [];
             if (Array.isArray(job.requirements)) {
-              requirements = job.requirements;
-            } else if (typeof job.requirements === 'string') {
-              requirements = job.requirements.split(',').map((req: string) => req.trim());
-            } else {
-              // Default requirements based on job type
+              requirements = job.requirements.filter(req => req && req.trim());
+            } else if (typeof job.requirements === 'string' && job.requirements.trim()) {
+              // Try to parse JSON first, if that fails, split by delimiters
+              try {
+                const parsed = JSON.parse(job.requirements);
+                if (Array.isArray(parsed)) {
+                  requirements = parsed.filter(req => req && req.trim());
+                } else {
+                  requirements = [job.requirements.trim()];
+                }
+              } catch {
+                requirements = job.requirements.split(/[,;|\n]/)
+                  .map((req: string) => req.trim())
+                  .filter(req => req.length > 0);
+              }
+            }
+            
+            // If still no requirements, provide defaults
+            if (requirements.length === 0) {
               requirements = [
                 `${job.minExperience || 2}+ years of experience`,
                 `Knowledge of ${job.domain || 'relevant technologies'}`,
@@ -169,11 +183,14 @@ export const useJobData = () => {
               isActive: job.isActive !== false,
               postedDate: job.postedDate || job.createdAt || new Date().toISOString(),
               applicantsCount: job.applicantsCount || 0,
-              posted: job.postedDate 
-                ? `${Math.ceil((new Date().getTime() - new Date(job.postedDate).getTime()) / (1000 * 60 * 60 * 24))} days ago`
-                : job.createdAt 
-                  ? `${Math.ceil((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days ago`
-                  : 'Recently posted',
+              posted: (() => {
+                const date = job.postedDate || job.createdAt;
+                if (date) {
+                  const days = Math.ceil((new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+                  return `${days} days ago`;
+                }
+                return 'Recently posted';
+              })(),
               applicants: `${job.applicantsCount || 0} applicants`,
               employmentType: job.employmentType || 'full-time',
               workMode: job.workMode || 'hybrid',

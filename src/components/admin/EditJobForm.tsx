@@ -28,6 +28,8 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
     minExperience: job.minExperience || 0,
     description: job.description || '',
     requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : '',
+    responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.join('\n') : '',
+    benefits: Array.isArray(job.benefits) ? job.benefits.join('\n') : '',
     salary: job.salary || '',
     isActive: job.isActive
   });
@@ -40,10 +42,12 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
 
   const fetchCompanies = async () => {
     try {
+      console.log('🔍 Fetching companies for job editing...');
       const data = await companiesAPI.getAll();
+      console.log('✅ Companies fetched for editing:', data);
       setCompanies(data);
     } catch (error) {
-      console.error('Error fetching companies:', error);
+      console.error('❌ Error fetching companies:', error);
       toast({
         title: "Error fetching companies",
         description: "Failed to load companies list",
@@ -66,19 +70,25 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
     
     try {
       setLoading(true);
+      console.log('🔧 Updating job with data:', formData);
+      
       const jobData = {
         ...formData,
-        requirements: formData.requirements.split('\n').filter(req => req.trim())
+        requirements: formData.requirements.split('\n').filter(req => req.trim()),
+        responsibilities: formData.responsibilities.split('\n').filter(resp => resp.trim()),
+        benefits: formData.benefits.split('\n').filter(benefit => benefit.trim())
       };
       
-      await jobsAPI.update(job._id, jobData);
+      const result = await jobsAPI.update(job._id, jobData);
+      console.log('✅ Job updated successfully:', result);
+      
       toast({
         title: "Job updated successfully",
         description: `${formData.title} has been updated`,
       });
       onSuccess();
     } catch (error: any) {
-      console.error('Error updating job:', error);
+      console.error('❌ Error updating job:', error);
       toast({
         title: "Error updating job",
         description: error.message || "Please try again later",
@@ -210,13 +220,14 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Description *</Label>
           <Textarea
             id="description"
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             placeholder="Job description..."
             rows={3}
+            required
           />
         </div>
 
@@ -227,7 +238,29 @@ const EditJobForm = ({ job, onSuccess, onCancel }: EditJobFormProps) => {
             value={formData.requirements}
             onChange={(e) => setFormData(prev => ({ ...prev, requirements: e.target.value }))}
             placeholder="Enter requirements, one per line"
-            rows={4}
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="responsibilities">Responsibilities (one per line)</Label>
+          <Textarea
+            id="responsibilities"
+            value={formData.responsibilities}
+            onChange={(e) => setFormData(prev => ({ ...prev, responsibilities: e.target.value }))}
+            placeholder="Enter responsibilities, one per line"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="benefits">Benefits (one per line)</Label>
+          <Textarea
+            id="benefits"
+            value={formData.benefits}
+            onChange={(e) => setFormData(prev => ({ ...prev, benefits: e.target.value }))}
+            placeholder="Enter benefits, one per line"
+            rows={3}
           />
         </div>
 

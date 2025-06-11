@@ -15,7 +15,8 @@ export interface JobApplication {
   coverLetter?: string;
   resumeFile?: File;
   resumePath?: string;
-  status: 'pending' | 'reviewing' | 'interviewed' | 'hired' | 'rejected';
+  status: 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
+  notes?: string;
   applicationDate?: string;
   createdAt: string;
   updatedAt?: string;

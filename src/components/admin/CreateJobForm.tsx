@@ -26,6 +26,8 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
     minExperience: 0,
     description: '',
     requirements: '',
+    responsibilities: '',
+    benefits: '',
     salary: '',
     isActive: true
   });
@@ -38,10 +40,17 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
 
   const fetchCompanies = async () => {
     try {
+      console.log('🔍 Fetching companies for job creation...');
       const data = await companiesAPI.getAll();
+      console.log('✅ Companies fetched:', data);
       setCompanies(data.filter(company => company.isActive));
     } catch (error) {
-      console.error('Error fetching companies:', error);
+      console.error('❌ Error fetching companies:', error);
+      toast({
+        title: "Error fetching companies",
+        description: "Could not load companies list",
+        variant: "destructive"
+      });
     }
   };
 
@@ -59,18 +68,25 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
 
     try {
       setLoading(true);
+      console.log('🔧 Creating job with data:', formData);
+      
       const jobData = {
         ...formData,
-        requirements: formData.requirements ? formData.requirements.split('\n').filter(req => req.trim()) : []
+        requirements: formData.requirements ? formData.requirements.split('\n').filter(req => req.trim()) : [],
+        responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').filter(resp => resp.trim()) : [],
+        benefits: formData.benefits ? formData.benefits.split('\n').filter(benefit => benefit.trim()) : []
       };
-      await jobsAPI.create(jobData);
+      
+      const result = await jobsAPI.create(jobData);
+      console.log('✅ Job created successfully:', result);
+      
       toast({
         title: "Job created successfully",
         description: `${formData.title} has been posted`,
       });
       onSuccess();
     } catch (error: any) {
-      console.error('Error creating job:', error);
+      console.error('❌ Error creating job:', error);
       toast({
         title: "Error creating job",
         description: error.message || "Please try again later",
@@ -206,12 +222,14 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Description *</Label>
           <Textarea
             id="description"
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             rows={3}
+            placeholder="Describe the job role and what the candidate will be doing..."
+            required
           />
         </div>
 
@@ -223,6 +241,28 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
             onChange={(e) => setFormData(prev => ({ ...prev, requirements: e.target.value }))}
             rows={3}
             placeholder="3+ years of experience&#10;Bachelor's degree&#10;Strong communication skills"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="responsibilities">Responsibilities (one per line)</Label>
+          <Textarea
+            id="responsibilities"
+            value={formData.responsibilities}
+            onChange={(e) => setFormData(prev => ({ ...prev, responsibilities: e.target.value }))}
+            rows={3}
+            placeholder="Develop and maintain software applications&#10;Collaborate with cross-functional teams&#10;Write clean, maintainable code"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="benefits">Benefits (one per line)</Label>
+          <Textarea
+            id="benefits"
+            value={formData.benefits}
+            onChange={(e) => setFormData(prev => ({ ...prev, benefits: e.target.value }))}
+            rows={3}
+            placeholder="Health insurance&#10;Flexible working hours&#10;Professional development opportunities"
           />
         </div>
 

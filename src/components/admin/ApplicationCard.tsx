@@ -1,30 +1,42 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Edit, Eye, Download, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Edit, Trash2, Mail, Phone, MapPin } from 'lucide-react';
 import { JobApplication } from '@/services/api';
-import EditApplicationForm from './EditApplicationForm';
-import { usePermissions } from '@/hooks/usePermissions';
 
 interface ApplicationCardProps {
   application: JobApplication;
-  onStatusUpdate: (id: string, status: string) => void;
   onEdit: (application: JobApplication) => void;
-  onDelete: (id: string) => void;
+  onStatusUpdate: (applicationId: string, newStatus: string) => void;
+  onDelete: (applicationId: string) => void;
+  isSelected: boolean;
+  onToggleSelection: (applicationId: string) => void;
 }
 
-const ApplicationCard = ({ application, onStatusUpdate, onEdit, onDelete }: ApplicationCardProps) => {
-  const [showEditForm, setShowEditForm] = useState(false);
-  const { canEdit, canDelete, isViewer } = usePermissions();
+const ApplicationCard = ({
+  application,
+  onEdit,
+  onStatusUpdate,
+  onDelete,
+  isSelected,
+  onToggleSelection
+}: ApplicationCardProps) => {
+  const fullName = `${application.firstName || ''} ${application.lastName || ''}`.trim();
+  const name = application.name || fullName || 'No Name';
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'submitted': return 'bg-blue-100 text-blue-800';
-      case 'under-review': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'reviewing': return 'bg-blue-100 text-blue-800';
       case 'shortlisted': return 'bg-purple-100 text-purple-800';
       case 'interviewed': return 'bg-orange-100 text-orange-800';
       case 'hired': return 'bg-green-100 text-green-800';
@@ -33,164 +45,115 @@ const ApplicationCard = ({ application, onStatusUpdate, onEdit, onDelete }: Appl
     }
   };
 
-  const handleStatusChange = (newStatus: string) => {
-    // Only allow status changes if user has edit permissions
-    if (canEdit('applications')) {
-      onStatusUpdate(application._id!, newStatus);
-    }
-  };
-
-  const handleEdit = () => {
-    if (canEdit('applications')) {
-      setShowEditForm(true);
-    }
-  };
-
-  const handleDelete = () => {
-    if (canDelete('applications')) {
-      if (window.confirm('Are you sure you want to delete this application?')) {
-        onDelete(application._id!);
-      }
-    }
-  };
-
-  const handleDownloadResume = () => {
-    if (application.resumePath) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      window.open(`${apiUrl}/applications/${application._id}/resume`, '_blank');
-    }
-  };
+  const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'reviewing', label: 'Reviewing' },
+    { value: 'shortlisted', label: 'Shortlisted' },
+    { value: 'interviewed', label: 'Interviewed' },
+    { value: 'hired', label: 'Hired' },
+    { value: 'rejected', label: 'Rejected' }
+  ];
 
   return (
-    <Card className="mb-4">
+    <Card className={`transition-all duration-200 ${isSelected ? 'ring-2 ring-blue-500' : 'hover:shadow-md'}`}>
       <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-semibold">
-              {application.firstName} {application.lastName}
-            </h3>
-            <p className="text-gray-600">{application.email}</p>
-            <p className="text-sm text-gray-500">{application.phone}</p>
-          </div>
-          <Badge className={getStatusColor(application.status)}>
-            {application.status.replace('-', ' ').toUpperCase()}
-          </Badge>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div>
-            <p className="text-sm font-medium">Position</p>
-            <p className="text-sm text-gray-600">{application.position}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Department</p>
-            <p className="text-sm text-gray-600">{application.department}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Experience</p>
-            <p className="text-sm text-gray-600">{application.yearsOfExperience} years</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Applied</p>
-            <p className="text-sm text-gray-600">
-              {new Date(application.applicationDate).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-
-        {application.skills && application.skills.length > 0 && (
-          <div className="mb-4">
-            <p className="text-sm font-medium mb-2">Skills</p>
-            <div className="flex flex-wrap gap-2">
-              {application.skills.map((skill, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {skill}
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4 flex-1">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelection(application._id!)}
+              className="mt-1"
+            />
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  {name}
+                </h3>
+                <Badge className={getStatusColor(application.status || 'pending')}>
+                  {application.status || 'pending'}
                 </Badge>
-              ))}
+              </div>
+              
+              <div className="space-y-2 text-sm text-gray-600">
+                {application.email && (
+                  <div className="flex items-center space-x-2">
+                    <Mail className="w-4 h-4" />
+                    <span>{application.email}</span>
+                  </div>
+                )}
+                
+                {application.phone && (
+                  <div className="flex items-center space-x-2">
+                    <Phone className="w-4 h-4" />
+                    <span>{application.phone}</span>
+                  </div>
+                )}
+                
+                {application.position && (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Position:</span>
+                    <span>{application.position}</span>
+                  </div>
+                )}
+                
+                {application.department && (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Department:</span>
+                    <span>{application.department}</span>
+                  </div>
+                )}
+                
+                {application.experienceLevel && (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Experience:</span>
+                    <span>{application.experienceLevel}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-4 flex flex-wrap gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Change Status
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {statusOptions.map((option) => (
+                      <DropdownMenuItem
+                        key={option.value}
+                        onClick={() => onStatusUpdate(application._id!, option.value)}
+                      >
+                        {option.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Select
-              value={application.status}
-              onValueChange={handleStatusChange}
-              disabled={!canEdit('applications') || isViewer()}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="submitted">Submitted</SelectItem>
-                <SelectItem value="under-review">Under Review</SelectItem>
-                <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                <SelectItem value="interviewed">Interviewed</SelectItem>
-                <SelectItem value="hired">Hired</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            {isViewer() && (
-              <span className="text-xs text-gray-500">(View only)</span>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            {application.resumePath && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadResume}
-              >
-                <Download className="w-4 h-4 mr-1" />
-                Resume
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="w-4 h-4" />
               </Button>
-            )}
-            
-            <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEdit}
-                  disabled={!canEdit('applications') || isViewer()}
-                >
-                  {canEdit('applications') && !isViewer() ? (
-                    <><Edit className="w-4 h-4 mr-1" />Edit</>
-                  ) : (
-                    <><Eye className="w-4 h-4 mr-1" />View</>
-                  )}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {canEdit('applications') && !isViewer() ? 'Edit' : 'View'} Application
-                  </DialogTitle>
-                </DialogHeader>
-                <EditApplicationForm
-                  application={application}
-                  onSuccess={() => {
-                    setShowEditForm(false);
-                    onEdit(application);
-                  }}
-                  onCancel={() => setShowEditForm(false)}
-                  readOnly={!canEdit('applications') || isViewer()}
-                />
-              </DialogContent>
-            </Dialog>
-
-            {canDelete('applications') && !isViewer() && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDelete}
-                className="text-red-600 hover:text-red-700"
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(application)}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onDelete(application._id!)}
+                className="text-red-600"
               >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardContent>
     </Card>

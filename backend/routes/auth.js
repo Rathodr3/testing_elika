@@ -1,10 +1,64 @@
+
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 
 // Store for reset tokens (in production, use Redis or database)
 const resetTokens = new Map();
+
+// Get current user info
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    console.log('Getting current user info for:', req.user.email);
+    
+    // Set permissions based on role if not already set
+    const rolePermissions = {
+      admin: {
+        users: { create: true, read: true, update: true, delete: true },
+        companies: { create: true, read: true, update: true, delete: true },
+        jobs: { create: true, read: true, update: true, delete: true },
+        applications: { create: true, read: true, update: true, delete: true }
+      },
+      hr_manager: {
+        users: { create: true, read: true, update: true, delete: false },
+        companies: { create: true, read: true, update: true, delete: false },
+        jobs: { create: true, read: true, update: true, delete: true },
+        applications: { create: false, read: true, update: true, delete: false }
+      },
+      recruiter: {
+        users: { create: false, read: true, update: false, delete: false },
+        companies: { create: false, read: true, update: false, delete: false },
+        jobs: { create: true, read: true, update: true, delete: false },
+        applications: { create: false, read: true, update: true, delete: false }
+      },
+      viewer: {
+        users: { create: false, read: true, update: false, delete: false },
+        companies: { create: false, read: true, update: false, delete: false },
+        jobs: { create: false, read: true, update: false, delete: false },
+        applications: { create: false, read: true, update: false, delete: false }
+      }
+    };
+
+    const userWithPermissions = {
+      ...req.user,
+      permissions: req.user.permissions || rolePermissions[req.user.role] || rolePermissions.viewer
+    };
+
+    res.json({
+      success: true,
+      user: userWithPermissions
+    });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user info'
+    });
+  }
+});
 
 // Simple admin login with database user support
 router.post('/login', async (req, res) => {
@@ -18,13 +72,27 @@ router.post('/login', async (req, res) => {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     
     if (email === adminEmail && password === adminPassword) {
-      // In production, generate a proper JWT token
+      // Generate a proper token for admin
       const token = 'admin-token-' + Date.now();
+      
+      const adminUser = {
+        email,
+        role: 'admin',
+        firstName: 'Admin',
+        lastName: 'User',
+        permissions: {
+          users: { create: true, read: true, update: true, delete: true },
+          companies: { create: true, read: true, update: true, delete: true },
+          jobs: { create: true, read: true, update: true, delete: true },
+          applications: { create: true, read: true, update: true, delete: true }
+        }
+      };
       
       return res.json({
         success: true,
         token,
-        user: { email, role: 'admin', firstName: 'Admin', lastName: 'User' }
+        user: adminUser,
+        message: 'Login successful'
       });
     }
     
@@ -57,16 +125,48 @@ router.post('/login', async (req, res) => {
     // Generate token for database user
     const token = 'user-token-' + Date.now() + '-' + user._id;
     
+    // Set permissions based on role
+    const rolePermissions = {
+      admin: {
+        users: { create: true, read: true, update: true, delete: true },
+        companies: { create: true, read: true, update: true, delete: true },
+        jobs: { create: true, read: true, update: true, delete: true },
+        applications: { create: true, read: true, update: true, delete: true }
+      },
+      hr_manager: {
+        users: { create: true, read: true, update: true, delete: false },
+        companies: { create: true, read: true, update: true, delete: false },
+        jobs: { create: true, read: true, update: true, delete: true },
+        applications: { create: false, read: true, update: true, delete: false }
+      },
+      recruiter: {
+        users: { create: false, read: true, update: false, delete: false },
+        companies: { create: false, read: true, update: false, delete: false },
+        jobs: { create: true, read: true, update: true, delete: false },
+        applications: { create: false, read: true, update: true, delete: false }
+      },
+      viewer: {
+        users: { create: false, read: true, update: false, delete: false },
+        companies: { create: false, read: true, update: false, delete: false },
+        jobs: { create: false, read: true, update: false, delete: false },
+        applications: { create: false, read: true, update: false, delete: false }
+      }
+    };
+
+    const userResponse = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      permissions: user.permissions || rolePermissions[user.role] || rolePermissions.viewer
+    };
+    
     res.json({
       success: true,
       token,
-      user: { 
-        id: user._id,
-        email: user.email, 
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName
-      }
+      user: userResponse,
+      message: 'Login successful'
     });
     
   } catch (error) {

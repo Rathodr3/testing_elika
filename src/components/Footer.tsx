@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -21,18 +20,16 @@ const Footer = () => {
     company: [
       { label: 'About Us', href: '/about' },
       { label: 'Our Team', href: '/about' },
-      { label: 'Careers', href: '/projects' },
-      { label: 'News & Updates', href: '/projects' }
+      { label: 'Careers', href: '/projects' }
     ],
     services: [
       { label: 'Engineering Services', href: '/services' },
-      { label: 'Placement Solutions', href: '/services' },
-      { label: 'Technical Consulting', href: '/services' },
-      { label: 'Brand Building', href: '/services' }
+      { label: 'IT Services', href: '/services' },
+      { label: 'Staff Augmentation', href: '/services' },
+      { label: 'Training Services', href: '/services' }
     ],
     support: [
       { label: 'Contact Us', href: '/contact' },
-      { label: 'Help Center', href: '/contact' },
       { label: 'Privacy Policy', href: '/contact' },
       { label: 'Terms of Service', href: '/contact' }
     ]

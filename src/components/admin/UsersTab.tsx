@@ -1,30 +1,46 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Mail, Phone, Calendar } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Plus, MoreHorizontal, Edit, Trash2, User, Mail, Phone } from 'lucide-react';
+import { User as UserType, usersAPI } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
+import { useAdminData } from '@/contexts/AdminDataContext';
 import CreateUserForm from './CreateUserForm';
 import EditUserForm from './EditUserForm';
-import { usersAPI, User } from '@/services/api';
-import { useToast } from '@/hooks/use-toast';
+import AdminHeader from './AdminHeader';
+import EnhancedFilters from './EnhancedFilters';
+import PermissionWrapper from './PermissionWrapper';
 
 const UsersTab = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const { toast } = useToast();
+  const { refreshTrigger, setRefreshing } = useAdminData();
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [refreshTrigger]);
 
   useEffect(() => {
     filterUsers();
@@ -33,17 +49,24 @@ const UsersTab = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setRefreshing(true);
+      console.log('🔍 Fetching users for admin dashboard...');
       const data = await usersAPI.getAll();
-      setUsers(data);
+      console.log('✅ Users fetched:', data);
+      
+      const usersArray = Array.isArray(data) ? data : [];
+      setUsers(usersArray);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('❌ Error fetching users:', error);
       toast({
         title: "Error fetching users",
-        description: "Please try again later",
+        description: "Failed to load users from the server.",
         variant: "destructive"
       });
+      setUsers([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -51,10 +74,11 @@ const UsersTab = () => {
     let filtered = users;
 
     if (searchTerm) {
-      filtered = filtered.filter(user => 
-        user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(user =>
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        (user.phoneNumber || '').toLowerCase().includes(searchLower)
       );
     }
 
@@ -65,18 +89,37 @@ const UsersTab = () => {
     setFilteredUsers(filtered);
   };
 
+  const handleCreateSuccess = () => {
+    setShowCreateDialog(false);
+    fetchUsers();
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setEditingUser(null);
+    fetchUsers();
+  };
+
+  const handleEditUser = (user: UserType) => {
+    setEditingUser(user);
+    setShowEditDialog(true);
+  };
+
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
 
     try {
+      console.log('🗑️ Deleting user:', userId);
       await usersAPI.delete(userId);
+      setUsers(prev => prev.filter(user => user._id !== userId));
       toast({
         title: "User deleted successfully",
-        description: "The user has been removed from the system",
+        description: "The user has been removed.",
       });
-      fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('❌ Error deleting user:', error);
       toast({
         title: "Error deleting user",
         description: "Please try again later",
@@ -85,7 +128,7 @@ const UsersTab = () => {
     }
   };
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800';
       case 'hr_manager': return 'bg-blue-100 text-blue-800';
@@ -95,157 +138,169 @@ const UsersTab = () => {
     }
   };
 
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'hr_manager': return 'HR Manager';
+      case 'recruiter': return 'Recruiter';
+      case 'admin': return 'Admin';
+      case 'viewer': return 'Viewer';
+      default: return role;
+    }
+  };
+
   if (loading) {
-    return <div className="text-center py-8">Loading users...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-3 text-muted-foreground">Loading users...</span>
+      </div>
+    );
   }
+
+  const roleOptions = [
+    { value: 'all', label: 'All Roles' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'hr_manager', label: 'HR Manager' },
+    { value: 'recruiter', label: 'Recruiter' },
+    { value: 'viewer', label: 'Viewer' }
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header with search and filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-1 gap-4">
-              <Input
-                placeholder="Search users by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="hr_manager">HR Manager</SelectItem>
-                  <SelectItem value="recruiter">Recruiter</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create New User</DialogTitle>
-                </DialogHeader>
-                <CreateUserForm 
-                  onSuccess={() => {
-                    setShowCreateDialog(false);
-                    fetchUsers();
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
+      <AdminHeader
+        title="Users Management"
+        description="Manage user accounts and permissions"
+      >
+        <PermissionWrapper resource="users" action="create">
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Create User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New User</DialogTitle>
+              </DialogHeader>
+              <CreateUserForm onSuccess={handleCreateSuccess} />
+            </DialogContent>
+          </Dialog>
+        </PermissionWrapper>
+      </AdminHeader>
 
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Users ({filteredUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user._id}>
-                  <TableCell className="font-medium">
-                    {user.firstName} {user.lastName}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                      {user.email}
+      <EnhancedFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search by name, email, or phone..."
+        filters={[
+          {
+            key: 'role',
+            label: 'Role',
+            value: roleFilter,
+            options: roleOptions,
+            onChange: setRoleFilter
+          }
+        ]}
+        onClearFilters={() => {
+          setSearchTerm('');
+          setRoleFilter('all');
+        }}
+      />
+
+      <div className="space-y-4">
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((user) => (
+            <Card key={user._id}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4 flex-1">
+                    <div className="p-2 bg-gray-100 rounded-full">
+                      <User className="w-5 h-5 text-gray-600" />
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                      {user.phoneNumber}
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {user.firstName} {user.lastName}
+                        </h3>
+                        <Badge className={getRoleColor(user.role)}>
+                          {getRoleLabel(user.role)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <Mail className="w-4 h-4" />
+                          <span>{user.email}</span>
+                        </div>
+                        {user.phoneNumber && (
+                          <div className="flex items-center space-x-2">
+                            <Phone className="w-4 h-4" />
+                            <span>{user.phoneNumber}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => setEditingUser(user)}
-                      >
-                        <Edit className="w-4 h-4" />
+                  </div>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleDeleteUser(user._id!)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No users found matching your criteria.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <PermissionWrapper resource="users" action="update" fallback={null}>
+                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      </PermissionWrapper>
+                      <PermissionWrapper resource="users" action="delete" fallback={null}>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteUser(user._id!)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </PermissionWrapper>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <h3 className="text-lg font-semibold mb-2">No Users Found</h3>
+              <p className="text-muted-foreground">
+                {users.length === 0 
+                  ? "No users have been created yet." 
+                  : "No users match your current search criteria."
+                }
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Edit User Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
           {editingUser && (
-            <EditUserForm 
+            <EditUserForm
               user={editingUser}
-              onSuccess={() => {
+              onSuccess={handleEditSuccess}
+              onCancel={() => {
+                setShowEditDialog(false);
                 setEditingUser(null);
-                fetchUsers();
               }}
-              onCancel={() => setEditingUser(null)}
             />
           )}
         </DialogContent>

@@ -35,7 +35,7 @@ const EnhancedCard = ({
   return (
     <Card 
       className={cn(
-        'border-0 shadow-lg bg-white overflow-hidden transition-all duration-300',
+        'border-0 shadow-lg bg-white overflow-hidden transition-all duration-300 flex flex-col h-full',
         hover && 'hover:shadow-xl hover:-translate-y-1 card-hover',
         gradient && 'bg-gradient-to-br from-white to-gray-50',
         className
@@ -66,26 +66,14 @@ const EnhancedCard = ({
         </div>
       )}
       
-      <CardContent className={cn('p-6', !image && !Icon && 'pt-6')}>
+      <CardContent className={cn('p-6 flex flex-col flex-grow justify-between', !image && !Icon && 'pt-6')}>
         <CardTitle className="text-xl font-bold text-secondary-800 mb-3 group-hover:text-primary transition-colors duration-300">
           {title}
         </CardTitle>
         
-        <p className="text-accent leading-relaxed mb-4">
+        <p className="text-accent leading-relaxed mb-2">
           {description}
         </p>
-
-        {/* Features List */}
-        {features && features.length > 0 && (
-          <ul className="space-y-2 mb-6">
-            {features.map((feature, index) => (
-              <li key={index} className="flex items-center text-sm text-accent">
-                <div className="w-1.5 h-1.5 bg-primary rounded-full mr-3 flex-shrink-0"></div>
-                {feature}
-              </li>
-            ))}
-          </ul>
-        )}
 
         {/* Action Button */}
         {buttonText && (

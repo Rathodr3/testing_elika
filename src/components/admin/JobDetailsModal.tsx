@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,11 +45,17 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
   const responsibilities = ensureArray(job.responsibilities);
   const benefits = ensureArray(job.benefits);
 
+  // Get the posted date - use createdAt since postedDate doesn't exist in Job type
+  const getPostedDate = () => {
+    const date = job.createdAt || new Date();
+    return new Date(date).toLocaleDateString();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-2xl font-bold">{job.title}</DialogTitle>
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0 pb-4">
+          <DialogTitle className="text-2xl font-bold text-left">{job.title}</DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="flex-1 pr-4">
@@ -58,12 +63,12 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
             {/* Basic Info */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Building className="w-5 h-5" />
                   Job Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="flex items-center gap-2">
                     <Building className="w-4 h-4 text-muted-foreground" />
@@ -111,19 +116,17 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
                     <span className="text-sm text-muted-foreground">Min Experience:</span>
                     <span className="font-medium">{job.minExperience}+ years</span>
                   </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Posted:</span>
+                    <span className="font-medium">{getPostedDate()}</span>
+                  </div>
                 </div>
                 
                 <Separator />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Posted:</span>
-                    <span className="font-medium">
-                      {new Date(job.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  
+                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Status:</span>
                     <Badge variant={job.isActive ? 'default' : 'secondary'}>
@@ -137,12 +140,14 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
             {/* Description */}
             <Card>
               <CardHeader>
-                <CardTitle>Job Description</CardTitle>
+                <CardTitle className="text-lg">Job Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {job.description}
-                </p>
+                <div className="prose prose-sm max-w-none">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {job.description}
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -150,14 +155,14 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
             {requirements.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Requirements</CardTitle>
+                  <CardTitle className="text-lg">Requirements</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {requirements.map((requirement, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                      <li key={index} className="flex items-start gap-3">
                         <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                        <span className="text-sm">{requirement}</span>
+                        <span className="text-sm leading-relaxed">{requirement}</span>
                       </li>
                     ))}
                   </ul>
@@ -169,14 +174,14 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
             {responsibilities.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Responsibilities</CardTitle>
+                  <CardTitle className="text-lg">Responsibilities</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {responsibilities.map((responsibility, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                      <li key={index} className="flex items-start gap-3">
                         <span className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0"></span>
-                        <span className="text-sm">{responsibility}</span>
+                        <span className="text-sm leading-relaxed">{responsibility}</span>
                       </li>
                     ))}
                   </ul>
@@ -188,14 +193,14 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChan
             {benefits.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Benefits</CardTitle>
+                  <CardTitle className="text-lg">Benefits</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {benefits.map((benefit, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                      <li key={index} className="flex items-start gap-3">
                         <span className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
-                        <span className="text-sm">{benefit}</span>
+                        <span className="text-sm leading-relaxed">{benefit}</span>
                       </li>
                     ))}
                   </ul>

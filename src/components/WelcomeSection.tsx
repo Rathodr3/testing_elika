@@ -38,7 +38,7 @@ const WelcomeSection = () => {
             </span>
           </h2>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Where we blend authenticity and innovation in recruitment and engineering 
+            Where we blend authenticity and innovation in staff augmentation and engineering 
             services. Our mission is simple: to transform the industry through authentic, 
             honest solutions tailored to your needs.
           </p>
@@ -68,7 +68,7 @@ const WelcomeSection = () => {
                 Building Lasting Relationships
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                We're not just another recruitment agency or engineering consultancy. We're a team of 
+                We're not just another staff augmentation agency or engineering consultancy. We're a team of 
                 dedicated professionals who prioritize building lasting relationships and delivering 
                 solutions that truly make a difference.
               </p>

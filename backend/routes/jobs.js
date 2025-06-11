@@ -11,21 +11,31 @@ router.get('/public', async (req, res) => {
     console.log('🔍 Fetching public jobs...');
     const jobs = await Job.find({ isActive: true })
       .populate('company', 'name logo description contactEmail phoneNumber website')
-      .sort({ postedDate: -1 })
+      .sort({ createdAt: -1 })
       .lean();
     
     console.log(`✅ Found ${jobs.length} active jobs for public`);
     
-    // Ensure consistent data structure
-    const formattedJobs = jobs.map(job => ({
-      ...job,
-      id: job._id,
-      company: job.company || { name: 'Unknown Company' },
-      requirements: Array.isArray(job.requirements) ? job.requirements : [],
-      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
-      benefits: Array.isArray(job.benefits) ? job.benefits : []
-    }));
+    // Ensure consistent data structure with proper array formatting
+    const formattedJobs = jobs.map(job => {
+      console.log('🔄 Formatting job for public:', job.title);
+      
+      return {
+        ...job,
+        id: job._id,
+        company: job.company || { name: 'Elika Engineering Pvt Ltd' },
+        requirements: Array.isArray(job.requirements) ? job.requirements : 
+          (typeof job.requirements === 'string' ? [job.requirements] : []),
+        responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : 
+          (typeof job.responsibilities === 'string' ? [job.responsibilities] : []),
+        benefits: Array.isArray(job.benefits) ? job.benefits : 
+          (typeof job.benefits === 'string' ? [job.benefits] : []),
+        postedDate: job.createdAt || job.postedDate || new Date(),
+        applicantsCount: job.applicantsCount || 0
+      };
+    });
     
+    console.log('✅ Formatted jobs for public:', formattedJobs.length);
     res.json(formattedJobs);
   } catch (error) {
     console.error('❌ Get public jobs error:', error);
@@ -48,15 +58,24 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
     
     console.log(`✅ Found ${jobs.length} total jobs for admin`);
     
-    // Ensure consistent data structure
-    const formattedJobs = jobs.map(job => ({
-      ...job,
-      id: job._id,
-      company: job.company || { name: 'Unknown Company' },
-      requirements: Array.isArray(job.requirements) ? job.requirements : [],
-      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
-      benefits: Array.isArray(job.benefits) ? job.benefits : []
-    }));
+    // Ensure consistent data structure with proper array formatting
+    const formattedJobs = jobs.map(job => {
+      console.log('🔄 Formatting job for admin:', job.title);
+      
+      return {
+        ...job,
+        id: job._id,
+        company: job.company || { name: 'Elika Engineering Pvt Ltd' },
+        requirements: Array.isArray(job.requirements) ? job.requirements : 
+          (typeof job.requirements === 'string' ? [job.requirements] : []),
+        responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : 
+          (typeof job.responsibilities === 'string' ? [job.responsibilities] : []),
+        benefits: Array.isArray(job.benefits) ? job.benefits : 
+          (typeof job.benefits === 'string' ? [job.benefits] : []),
+        postedDate: job.createdAt || job.postedDate || new Date(),
+        applicantsCount: job.applicantsCount || 0
+      };
+    });
     
     res.json({
       success: true,

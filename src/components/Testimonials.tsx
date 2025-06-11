@@ -120,23 +120,7 @@ const Testimonials = () => {
               >
                 <ChevronRight className="h-6 w-6" />
               </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center space-x-12">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-gray-900 mb-2">98%</div>
-                <div className="text-sm text-gray-600 uppercase tracking-wide">Satisfaction Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-gray-900 mb-2">500+</div>
-                <div className="text-sm text-gray-600 uppercase tracking-wide">Happy Clients</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-gray-900 mb-2">50+</div>
-                <div className="text-sm text-gray-600 uppercase tracking-wide">Industry Awards</div>
-              </div>
-            </div>
+            </div>         
           </div>
         </div>
       </div>

@@ -37,7 +37,7 @@ const Newsletter = () => {
 
     try {
       // Simulate subscription
-      console.log('Newsletter subscription:', { email });
+      console.log('Newsletter subscription:', { email, timestamp: new Date().toISOString() });
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -159,14 +159,15 @@ const Newsletter = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full h-14 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl backdrop-blur-sm text-lg"
+                      disabled={isSubscribing}
                     />
                     <Mail className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
                   </div>
                   
                   <Button 
                     type="submit"
-                    disabled={isSubscribing}
-                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg"
+                    disabled={isSubscribing || !email.trim()}
+                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg"
                   >
                     {isSubscribing ? (
                       <>

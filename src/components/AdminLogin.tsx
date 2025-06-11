@@ -1,103 +1,110 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { authAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import ForgotPassword from './ForgotPassword';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
 }
 
 const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
-  const [view, setView] = useState<'login' | 'forgot'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
 
     try {
-      console.log('Attempting login for:', email);
-      const response = await authAPI.login(email, password);
-      console.log('Login response received:', response);
+      setLoading(true);
+      console.log('🔐 Attempting admin login...');
       
-      if (response.success) {
-        // Store additional user info if available
-        if (response.user) {
-          localStorage.setItem('userInfo', JSON.stringify(response.user));
-        }
-        
-        toast({
-          title: "Login successful",
-          description: `Welcome ${response.user?.firstName || 'back'} to the admin dashboard`,
-        });
-        onLoginSuccess();
-      } else {
-        const errorMessage = response.message || 'Invalid credentials. Please check your email and password.';
-        setError(errorMessage);
-        
-        // Provide specific help for common issues
-        if (errorMessage.includes('Invalid credentials')) {
-          toast({
-            title: "Login Failed",
-            description: "Please check your email and password. If you're a new user, make sure your account is activated.",
-            variant: "destructive",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
+      const result = await authAPI.login(formData.email, formData.password);
+      console.log('✅ Login successful:', result);
+      
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${result.user?.firstName || 'Admin'}!`,
+      });
+      
+      onLoginSuccess();
+    } catch (error: any) {
+      console.error('❌ Login failed:', error);
+      const errorMessage = error.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
       
-      // Show additional help for connection errors
-      if (errorMessage.includes('backend server') || errorMessage.includes('connect')) {
-        toast({
-          title: "Connection Error",
-          description: "Please ensure the backend server is running on port 5000",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Login Error",
-          description: "Please check your credentials and try again",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Login failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  if (view === 'forgot') {
-    return <ForgotPassword onBack={() => setView('login')} />;
-  }
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log('🔑 Requesting password reset...');
+      await authAPI.forgotPassword(formData.email);
+      toast({
+        title: "Password reset email sent",
+        description: "Check your email for password reset instructions",
+      });
+    } catch (error: any) {
+      console.error('❌ Password reset failed:', error);
+      toast({
+        title: "Password reset failed",
+        description: error.message || "Could not send reset email",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Lock className="h-6 w-6 text-primary" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-primary/10 rounded-full">
+              <Lock className="w-8 h-8 text-primary" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-secondary-800 dark:text-white">
-            Admin Login
-          </CardTitle>
-          <p className="text-sm text-accent dark:text-gray-400">
-            Sign in to access the admin dashboard
-          </p>
+          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          <CardDescription>
+            Enter your credentials to access the admin dashboard
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,15 +116,15 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   className="pl-10"
                   required
                 />
@@ -127,58 +134,54 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   className="pl-10 pr-10"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || !email || !password}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Signing in...
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </Button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-primary hover:underline"
+                disabled={loading}
+              >
+                Forgot your password?
+              </button>
+            </div>
           </form>
 
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setView('forgot')}
-              className="text-sm text-primary hover:underline"
-            >
-              Forgot your password?
-            </button>
-          </div>
-
-          <div className="mt-6 text-center space-y-2">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Demo admin: admin@elikaengineering.com / admin123
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Or use credentials provided by your administrator
-            </p>
-            <p className="text-xs text-orange-600 dark:text-orange-400">
-              Note: Backend server must be running on port 5000
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-600 text-center">
+              For demo purposes, you can use:<br />
+              <strong>admin@elikaengineering.com</strong><br />
+              <strong>admin123</strong>
             </p>
           </div>
         </CardContent>

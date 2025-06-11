@@ -13,30 +13,143 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token. User not found.'
-      });
+    // Handle hardcoded admin token for backwards compatibility
+    if (token.startsWith('admin-token-')) {
+      req.user = {
+        id: 'admin',
+        email: process.env.ADMIN_EMAIL || 'admin@elikaengineering.com',
+        role: 'admin',
+        firstName: 'Admin',
+        lastName: 'User',
+        permissions: {
+          users: { create: true, read: true, update: true, delete: true },
+          companies: { create: true, read: true, update: true, delete: true },
+          jobs: { create: true, read: true, update: true, delete: true },
+          applications: { create: true, read: true, update: true, delete: true }
+        }
+      };
+      return next();
     }
 
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is deactivated.'
-      });
+    // Handle user tokens
+    if (token.startsWith('user-token-')) {
+      const tokenParts = token.split('-');
+      const userId = tokenParts[tokenParts.length - 1];
+      
+      const user = await User.findById(userId).select('-password');
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token. User not found.'
+        });
+      }
+
+      if (!user.isActive) {
+        return res.status(401).json({
+          success: false,
+          message: 'Account is deactivated.'
+        });
+      }
+
+      // Set permissions based on role
+      const rolePermissions = {
+        admin: {
+          users: { create: true, read: true, update: true, delete: true },
+          companies: { create: true, read: true, update: true, delete: true },
+          jobs: { create: true, read: true, update: true, delete: true },
+          applications: { create: true, read: true, update: true, delete: true }
+        },
+        hr_manager: {
+          users: { create: true, read: true, update: true, delete: false },
+          companies: { create: true, read: true, update: true, delete: false },
+          jobs: { create: true, read: true, update: true, delete: true },
+          applications: { create: false, read: true, update: true, delete: false }
+        },
+        recruiter: {
+          users: { create: false, read: true, update: false, delete: false },
+          companies: { create: false, read: true, update: false, delete: false },
+          jobs: { create: true, read: true, update: true, delete: false },
+          applications: { create: false, read: true, update: true, delete: false }
+        },
+        viewer: {
+          users: { create: false, read: true, update: false, delete: false },
+          companies: { create: false, read: true, update: false, delete: false },
+          jobs: { create: false, read: true, update: false, delete: false },
+          applications: { create: false, read: true, update: false, delete: false }
+        }
+      };
+
+      req.user = {
+        ...user.toObject(),
+        permissions: user.permissions || rolePermissions[user.role] || rolePermissions.viewer
+      };
+      return next();
     }
 
-    req.user = user;
-    next();
+    // Try to verify as JWT token
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
+      const user = await User.findById(decoded.userId).select('-password');
+      
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token. User not found.'
+        });
+      }
+
+      if (!user.isActive) {
+        return res.status(401).json({
+          success: false,
+          message: 'Account is deactivated.'
+        });
+      }
+
+      // Set permissions based on role
+      const rolePermissions = {
+        admin: {
+          users: { create: true, read: true, update: true, delete: true },
+          companies: { create: true, read: true, update: true, delete: true },
+          jobs: { create: true, read: true, update: true, delete: true },
+          applications: { create: true, read: true, update: true, delete: true }
+        },
+        hr_manager: {
+          users: { create: true, read: true, update: true, delete: false },
+          companies: { create: true, read: true, update: true, delete: false },
+          jobs: { create: true, read: true, update: true, delete: true },
+          applications: { create: false, read: true, update: true, delete: false }
+        },
+        recruiter: {
+          users: { create: false, read: true, update: false, delete: false },
+          companies: { create: false, read: true, update: false, delete: false },
+          jobs: { create: true, read: true, update: true, delete: false },
+          applications: { create: false, read: true, update: true, delete: false }
+        },
+        viewer: {
+          users: { create: false, read: true, update: false, delete: false },
+          companies: { create: false, read: true, update: false, delete: false },
+          jobs: { create: false, read: true, update: false, delete: false },
+          applications: { create: false, read: true, update: false, delete: false }
+        }
+      };
+
+      req.user = {
+        ...user.toObject(),
+        permissions: user.permissions || rolePermissions[user.role] || rolePermissions.viewer
+      };
+      next();
+    } catch (jwtError) {
+      console.error('JWT verification failed:', jwtError);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token.'
+      });
+    }
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(401).json({
       success: false,
-      message: 'Invalid token.'
+      message: 'Authentication failed.'
     });
   }
 };

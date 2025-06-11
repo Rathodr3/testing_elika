@@ -37,7 +37,9 @@ export const authAPI = {
       // Store token in localStorage
       if (result.token) {
         localStorage.setItem('adminToken', result.token);
-        localStorage.setItem('adminUser', JSON.stringify(result.user));
+        if (result.user) {
+          localStorage.setItem('adminUser', JSON.stringify(result.user));
+        }
       }
       
       return {
@@ -67,25 +69,33 @@ export const authAPI = {
       
       await handleAPIError(response);
       const result = await response.json();
+      
+      // Update stored user data
+      if (result.user) {
+        localStorage.setItem('adminUser', JSON.stringify(result.user));
+      }
+      
       return result.user;
     } catch (error) {
-      // Fallback to stored user data if API call fails
-      const storedUser = localStorage.getItem('adminUser');
-      if (storedUser) {
-        return JSON.parse(storedUser);
-      }
       console.error('Get current user error:', error);
+      // Clear invalid stored data using the logout function directly
+      authAPI.logout();
       throw error;
     }
   },
 
   changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
     try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
@@ -183,7 +193,8 @@ export const authAPI = {
   },
 
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('adminToken');
+    const token = localStorage.getItem('adminToken');
+    return !!token;
   },
 
   logout: (): void => {

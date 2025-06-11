@@ -9,11 +9,6 @@ interface UserPermissions {
   applications: { create: boolean; read: boolean; update: boolean; delete: boolean; };
 }
 
-interface UserData {
-  role: string;
-  permissions: UserPermissions;
-}
-
 export const usePermissions = () => {
   const [userPermissions, setUserPermissions] = useState<UserPermissions | null>(null);
   const [userRole, setUserRole] = useState<string>('');
@@ -23,20 +18,58 @@ export const usePermissions = () => {
     const checkPermissions = async () => {
       try {
         if (authAPI.isAuthenticated()) {
+          console.log('🔍 Checking user permissions...');
           const userData = await authAPI.getCurrentUser();
-          setUserRole(userData.role);
-          setUserPermissions(userData.permissions);
+          console.log('✅ User data received:', userData);
+          
+          setUserRole(userData.role || 'viewer');
+          
+          // Ensure permissions are properly set
+          if (userData.permissions) {
+            setUserPermissions(userData.permissions);
+          } else {
+            // Fallback to role-based permissions if not set
+            const rolePermissions = {
+              admin: {
+                users: { create: true, read: true, update: true, delete: true },
+                companies: { create: true, read: true, update: true, delete: true },
+                jobs: { create: true, read: true, update: true, delete: true },
+                applications: { create: true, read: true, update: true, delete: true }
+              },
+              hr_manager: {
+                users: { create: true, read: true, update: true, delete: false },
+                companies: { create: true, read: true, update: true, delete: false },
+                jobs: { create: true, read: true, update: true, delete: true },
+                applications: { create: false, read: true, update: true, delete: false }
+              },
+              recruiter: {
+                users: { create: false, read: true, update: false, delete: false },
+                companies: { create: false, read: true, update: false, delete: false },
+                jobs: { create: true, read: true, update: true, delete: false },
+                applications: { create: false, read: true, update: true, delete: false }
+              },
+              viewer: {
+                users: { create: false, read: true, update: false, delete: false },
+                companies: { create: false, read: true, update: false, delete: false },
+                jobs: { create: false, read: true, update: false, delete: false },
+                applications: { create: false, read: true, update: false, delete: false }
+              }
+            };
+            
+            const permissions = rolePermissions[userData.role as keyof typeof rolePermissions] || rolePermissions.viewer;
+            setUserPermissions(permissions);
+          }
+        } else {
+          console.log('❌ User not authenticated');
+          setUserRole('');
+          setUserPermissions(null);
         }
       } catch (error) {
-        console.error('Error checking permissions:', error);
-        // Set default viewer permissions on error
-        setUserRole('viewer');
-        setUserPermissions({
-          users: { create: false, read: false, update: false, delete: false },
-          companies: { create: false, read: true, update: false, delete: false },
-          jobs: { create: false, read: true, update: false, delete: false },
-          applications: { create: false, read: true, update: false, delete: false }
-        });
+        console.error('❌ Error checking permissions:', error);
+        // Clear authentication on error
+        authAPI.logout();
+        setUserRole('');
+        setUserPermissions(null);
       } finally {
         setLoading(false);
       }
@@ -47,7 +80,7 @@ export const usePermissions = () => {
 
   const hasPermission = (resource: keyof UserPermissions, action: keyof UserPermissions['users']) => {
     if (!userPermissions) return false;
-    return userPermissions[resource][action];
+    return userPermissions[resource]?.[action] || false;
   };
 
   const canEdit = (resource: keyof UserPermissions) => {
@@ -66,6 +99,18 @@ export const usePermissions = () => {
     return userRole === 'viewer';
   };
 
+  const isAdmin = () => {
+    return userRole === 'admin';
+  };
+
+  const isHRManager = () => {
+    return userRole === 'hr_manager';
+  };
+
+  const isRecruiter = () => {
+    return userRole === 'recruiter';
+  };
+
   return {
     userPermissions,
     userRole,
@@ -74,6 +119,9 @@ export const usePermissions = () => {
     canEdit,
     canDelete,
     canCreate,
-    isViewer
+    isViewer,
+    isAdmin,
+    isHRManager,
+    isRecruiter
   };
 };
