@@ -25,10 +25,15 @@ const handleAPIError = async (response: Response) => {
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('adminToken');
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
   };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };
 
 export const apiRequest = async (
@@ -37,18 +42,40 @@ export const apiRequest = async (
   data?: any, 
   requiresAuth = false
 ) => {
-  const headers = requiresAuth ? getAuthHeaders() : { 'Content-Type': 'application/json' };
-  
-  const config: RequestInit = {
-    method,
-    headers,
-  };
+  try {
+    console.log(`🔍 Making ${method} request to: ${API_BASE_URL}${endpoint}`);
+    console.log('🔍 Request data:', data);
+    console.log('🔍 Requires auth:', requiresAuth);
+    
+    const headers = requiresAuth ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+    console.log('🔍 Request headers:', headers);
+    
+    const config: RequestInit = {
+      method,
+      headers,
+    };
 
-  if (data && (method === 'POST' || method === 'PUT')) {
-    config.body = JSON.stringify(data);
+    if (data && (method === 'POST' || method === 'PUT')) {
+      config.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    console.log('🔍 Response status:', response.status);
+    console.log('🔍 Response ok:', response.ok);
+    
+    await handleAPIError(response);
+    const result = await response.json();
+    console.log('✅ API Response:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('❌ API Request failed:', error);
+    
+    // If it's a network error, provide a more helpful message
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error('Backend server is not available. Please check if the server is running.');
+    }
+    
+    throw error;
   }
-
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  await handleAPIError(response);
-  return response.json();
 };

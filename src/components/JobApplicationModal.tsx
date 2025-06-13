@@ -141,7 +141,7 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
       if (result.success) {
         toast({
           title: "Application submitted successfully!",
-          description: "We'll review your application and get back to you soon.",
+          description: result.message || "We'll review your application and get back to you soon.",
         });
         
         onClose();

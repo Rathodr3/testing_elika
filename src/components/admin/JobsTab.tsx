@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Building2, MapPin, Clock, Users } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Building2, MapPin, Clock, Users, AlertCircle } from 'lucide-react';
 import { Job, jobsAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/contexts/AdminDataContext';
@@ -30,6 +29,7 @@ const JobsTab = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -50,18 +50,26 @@ const JobsTab = () => {
     try {
       setLoading(true);
       setRefreshing(true);
+      setError(null);
       console.log('🔍 Fetching jobs for admin dashboard...');
+      
       const data = await jobsAPI.getAll();
       console.log('✅ Jobs fetched:', data);
       
       const jobsArray = Array.isArray(data) ? data : [];
       setJobs(jobsArray);
       setFilteredJobs(jobsArray);
+      
+      if (jobsArray.length === 0) {
+        console.log('⚠️ No jobs found in admin dashboard');
+      }
     } catch (error) {
       console.error('❌ Error fetching jobs:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs from the server';
+      setError(errorMessage);
       toast({
         title: "Error fetching jobs",
-        description: "Failed to load jobs from the server. Please check your connection.",
+        description: errorMessage,
         variant: "destructive"
       });
       setJobs([]);
@@ -122,7 +130,7 @@ const JobsTab = () => {
       console.error('❌ Error deleting job:', error);
       toast({
         title: "Error deleting job",
-        description: "Please try again later",
+        description: error instanceof Error ? error.message : "Please try again later",
         variant: "destructive"
       });
     }
@@ -160,6 +168,21 @@ const JobsTab = () => {
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="ml-3 text-muted-foreground">Loading jobs...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-500" />
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Jobs</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={fetchJobs} variant="outline">
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }

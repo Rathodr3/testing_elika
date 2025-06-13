@@ -42,7 +42,7 @@ export const jobsService = {
       }
       
       console.log('✅ Admin jobs fetched:', jobs.length);
-      return jobs.map(transformJobForCareersPage);
+      return jobs.map(transformJobForAdmin);
     } catch (error) {
       console.error('❌ Fetch admin jobs error:', error);
       return [];
@@ -56,11 +56,11 @@ export const jobsService = {
       console.log('✅ Job fetched by ID:', result);
       
       if (result.data) {
-        return result.data;
+        return transformJobForAdmin(result.data);
       } else if (result.success && result.data) {
-        return result.data;
+        return transformJobForAdmin(result.data);
       } else {
-        return result;
+        return transformJobForAdmin(result);
       }
     } catch (error) {
       console.error('❌ Fetch job by ID error:', error);
@@ -75,11 +75,11 @@ export const jobsService = {
       console.log('✅ Job created:', result);
       
       if (result.data) {
-        return result.data;
+        return transformJobForAdmin(result.data);
       } else if (result.success && result.data) {
-        return result.data;
+        return transformJobForAdmin(result.data);
       } else {
-        return result;
+        return transformJobForAdmin(result);
       }
     } catch (error) {
       console.error('❌ Create job error:', error);
@@ -94,11 +94,11 @@ export const jobsService = {
       console.log('✅ Job updated:', result);
       
       if (result.data) {
-        return result.data;
+        return transformJobForAdmin(result.data);
       } else if (result.success && result.data) {
-        return result.data;
+        return transformJobForAdmin(result.data);
       } else {
-        return result;
+        return transformJobForAdmin(result);
       }
     } catch (error) {
       console.error('❌ Update job error:', error);
@@ -136,5 +136,31 @@ const transformJobForCareersPage = (job: any): Job => {
     applicants: job.applicantsCount || 0,
     experience: `${job.minExperience || 0}+ years`,
     type: `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`
+  };
+};
+
+const transformJobForAdmin = (job: any): Job => {
+  const companyName = typeof job.company === 'object' ? job.company?.name : job.company || 'Elika Engineering Pvt Ltd';
+  const postedDate = job.createdAt || job.postedDate || new Date();
+  
+  return {
+    ...job,
+    id: job._id?.toString() || job.id,
+    _id: job._id,
+    company: typeof job.company === 'object' ? job.company : { name: companyName },
+    requirements: Array.isArray(job.requirements) ? job.requirements : [],
+    responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+    benefits: Array.isArray(job.benefits) ? job.benefits : [],
+    postedDate: postedDate,
+    applicantsCount: job.applicantsCount || 0,
+    isActive: job.isActive !== false,
+    title: job.title || 'Untitled Job',
+    location: job.location || 'Not specified',
+    employmentType: job.employmentType || 'full-time',
+    workMode: job.workMode || 'hybrid',
+    experienceLevel: job.experienceLevel || 'mid',
+    minExperience: job.minExperience || 0,
+    domain: job.domain || 'General',
+    description: job.description || 'No description available'
   };
 };

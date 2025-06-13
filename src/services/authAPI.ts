@@ -19,7 +19,7 @@ const handleAPIError = async (response: Response) => {
 export const authAPI = {
   login: async (email: string, password: string): Promise<{ success: boolean; user: any; token: string; message?: string }> => {
     try {
-      console.log('Attempting login with:', { email, password: '***' });
+      console.log('🔐 Attempting login with:', { email, password: '***' });
       
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -32,9 +32,9 @@ export const authAPI = {
       await handleAPIError(response);
       const result = await response.json();
       
-      console.log('Login response:', result);
+      console.log('✅ Login response:', result);
       
-      // Store token in localStorage
+      // Store token and user info in localStorage
       if (result.token) {
         localStorage.setItem('adminToken', result.token);
         if (result.user) {
@@ -49,7 +49,7 @@ export const authAPI = {
         message: result.message
       };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       throw error;
     }
   },
@@ -61,6 +61,8 @@ export const authAPI = {
         throw new Error('No authentication token found');
       }
 
+      console.log('🔍 Getting current user with token:', token.substring(0, 20) + '...');
+
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -70,6 +72,8 @@ export const authAPI = {
       await handleAPIError(response);
       const result = await response.json();
       
+      console.log('✅ Current user response:', result);
+      
       // Update stored user data
       if (result.user) {
         localStorage.setItem('adminUser', JSON.stringify(result.user));
@@ -77,8 +81,8 @@ export const authAPI = {
       
       return result.user;
     } catch (error) {
-      console.error('Get current user error:', error);
-      // Clear invalid stored data using the logout function directly
+      console.error('❌ Get current user error:', error);
+      // Clear invalid stored data on error
       authAPI.logout();
       throw error;
     }
@@ -90,6 +94,8 @@ export const authAPI = {
       if (!token) {
         throw new Error('No authentication token found');
       }
+
+      console.log('🔑 Changing password...');
 
       const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'POST',
@@ -103,19 +109,21 @@ export const authAPI = {
       await handleAPIError(response);
       const result = await response.json();
       
+      console.log('✅ Password changed successfully');
+      
       return {
         success: true,
         message: result.message || 'Password changed successfully'
       };
     } catch (error) {
-      console.error('Change password error:', error);
+      console.error('❌ Change password error:', error);
       throw error;
     }
   },
 
   forgotPassword: async (email: string): Promise<{ success: boolean; message: string; resetToken?: string }> => {
     try {
-      console.log('Requesting password reset for:', email);
+      console.log('🔑 Requesting password reset for:', email);
       
       const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
@@ -128,7 +136,7 @@ export const authAPI = {
       await handleAPIError(response);
       const result = await response.json();
       
-      console.log('Forgot password response:', result);
+      console.log('✅ Forgot password response:', result);
       
       return {
         success: true,
@@ -136,14 +144,14 @@ export const authAPI = {
         resetToken: result.resetToken
       };
     } catch (error) {
-      console.error('Forgot password error:', error);
+      console.error('❌ Forgot password error:', error);
       throw error;
     }
   },
 
   resetPassword: async (resetToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
     try {
-      console.log('Resetting password with token:', resetToken.substring(0, 20) + '...');
+      console.log('🔑 Resetting password with token:', resetToken.substring(0, 20) + '...');
       
       const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: 'POST',
@@ -156,20 +164,22 @@ export const authAPI = {
       await handleAPIError(response);
       const result = await response.json();
       
-      console.log('Reset password response:', result);
+      console.log('✅ Reset password response:', result);
       
       return {
         success: true,
         message: result.message || 'Password reset successfully'
       };
     } catch (error) {
-      console.error('Reset password error:', error);
+      console.error('❌ Reset password error:', error);
       throw error;
     }
   },
 
   validateResetToken: async (resetToken: string): Promise<{ success: boolean; message?: string; email?: string }> => {
     try {
+      console.log('🔍 Validating reset token:', resetToken.substring(0, 20) + '...');
+      
       const response = await fetch(`${API_BASE_URL}/auth/validate-reset-token`, {
         method: 'POST',
         headers: {
@@ -181,23 +191,28 @@ export const authAPI = {
       await handleAPIError(response);
       const result = await response.json();
       
+      console.log('✅ Token validation response:', result);
+      
       return {
         success: true,
         message: result.message,
         email: result.email
       };
     } catch (error) {
-      console.error('Validate reset token error:', error);
+      console.error('❌ Validate reset token error:', error);
       throw error;
     }
   },
 
   isAuthenticated: (): boolean => {
     const token = localStorage.getItem('adminToken');
-    return !!token;
+    const isAuth = !!token;
+    console.log('🔍 Checking authentication status:', isAuth);
+    return isAuth;
   },
 
   logout: (): void => {
+    console.log('🚪 Logging out - clearing stored data');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
   }

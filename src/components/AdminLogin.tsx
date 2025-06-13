@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { authAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import ForgotPassword from './ForgotPassword';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -21,6 +22,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,32 +67,9 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!formData.email) {
-      toast({
-        title: "Email required",
-        description: "Please enter your email address first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      console.log('🔑 Requesting password reset...');
-      await authAPI.forgotPassword(formData.email);
-      toast({
-        title: "Password reset email sent",
-        description: "Check your email for password reset instructions",
-      });
-    } catch (error: any) {
-      console.error('❌ Password reset failed:', error);
-      toast({
-        title: "Password reset failed",
-        description: error.message || "Could not send reset email",
-        variant: "destructive",
-      });
-    }
-  };
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -168,7 +147,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
             <div className="text-center">
               <button
                 type="button"
-                onClick={handleForgotPassword}
+                onClick={() => setShowForgotPassword(true)}
                 className="text-sm text-primary hover:underline"
                 disabled={loading}
               >

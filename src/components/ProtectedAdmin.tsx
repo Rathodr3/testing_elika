@@ -139,7 +139,10 @@ const ProtectedAdmin = () => {
                 <DialogHeader>
                   <DialogTitle>Change Password</DialogTitle>
                 </DialogHeader>
-                <ChangePassword onCancel={() => setShowChangePassword(false)} />
+                <ChangePassword 
+                  onCancel={() => setShowChangePassword(false)}
+                  onSuccess={handlePasswordChanged}
+                />
               </DialogContent>
             </Dialog>
             
