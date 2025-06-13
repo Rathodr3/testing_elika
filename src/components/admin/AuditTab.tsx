@@ -16,8 +16,8 @@ const AuditTab = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState('');
-  const [resourceFilter, setResourceFilter] = useState('');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [resourceFilter, setResourceFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
@@ -29,8 +29,8 @@ const AuditTab = () => {
       
       const filters = {
         search: searchTerm,
-        action: actionFilter,
-        resource: resourceFilter,
+        action: actionFilter === 'all' ? '' : actionFilter,
+        resource: resourceFilter === 'all' ? '' : resourceFilter,
         page,
         limit: 20
       };
@@ -66,8 +66,8 @@ const AuditTab = () => {
     try {
       const filters = {
         search: searchTerm,
-        action: actionFilter,
-        resource: resourceFilter
+        action: actionFilter === 'all' ? '' : actionFilter,
+        resource: resourceFilter === 'all' ? '' : resourceFilter
       };
       
       const blob = await auditAPI.export(filters);
@@ -228,7 +228,7 @@ const AuditTab = () => {
             <SelectValue placeholder="Filter by action" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Actions</SelectItem>
+            <SelectItem value="all">All Actions</SelectItem>
             <SelectItem value="create">Create</SelectItem>
             <SelectItem value="update">Update</SelectItem>
             <SelectItem value="delete">Delete</SelectItem>
@@ -243,7 +243,7 @@ const AuditTab = () => {
             <SelectValue placeholder="Filter by resource" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Resources</SelectItem>
+            <SelectItem value="all">All Resources</SelectItem>
             <SelectItem value="users">Users</SelectItem>
             <SelectItem value="companies">Companies</SelectItem>
             <SelectItem value="jobs">Jobs</SelectItem>

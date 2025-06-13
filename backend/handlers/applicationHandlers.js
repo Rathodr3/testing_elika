@@ -277,6 +277,38 @@ const downloadResume = async (req, res) => {
     });
   }
 };
+const deleteApplication = async (req, res) => {
+  try {
+    const application = await JobApplication.findById(req.params.id);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job application not found'
+      });
+    }
+
+    // Delete resume file if it exists
+    if (application.resumePath && fs.existsSync(application.resumePath)) {
+      fs.unlinkSync(application.resumePath);
+    }
+
+    await JobApplication.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Job application deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete application error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete job application'
+    });
+  }
+};
+
 
 module.exports = {
   submitApplication,
@@ -284,5 +316,6 @@ module.exports = {
   getApplicationById,
   updateApplication,
   updateApplicationStatus,
-  downloadResume
+  downloadResume,
+  deleteApplication
 };

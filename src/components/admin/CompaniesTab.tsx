@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Building2, Globe, Mail, Phone, MapPin, Users } from 'lucide-react';
+import { Plus, Building2, Globe, Mail, Phone, MapPin, Users, Edit, Trash } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,13 +16,20 @@ import { useToast } from '@/hooks/use-toast';
 import { Company } from '@/services/types';
 import AdminHeader from './AdminHeader';
 import { Skeleton } from '@/components/ui/skeleton';
+import CreateCompanyForm from './CreateCompanyForm';
+import EditCompanyForm from './EditCompanyForm';
+import { usePermissions } from '@/hooks/usePermissions';
+import PermissionWrapper from './PermissionWrapper';
 
 const CompaniesTab = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const { toast } = useToast();
+  const { canCreate, canEdit, canDelete } = usePermissions();
 
   const fetchCompanies = async () => {
     try {
@@ -48,6 +55,44 @@ const CompaniesTab = () => {
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  const handleCreateSuccess = () => {
+    setShowCreateDialog(false);
+    fetchCompanies();
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setSelectedCompany(null);
+    fetchCompanies();
+  };
+
+  const handleEdit = (company: Company) => {
+    setSelectedCompany(company);
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = async (companyId: string) => {
+    if (!window.confirm('Are you sure you want to delete this company?')) {
+      return;
+    }
+
+    try {
+      await companiesAPI.delete(companyId);
+      toast({
+        title: "Success",
+        description: "Company deleted successfully",
+      });
+      fetchCompanies();
+    } catch (error) {
+      console.error('❌ Error deleting company:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete company",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredCompanies = companies.filter(company =>
     company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,13 +133,15 @@ const CompaniesTab = () => {
         description="Manage company information"
         onRefresh={fetchCompanies}
       >
-        <Button 
-          onClick={() => setShowCreateDialog(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Company
-        </Button>
+        <PermissionWrapper resource="companies" action="create" fallback={null}>
+          <Button 
+            onClick={() => setShowCreateDialog(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Company
+          </Button>
+        </PermissionWrapper>
       </AdminHeader>
 
       {/* Stats */}
@@ -163,12 +210,12 @@ const CompaniesTab = () => {
             <Card key={company._id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 flex-1">
                     <div className="p-2 bg-primary/10 rounded-full">
                       <Building2 className="w-5 h-5 text-primary" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{company.name}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">{company.name}</h3>
                       {company.industry && (
                         <Badge variant="secondary" className="mt-1">
                           {company.industry}
@@ -176,13 +223,33 @@ const CompaniesTab = () => {
                       )}
                     </div>
                   </div>
+                  <div className="flex gap-2">
+                    <PermissionWrapper resource="companies" action="update" fallback={null}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(company)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </PermissionWrapper>
+                    <PermissionWrapper resource="companies" action="delete" fallback={null}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(company._id!)}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </PermissionWrapper>
+                  </div>
                 </div>
                 
                 <div className="space-y-2 text-sm text-muted-foreground">
                   {company.contactEmail && (
                     <div className="flex items-center space-x-2">
                       <Mail className="w-4 h-4" />
-                      <span>{company.contactEmail}</span>
+                      <span className="truncate">{company.contactEmail}</span>
                     </div>
                   )}
                   {company.phoneNumber && (
@@ -222,6 +289,35 @@ const CompaniesTab = () => {
           ))}
         </div>
       )}
+
+      {/* Create Company Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Company</DialogTitle>
+          </DialogHeader>
+          <CreateCompanyForm onSuccess={handleCreateSuccess} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Company Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Company</DialogTitle>
+          </DialogHeader>
+          {selectedCompany && (
+            <EditCompanyForm
+              company={selectedCompany}
+              onSuccess={handleEditSuccess}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setSelectedCompany(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
