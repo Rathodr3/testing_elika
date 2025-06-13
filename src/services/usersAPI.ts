@@ -1,7 +1,6 @@
 
 import { User } from './types';
-import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
-import { mockDataService } from './mockData';
+import { apiRequest } from './jobs/apiUtils';
 
 export const usersAPI = {
   getAll: async (): Promise<User[]> => {
@@ -22,9 +21,8 @@ export const usersAPI = {
         return [];
       }
     } catch (error) {
-      console.error('❌ Backend fetch failed, using mock data:', error);
-      // Use mock data when backend is unavailable
-      return await mockDataService.getUsers();
+      console.error('❌ Users fetch failed:', error);
+      throw error;
     }
   },
 
@@ -42,9 +40,8 @@ export const usersAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Backend create failed, using mock service:', error);
-      // Use mock service when backend is unavailable
-      return await mockDataService.createUser(userData);
+      console.error('❌ User creation failed:', error);
+      throw error;
     }
   },
 
@@ -62,9 +59,8 @@ export const usersAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Backend update failed, using mock service:', error);
-      // Use mock service when backend is unavailable
-      return await mockDataService.updateUser(userId, userData);
+      console.error('❌ User update failed:', error);
+      throw error;
     }
   },
 
@@ -74,9 +70,8 @@ export const usersAPI = {
       await apiRequest(`/users/${userId}`, 'DELETE', null, true);
       console.log('✅ User deleted from backend');
     } catch (error) {
-      console.error('❌ Backend delete failed, using mock service:', error);
-      // Use mock service when backend is unavailable
-      await mockDataService.deleteUser(userId);
+      console.error('❌ User deletion failed:', error);
+      throw error;
     }
   }
 };

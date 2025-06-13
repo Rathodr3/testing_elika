@@ -16,9 +16,10 @@ export const apiRequest = async (
 
   if (requireAuth) {
     const token = localStorage.getItem('adminToken');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    if (!token) {
+      throw new Error('No authentication token found. Please login again.');
     }
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const config: RequestInit = {
@@ -29,6 +30,14 @@ export const apiRequest = async (
 
   try {
     const response = await tryFetchWithFallback(endpoint, config);
+    
+    if (response.status === 401) {
+      // Token expired or invalid - force re-login
+      console.log('🔄 Token expired, forcing re-login');
+      localStorage.removeItem('adminToken');
+      window.location.reload();
+      throw new Error('Session expired. Please login again.');
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -71,10 +80,7 @@ export const tryFetchWithFallback = async (endpoint: string, config: RequestInit
   try {
     console.log('🔗 Trying primary API:', `${API_BASE_URL}${endpoint}`);
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    if (response.ok || response.status < 500) {
-      return response;
-    }
-    throw new Error(`Server error: ${response.status}`);
+    return response;
   } catch (error) {
     console.warn('❌ Primary API failed:', error);
   }
@@ -84,65 +90,11 @@ export const tryFetchWithFallback = async (endpoint: string, config: RequestInit
     try {
       console.log('🔗 Trying fallback API:', `${fallbackUrl}${endpoint}`);
       const response = await fetch(`${fallbackUrl}${endpoint}`, config);
-      if (response.ok || response.status < 500) {
-        return response;
-      }
+      return response;
     } catch (error) {
       console.warn(`❌ Fallback API failed (${fallbackUrl}):`, error);
     }
   }
 
-  // If all APIs fail, return a mock response for development
-  console.warn('🚧 All APIs failed, returning mock response for development');
-  
-  // Return appropriate mock responses based on endpoint
-  if (endpoint.includes('/jobs/public') || endpoint.includes('/jobs')) {
-    return new Response(JSON.stringify([]), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-  
-  if (endpoint.includes('/users')) {
-    return new Response(JSON.stringify({ success: true, data: [] }), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-  
-  if (endpoint.includes('/companies')) {
-    return new Response(JSON.stringify({ success: true, data: [] }), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-  
-  if (endpoint.includes('/job-applications')) {
-    if (config.method === 'POST') {
-      return new Response(JSON.stringify({ 
-        success: true, 
-        message: 'Application submitted successfully (mock)',
-        data: { id: 'mock-' + Date.now() }
-      }), { 
-        status: 201, 
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    return new Response(JSON.stringify({ success: true, data: [] }), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-  
-  if (endpoint.includes('/audit')) {
-    return new Response(JSON.stringify({ 
-      success: true, 
-      data: { logs: [], total: 0, page: 1, totalPages: 1 }
-    }), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  throw new Error('All API endpoints failed and no mock available');
+  throw new Error('All API endpoints failed - please check your connection');
 };

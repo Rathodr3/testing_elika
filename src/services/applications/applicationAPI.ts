@@ -1,7 +1,5 @@
-
 import { apiRequest, tryFetchWithFallback } from '../jobs/apiUtils';
 import { JobApplication } from '../types';
-import { mockDataService } from '../mockData';
 
 export const applicationAPI = {
   getAll: async (filters?: any): Promise<JobApplication[]> => {
@@ -37,12 +35,12 @@ export const applicationAPI = {
       } catch (apiError) {
         console.error('❌ Backend fetch failed, using mock data:', apiError);
         // Use mock data when backend is unavailable
-        return await mockDataService.getApplications();
+        return [];
       }
     } catch (error) {
       console.error('❌ Fetch applications error:', error);
       // Return mock data instead of empty array
-      return await mockDataService.getApplications();
+      return [];
     }
   },
 
@@ -81,7 +79,7 @@ export const applicationAPI = {
     } catch (error) {
       console.error('❌ Update application status error:', error);
       // For mock service, just return a mock response
-      return await mockDataService.updateApplication(id, { status, notes });
+      return {} as any;
     }
   },
 
@@ -101,7 +99,7 @@ export const applicationAPI = {
     } catch (error) {
       console.error('❌ Update application error:', error);
       // Use mock service when backend is unavailable
-      return await mockDataService.updateApplication(id, data);
+      return {} as any;
     }
   },
 
@@ -119,28 +117,9 @@ export const applicationAPI = {
         const errorText = await response.text();
         console.error('❌ Application submission failed:', errorText);
         
-        // If backend fails, create mock application
-        const mockAppData = {
-          firstName: formData.get('firstName') as string,
-          lastName: formData.get('lastName') as string,
-          email: formData.get('email') as string,
-          phone: formData.get('phone') as string,
-          jobId: formData.get('jobId') as string,
-          jobTitle: formData.get('jobTitle') as string,
-          companyName: formData.get('companyName') as string,
-          experience: formData.get('experience') as string,
-          education: formData.get('education') as string,
-          skills: formData.get('skills') as string,
-          coverLetter: formData.get('coverLetter') as string,
-          resumeFileName: (formData.get('resume') as File)?.name || 'resume.pdf'
-        };
-        
-        const mockApplication = await mockDataService.createApplication(mockAppData);
-        
         return {
-          success: true,
-          data: mockApplication,
-          message: 'Application submitted successfully (using mock service due to backend unavailability)'
+          success: false,
+          message: 'Application submission failed',
         };
       }
 
@@ -150,28 +129,9 @@ export const applicationAPI = {
       if (responseText.startsWith('<!DOCTYPE') || responseText.startsWith('<html')) {
         console.error('❌ Received HTML instead of JSON:', responseText.substring(0, 200));
         
-        // Create mock application
-        const mockAppData = {
-          firstName: formData.get('firstName') as string,
-          lastName: formData.get('lastName') as string,
-          email: formData.get('email') as string,
-          phone: formData.get('phone') as string,
-          jobId: formData.get('jobId') as string,
-          jobTitle: formData.get('jobTitle') as string,
-          companyName: formData.get('companyName') as string,
-          experience: formData.get('experience') as string,
-          education: formData.get('education') as string,
-          skills: formData.get('skills') as string,
-          coverLetter: formData.get('coverLetter') as string,
-          resumeFileName: (formData.get('resume') as File)?.name || 'resume.pdf'
-        };
-        
-        const mockApplication = await mockDataService.createApplication(mockAppData);
-        
         return {
-          success: true,
-          data: mockApplication,
-          message: 'Application submitted successfully (mock service - backend returned HTML)'
+          success: false,
+          message: 'Application submission failed (backend returned HTML)',
         };
       }
 
@@ -187,61 +147,18 @@ export const applicationAPI = {
       } catch (parseError) {
         console.error('❌ Failed to parse response:', parseError);
         
-        // Fallback to mock service
-        const mockAppData = {
-          firstName: formData.get('firstName') as string,
-          lastName: formData.get('lastName') as string,
-          email: formData.get('email') as string,
-          phone: formData.get('phone') as string,
-          jobId: formData.get('jobId') as string,
-          jobTitle: formData.get('jobTitle') as string,
-          companyName: formData.get('companyName') as string,
-          experience: formData.get('experience') as string,
-          education: formData.get('education') as string,
-          skills: formData.get('skills') as string,
-          coverLetter: formData.get('coverLetter') as string,
-          resumeFileName: (formData.get('resume') as File)?.name || 'resume.pdf'
-        };
-        
-        const mockApplication = await mockDataService.createApplication(mockAppData);
-        
         return {
-          success: true,
-          data: mockApplication,
-          message: 'Application submitted successfully (mock service - parse error)'
+          success: false,
+          message: 'Application submission failed (parse error)',
         };
       }
     } catch (error) {
       console.error('❌ Submit application error:', error);
       
-      // Always try to create a mock application as fallback
-      try {
-        const mockAppData = {
-          firstName: formData.get('firstName') as string,
-          lastName: formData.get('lastName') as string,
-          email: formData.get('email') as string,
-          phone: formData.get('phone') as string,
-          jobId: formData.get('jobId') as string,
-          jobTitle: formData.get('jobTitle') as string,
-          companyName: formData.get('companyName') as string,
-          experience: formData.get('experience') as string,
-          education: formData.get('education') as string,
-          skills: formData.get('skills') as string,
-          coverLetter: formData.get('coverLetter') as string,
-          resumeFileName: (formData.get('resume') as File)?.name || 'resume.pdf'
-        };
-        
-        const mockApplication = await mockDataService.createApplication(mockAppData);
-        
-        return {
-          success: true,
-          data: mockApplication,
-          message: 'Application submitted successfully (mock service - network error)'
-        };
-      } catch (mockError) {
-        console.error('❌ Even mock submission failed:', mockError);
-        throw new Error('Application submission failed completely');
-      }
+      return {
+        success: false,
+        message: 'Application submission failed',
+      };
     }
   },
 

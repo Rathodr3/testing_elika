@@ -1,5 +1,5 @@
 
-export { applicationAPI } from './applications/applicationAPI';
+export { applicationAPI } from './applicationAPI';
 export { jobsService as jobsAPI } from './jobs/jobsService';
 export { auditAPI } from './auditAPI';
 export { authAPI } from './authAPI';

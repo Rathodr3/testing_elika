@@ -29,7 +29,7 @@ const ApplicationsTab = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedApplicationIds, setSelectedApplicationIds] = useState<string[]>([]);
@@ -41,7 +41,7 @@ const ApplicationsTab = () => {
       console.log('🔍 Fetching applications...');
       
       const filters: FilterState = {
-        status: statusFilter,
+        status: statusFilter === 'all' ? '' : statusFilter,
         search: searchTerm
       };
       
@@ -230,7 +230,7 @@ const ApplicationsTab = () => {
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="submitted">Submitted</SelectItem>
             <SelectItem value="under_review">Under Review</SelectItem>

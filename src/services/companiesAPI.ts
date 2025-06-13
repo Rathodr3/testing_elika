@@ -1,7 +1,6 @@
 
 import { Company } from './types';
-import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
-import { mockDataService } from './mockData';
+import { apiRequest } from './jobs/apiUtils';
 
 export const companiesAPI = {
   getAll: async (): Promise<Company[]> => {
@@ -22,9 +21,8 @@ export const companiesAPI = {
         return [];
       }
     } catch (error) {
-      console.error('❌ Backend fetch failed, using mock data:', error);
-      // Use mock data when backend is unavailable
-      return await mockDataService.getCompanies();
+      console.error('❌ Companies fetch failed:', error);
+      throw error;
     }
   },
 
@@ -42,9 +40,8 @@ export const companiesAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Backend create failed, using mock service:', error);
-      // Use mock service when backend is unavailable
-      return await mockDataService.createCompany(companyData);
+      console.error('❌ Company creation failed:', error);
+      throw error;
     }
   },
 
@@ -62,9 +59,8 @@ export const companiesAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Backend update failed, using mock service:', error);
-      // Use mock service when backend is unavailable
-      return await mockDataService.updateCompany(companyId, companyData);
+      console.error('❌ Company update failed:', error);
+      throw error;
     }
   },
 
@@ -74,9 +70,8 @@ export const companiesAPI = {
       await apiRequest(`/companies/${companyId}`, 'DELETE', null, true);
       console.log('✅ Company deleted from backend');
     } catch (error) {
-      console.error('❌ Backend delete failed, using mock service:', error);
-      // Use mock service when backend is unavailable
-      await mockDataService.deleteCompany(companyId);
+      console.error('❌ Company deletion failed:', error);
+      throw error;
     }
   }
 };

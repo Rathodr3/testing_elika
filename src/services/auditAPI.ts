@@ -1,35 +1,6 @@
-
-import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
+import { apiRequest } from './jobs/apiUtils';
 import { AuditLog } from './types';
-
-// Mock audit logs for development
-const mockAuditLogs = [
-  {
-    _id: 'audit1',
-    userId: 'admin',
-    userEmail: 'admin@elikaengineering.com',
-    userName: 'Admin User',
-    action: 'login',
-    resource: 'users',
-    details: 'Admin user logged in',
-    ipAddress: '127.0.0.1',
-    userAgent: 'Mozilla/5.0...',
-    createdAt: new Date().toISOString()
-  },
-  {
-    _id: 'audit2',
-    userId: 'admin',
-    userEmail: 'admin@elikaengineering.com',
-    userName: 'Admin User',
-    action: 'create',
-    resource: 'companies',
-    resourceName: 'Test Company',
-    details: 'Created new company',
-    ipAddress: '127.0.0.1',
-    userAgent: 'Mozilla/5.0...',
-    createdAt: new Date(Date.now() - 3600000).toISOString()
-  }
-];
+import { API_BASE_URL } from '@/config/api';
 
 export const auditAPI = {
   log: async (auditData: any) => {
@@ -39,9 +10,8 @@ export const auditAPI = {
       console.log('✅ Audit log created:', result);
       return result;
     } catch (error) {
-      console.error('❌ Audit log error (using mock):', error);
-      // Don't throw error as audit logging shouldn't break main functionality
-      return { success: true, message: 'Audit logged to mock service' };
+      console.error('❌ Audit log error:', error);
+      throw error;
     }
   },
   
@@ -52,77 +22,43 @@ export const auditAPI = {
       
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
-          if (value && value !== '') {
+          if (value && value !== '' && value !== 'all') {
             queryParams.append(key, value as string);
           }
         });
       }
       
       const endpoint = `/audit${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const result = await apiRequest(endpoint, 'GET', null, true);
       
-      try {
-        const result = await apiRequest(endpoint, 'GET', null, true);
-        console.log('✅ Audit logs fetched from backend:', result);
-        
-        // Handle different response formats
-        if (result?.data && result.data.logs) {
-          return {
-            logs: result.data.logs || [],
-            total: result.data.total || 0,
-            page: result.data.page || 1,
-            totalPages: result.data.totalPages || 1
-          };
-        } else if (Array.isArray(result)) {
-          return {
-            logs: result,
-            total: result.length,
-            page: 1,
-            totalPages: 1
-          };
-        } else {
-          return {
-            logs: result?.logs || [],
-            total: result?.total || 0,
-            page: result?.page || 1,
-            totalPages: result?.totalPages || 1
-          };
-        }
-      } catch (apiError) {
-        console.error('❌ Backend audit fetch failed, using mock data:', apiError);
-        
-        // Filter mock data based on filters
-        let filteredLogs = [...mockAuditLogs];
-        
-        if (filters?.userId) {
-          filteredLogs = filteredLogs.filter(log => 
-            log.userEmail.toLowerCase().includes(filters.userId.toLowerCase())
-          );
-        }
-        
-        if (filters?.resource) {
-          filteredLogs = filteredLogs.filter(log => log.resource === filters.resource);
-        }
-        
-        if (filters?.action) {
-          filteredLogs = filteredLogs.filter(log => log.action === filters.action);
-        }
-        
+      console.log('✅ Audit logs fetched from backend:', result);
+      
+      // Handle different response formats
+      if (result?.data && result.data.logs) {
         return {
-          logs: filteredLogs,
-          total: filteredLogs.length,
+          logs: result.data.logs || [],
+          total: result.data.total || 0,
+          page: result.data.page || 1,
+          totalPages: result.data.totalPages || 1
+        };
+      } else if (Array.isArray(result)) {
+        return {
+          logs: result,
+          total: result.length,
           page: 1,
           totalPages: 1
         };
+      } else {
+        return {
+          logs: result?.logs || [],
+          total: result?.total || 0,
+          page: result?.page || 1,
+          totalPages: result?.totalPages || 1
+        };
       }
     } catch (error) {
-      console.error('❌ Fetch audit logs error, using mock data:', error);
-      // Return mock data instead of empty data
-      return {
-        logs: mockAuditLogs,
-        total: mockAuditLogs.length,
-        page: 1,
-        totalPages: 1
-      };
+      console.error('❌ Fetch audit logs error:', error);
+      throw error;
     }
   },
 
@@ -133,18 +69,29 @@ export const auditAPI = {
       const queryParams = new URLSearchParams();
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
-          if (value && value !== '') {
+          if (value && value !== '' && value !== 'all') {
             queryParams.append(key, value as string);
           }
         });
       }
       
       const endpoint = `/audit/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      const response = await tryFetchWithFallback(endpoint, {
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
+      
+      if (response.status === 401) {
+        localStorage.removeItem('adminToken');
+        throw new Error('Session expired. Please login again.');
+      }
       
       if (!response.ok) {
         throw new Error('Failed to export audit logs');
@@ -155,16 +102,8 @@ export const auditAPI = {
       
       return blob;
     } catch (error) {
-      console.error('❌ Export audit logs error, generating mock CSV:', error);
-      
-      // Generate mock CSV
-      const csvHeaders = 'Timestamp,User Email,User Name,Action,Resource,Details\n';
-      const csvRows = mockAuditLogs.map(log => 
-        `${log.createdAt},${log.userEmail},${log.userName},${log.action},${log.resource},"${log.details}"`
-      ).join('\n');
-      
-      const csvContent = csvHeaders + csvRows;
-      return new Blob([csvContent], { type: 'text/csv' });
+      console.error('❌ Export audit logs error:', error);
+      throw error;
     }
   }
 };
