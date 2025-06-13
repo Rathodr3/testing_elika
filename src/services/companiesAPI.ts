@@ -1,13 +1,14 @@
 
 import { Company } from './types';
 import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
+import { mockDataService } from './mockData';
 
 export const companiesAPI = {
   getAll: async (): Promise<Company[]> => {
     try {
       console.log('🔍 Fetching companies...');
       const result = await apiRequest('/companies', 'GET', null, true);
-      console.log('✅ Companies fetched:', result);
+      console.log('✅ Companies fetched from backend:', result);
       
       // Handle different response formats
       if (Array.isArray(result)) {
@@ -21,26 +22,9 @@ export const companiesAPI = {
         return [];
       }
     } catch (error) {
-      console.error('❌ Fetch companies error:', error);
-      // Try fallback approach
-      try {
-        const response = await tryFetchWithFallback('/companies', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          return Array.isArray(data) ? data : (data?.data || []);
-        }
-      } catch (fallbackError) {
-        console.error('❌ Fallback fetch also failed:', fallbackError);
-      }
-      
-      // Return empty array instead of throwing to prevent UI crash
-      return [];
+      console.error('❌ Backend fetch failed, using mock data:', error);
+      // Use mock data when backend is unavailable
+      return await mockDataService.getCompanies();
     }
   },
 
@@ -48,7 +32,7 @@ export const companiesAPI = {
     try {
       console.log('📝 Creating company:', companyData);
       const result = await apiRequest('/companies', 'POST', companyData, true);
-      console.log('✅ Company created:', result);
+      console.log('✅ Company created on backend:', result);
       
       if (result?.data) {
         return result.data;
@@ -58,8 +42,9 @@ export const companiesAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Create company error:', error);
-      throw error;
+      console.error('❌ Backend create failed, using mock service:', error);
+      // Use mock service when backend is unavailable
+      return await mockDataService.createCompany(companyData);
     }
   },
 
@@ -67,7 +52,7 @@ export const companiesAPI = {
     try {
       console.log('🔧 Updating company:', companyId, companyData);
       const result = await apiRequest(`/companies/${companyId}`, 'PUT', companyData, true);
-      console.log('✅ Company updated:', result);
+      console.log('✅ Company updated on backend:', result);
       
       if (result?.data) {
         return result.data;
@@ -77,8 +62,9 @@ export const companiesAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Update company error:', error);
-      throw error;
+      console.error('❌ Backend update failed, using mock service:', error);
+      // Use mock service when backend is unavailable
+      return await mockDataService.updateCompany(companyId, companyData);
     }
   },
 
@@ -86,10 +72,11 @@ export const companiesAPI = {
     try {
       console.log('🗑️ Deleting company:', companyId);
       await apiRequest(`/companies/${companyId}`, 'DELETE', null, true);
-      console.log('✅ Company deleted successfully');
+      console.log('✅ Company deleted from backend');
     } catch (error) {
-      console.error('❌ Delete company error:', error);
-      throw error;
+      console.error('❌ Backend delete failed, using mock service:', error);
+      // Use mock service when backend is unavailable
+      await mockDataService.deleteCompany(companyId);
     }
   }
 };

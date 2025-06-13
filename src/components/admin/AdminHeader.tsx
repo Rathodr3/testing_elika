@@ -1,46 +1,27 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 interface AdminHeaderProps {
   title: string;
-  description?: string;
-  onExport?: () => void;
-  onRefresh?: () => void;
+  description: string;
   children?: React.ReactNode;
+  onRefresh?: () => void;
 }
 
-const AdminHeader = ({ title, description, onExport, onRefresh, children }: AdminHeaderProps) => {
+const AdminHeader = ({ title, description, children, onRefresh }: AdminHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
-        <h2 className="text-2xl font-bold">{title}</h2>
-        {description && (
-          <p className="text-muted-foreground">{description}</p>
-        )}
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <p className="text-gray-600 mt-1">{description}</p>
       </div>
       <div className="flex items-center gap-2">
         {onRefresh && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
+          <Button variant="outline" size="sm" onClick={onRefresh}>
+            <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
-          </Button>
-        )}
-        {onExport && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onExport}
-            className="flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Export
           </Button>
         )}
         {children}

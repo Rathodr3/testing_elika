@@ -1,88 +1,89 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, Calendar, User, FileText } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Download, Shield, Clock, User, Activity } from 'lucide-react';
 import { auditAPI } from '@/services/auditAPI';
+import { useToast } from '@/hooks/use-toast';
 import { AuditLog } from '@/services/types';
-import { format } from 'date-fns';
 import AdminHeader from './AdminHeader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AuditTab = () => {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    resource: '',
-    action: '',
-    userId: '',
-    startDate: '',
-    endDate: '',
-    page: 1,
-    limit: 50
-  });
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    totalPages: 1
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [actionFilter, setActionFilter] = useState('');
+  const [resourceFilter, setResourceFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchAuditLogs();
-  }, [filters.page]);
 
   const fetchAuditLogs = async () => {
     try {
       setLoading(true);
-      const result = await auditAPI.getAll(filters);
-      setLogs(result.logs);
-      setPagination({
-        total: result.total,
-        page: result.page,
-        totalPages: result.totalPages
-      });
+      console.log('🔍 Fetching audit logs...');
+      
+      const filters = {
+        search: searchTerm,
+        action: actionFilter,
+        resource: resourceFilter,
+        page,
+        limit: 20
+      };
+      
+      const data = await auditAPI.getAll(filters);
+      console.log('✅ Audit logs loaded:', data);
+      
+      setAuditLogs(data.logs || []);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching audit logs:', error);
+      console.error('❌ Error fetching audit logs:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch audit logs",
+        description: "Failed to fetch audit logs. Please check your connection and try again.",
         variant: "destructive",
       });
+      setAuditLogs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
-  };
+  useEffect(() => {
+    fetchAuditLogs();
+  }, [page, actionFilter, resourceFilter]);
 
   const handleSearch = () => {
+    setPage(1);
     fetchAuditLogs();
   };
 
   const handleExport = async () => {
     try {
+      const filters = {
+        search: searchTerm,
+        action: actionFilter,
+        resource: resourceFilter
+      };
+      
       const blob = await auditAPI.export(filters);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `audit-logs-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-      document.body.appendChild(a);
+      a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
       
       toast({
         title: "Success",
         description: "Audit logs exported successfully",
       });
     } catch (error) {
-      console.error('Error exporting audit logs:', error);
+      console.error('❌ Error exporting audit logs:', error);
       toast({
         title: "Error",
         description: "Failed to export audit logs",
@@ -91,7 +92,7 @@ const AuditTab = () => {
     }
   };
 
-  const getActionBadgeColor = (action: string) => {
+  const getActionColor = (action: string) => {
     switch (action) {
       case 'create': return 'bg-green-100 text-green-800';
       case 'update': return 'bg-blue-100 text-blue-800';
@@ -103,12 +104,38 @@ const AuditTab = () => {
     }
   };
 
+  const getResourceColor = (resource: string) => {
+    switch (resource) {
+      case 'users': return 'bg-blue-100 text-blue-800';
+      case 'companies': return 'bg-green-100 text-green-800';
+      case 'jobs': return 'bg-yellow-100 text-yellow-800';
+      case 'applications': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading audit logs...</p>
+      <div className="space-y-6">
+        <AdminHeader title="Audit Logs" description="Track system activities and changes" />
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
         </div>
       </div>
     );
@@ -116,170 +143,198 @@ const AuditTab = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-secondary-800">Audit Logs</h2>
-          <p className="text-accent">Monitor system activities and user actions</p>
-        </div>
-        <Button onClick={handleExport} className="flex items-center gap-2">
+      <AdminHeader 
+        title="Audit Logs" 
+        description="Track system activities and changes"
+        onRefresh={fetchAuditLogs}
+      >
+        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
           <Download className="w-4 h-4" />
-          Export Logs
+          Export
         </Button>
+      </AdminHeader>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{auditLogs.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Activities</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {auditLogs.filter(log => {
+                const today = new Date().toDateString();
+                const logDate = new Date(log.createdAt || '').toDateString();
+                return today === logDate;
+              }).length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Unique Users</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {new Set(auditLogs.map(log => log.userId)).size}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Security Events</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {auditLogs.filter(log => ['login', 'logout', 'delete'].includes(log.action || '')).length}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Select value={filters.resource} onValueChange={(value) => handleFilterChange('resource', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Resource" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Resources</SelectItem>
-                <SelectItem value="users">Users</SelectItem>
-                <SelectItem value="companies">Companies</SelectItem>
-                <SelectItem value="jobs">Jobs</SelectItem>
-                <SelectItem value="applications">Applications</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.action} onValueChange={(value) => handleFilterChange('action', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Action" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Actions</SelectItem>
-                <SelectItem value="create">Create</SelectItem>
-                <SelectItem value="update">Update</SelectItem>
-                <SelectItem value="delete">Delete</SelectItem>
-                <SelectItem value="view">View</SelectItem>
-                <SelectItem value="login">Login</SelectItem>
-                <SelectItem value="logout">Logout</SelectItem>
-              </SelectContent>
-            </Select>
-
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <div className="flex gap-2">
             <Input
-              type="date"
-              placeholder="Start Date"
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              placeholder="Search by user, resource, or details..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
             />
-
-            <Input
-              type="date"
-              placeholder="End Date"
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-            />
-
-            <Input
-              placeholder="User Email"
-              value={filters.userId}
-              onChange={(e) => handleFilterChange('userId', e.target.value)}
-            />
-
-            <Button onClick={handleSearch} className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
+            <Button onClick={handleSearch} variant="outline">
               Search
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        <Select value={actionFilter} onValueChange={setActionFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by action" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Actions</SelectItem>
+            <SelectItem value="create">Create</SelectItem>
+            <SelectItem value="update">Update</SelectItem>
+            <SelectItem value="delete">Delete</SelectItem>
+            <SelectItem value="view">View</SelectItem>
+            <SelectItem value="login">Login</SelectItem>
+            <SelectItem value="logout">Logout</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select value={resourceFilter} onValueChange={setResourceFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by resource" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Resources</SelectItem>
+            <SelectItem value="users">Users</SelectItem>
+            <SelectItem value="companies">Companies</SelectItem>
+            <SelectItem value="jobs">Jobs</SelectItem>
+            <SelectItem value="applications">Applications</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Audit Logs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Activity Log ({pagination.total} total)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {logs.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-accent">No audit logs found</p>
-              </div>
-            ) : (
-              logs.map((log) => (
-                <div key={log._id} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Badge className={getActionBadgeColor(log.action)}>
-                        {log.action.toUpperCase()}
-                      </Badge>
-                      <span className="font-medium">{log.resource}</span>
-                      {log.resourceName && (
-                        <span className="text-accent">- {log.resourceName}</span>
-                      )}
+      {auditLogs.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-8">
+            <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground">No Audit Logs Found</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {searchTerm || actionFilter || resourceFilter 
+                ? "Try adjusting your search filters." 
+                : "No audit activities have been recorded yet."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {auditLogs.map((log) => (
+            <Card key={log._id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4 flex-1">
+                    <div className="p-2 bg-gray-100 rounded-full">
+                      <Activity className="w-4 h-4 text-gray-600" />
                     </div>
-                    <span className="text-sm text-accent">
-                      {format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm:ss')}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-accent">
-                    <User className="w-4 h-4" />
-                    <span>{log.userName} ({log.userEmail})</span>
-                  </div>
-
-                  {log.details && (
-                    <p className="text-sm text-accent">{log.details}</p>
-                  )}
-
-                  {log.changes && log.changes.length > 0 && (
-                    <div className="bg-gray-50 rounded p-3 text-sm">
-                      <p className="font-medium mb-2">Changes:</p>
-                      {log.changes.map((change, index) => (
-                        <div key={index} className="mb-1">
-                          <span className="font-medium">{change.field}:</span>
-                          <span className="text-red-600 ml-2">{change.oldValue || 'null'}</span>
-                          <span className="mx-2">→</span>
-                          <span className="text-green-600">{change.newValue || 'null'}</span>
-                        </div>
-                      ))}
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className={getActionColor(log.action || '')}>
+                          {log.action}
+                        </Badge>
+                        <Badge className={getResourceColor(log.resource || '')}>
+                          {log.resource}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(log.createdAt || '').toLocaleString()}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">
+                          {log.userName} ({log.userEmail})
+                        </p>
+                        {log.resourceName && (
+                          <p className="text-sm text-muted-foreground">
+                            Resource: {log.resourceName}
+                          </p>
+                        )}
+                        {log.details && (
+                          <p className="text-sm text-muted-foreground">
+                            {log.details}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-              ))
-            )}
-          </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <p className="text-sm text-accent">
-                Showing page {pagination.page} of {pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setFilters(prev => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setPage(page - 1)}
+            disabled={page <= 1}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4 text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setPage(page + 1)}
+            disabled={page >= totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

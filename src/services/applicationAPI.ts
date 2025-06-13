@@ -1,160 +1,145 @@
-
 import { JobApplication } from './types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
-
-const handleAPIError = async (response: Response) => {
-  if (!response.ok) {
-    let errorMessage = 'An error occurred';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-    }
-    throw new Error(errorMessage);
-  }
-  return response;
-};
+import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
 
 export const applicationAPI = {
-  getAll: async (): Promise<JobApplication[]> => {
+  getAll: async (filters?: any): Promise<JobApplication[]> => {
     try {
-      console.log('🔍 Fetching all applications...');
+      console.log('🔍 Fetching applications with filters:', filters);
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
+      const queryParams = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value && value !== '') {
+            queryParams.append(key, value as string);
+          }
+        });
       }
-
-      const response = await fetch(`${API_BASE_URL}/applications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       
-      await handleAPIError(response);
-      const result = await response.json();
+      const endpoint = `/job-applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       
-      console.log('✅ Applications fetched:', result);
-      
-      // Handle both array and object responses
-      const applications = Array.isArray(result) ? result : (result.data || []);
-      return applications;
+      try {
+        const result = await apiRequest(endpoint, 'GET', null, true);
+        console.log('✅ Applications fetched:', result);
+        
+        // Handle different response formats
+        if (Array.isArray(result)) {
+          return result;
+        } else if (result?.data && Array.isArray(result.data)) {
+          return result.data;
+        } else if (result?.success && result?.data && Array.isArray(result.data)) {
+          return result.data;
+        } else {
+          console.warn('⚠️ Unexpected applications response format:', result);
+          return [];
+        }
+      } catch (apiError) {
+        console.error('❌ API request failed, trying fallback:', apiError);
+        
+        // Try fallback approach
+        const response = await tryFetchWithFallback(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          return Array.isArray(result) ? result : (result?.data || []);
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
     } catch (error) {
       console.error('❌ Fetch applications error:', error);
-      throw error;
+      // Return empty array instead of throwing to prevent UI crash
+      return [];
     }
   },
 
   getById: async (id: string): Promise<JobApplication> => {
     try {
       console.log('🔍 Fetching application by ID:', id);
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
+      const result = await apiRequest(`/job-applications/${id}`, 'GET', null, true);
       console.log('✅ Application fetched:', result);
       
-      return result.data || result;
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Fetch application error:', error);
       throw error;
     }
   },
 
-  updateStatus: async (id: string, status: string): Promise<JobApplication> => {
+  updateStatus: async (id: string, status: string, notes?: string): Promise<JobApplication> => {
     try {
-      console.log('🔄 Updating application status:', { id, status });
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status }),
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
+      console.log('🔧 Updating application status:', id, status);
+      const result = await apiRequest(`/job-applications/${id}/status`, 'PUT', { status, notes }, true);
       console.log('✅ Application status updated:', result);
       
-      return result.data || result;
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Update application status error:', error);
       throw error;
     }
   },
 
-  update: async (id: string, applicationData: Partial<JobApplication>): Promise<JobApplication> => {
+  update: async (id: string, data: Partial<JobApplication>): Promise<JobApplication> => {
     try {
-      console.log('🔄 Updating application:', { id, applicationData });
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(applicationData),
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
+      console.log('🔧 Updating application:', id, data);
+      const result = await apiRequest(`/job-applications/${id}`, 'PUT', data, true);
       console.log('✅ Application updated:', result);
       
-      return result.data || result;
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Update application error:', error);
       throw error;
     }
   },
 
-  delete: async (id: string): Promise<void> => {
+  submit: async (formData: FormData): Promise<{ success: boolean; message?: string; data?: JobApplication }> => {
     try {
-      console.log('🗑️ Deleting application:', id);
+      console.log('📤 Submitting application...');
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await tryFetchWithFallback('/job-applications', {
+        method: 'POST',
+        body: formData,
       });
       
-      await handleAPIError(response);
-      console.log('✅ Application deleted successfully');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      console.log('✅ Application submitted:', result);
+      
+      // Return a standardized response format
+      return {
+        success: true,
+        data: result?.data || result,
+        message: result?.message || 'Application submitted successfully'
+      };
     } catch (error) {
-      console.error('❌ Delete application error:', error);
+      console.error('❌ Submit application error:', error);
       throw error;
     }
   },
@@ -168,7 +153,7 @@ export const applicationAPI = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/applications/${id}/resume`, {
+      const response = await tryFetchWithFallback(`/job-applications/${id}/resume`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -184,32 +169,6 @@ export const applicationAPI = {
       return blob;
     } catch (error) {
       console.error('❌ Download resume error:', error);
-      throw error;
-    }
-  },
-
-  submit: async (formData: FormData): Promise<{ success: boolean; message?: string; data?: JobApplication }> => {
-    try {
-      console.log('📤 Submitting application...');
-      
-      const response = await fetch(`${API_BASE_URL}/applications`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
-      console.log('✅ Application submitted:', result);
-      
-      // Return a standardized response format
-      return {
-        success: true,
-        data: result.data || result,
-        message: result.message || 'Application submitted successfully'
-      };
-    } catch (error) {
-      console.error('❌ Submit application error:', error);
       throw error;
     }
   }

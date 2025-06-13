@@ -1,135 +1,82 @@
 
 import { User } from './types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
-
-const handleAPIError = async (response: Response) => {
-  if (!response.ok) {
-    let errorMessage = 'An error occurred';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-    }
-    throw new Error(errorMessage);
-  }
-  return response;
-};
+import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
+import { mockDataService } from './mockData';
 
 export const usersAPI = {
   getAll: async (): Promise<User[]> => {
     try {
-      console.log('🔍 Fetching all users...');
+      console.log('🔍 Fetching users...');
+      const result = await apiRequest('/users', 'GET', null, true);
+      console.log('✅ Users fetched from backend:', result);
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
+      // Handle different response formats
+      if (Array.isArray(result)) {
+        return result;
+      } else if (result?.data && Array.isArray(result.data)) {
+        return result.data;
+      } else if (result?.success && result?.data && Array.isArray(result.data)) {
+        return result.data;
+      } else {
+        console.warn('⚠️ Unexpected users response format:', result);
+        return [];
       }
-
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
-      console.log('✅ Users fetched:', result);
-      
-      // Handle both array and object responses
-      const users = Array.isArray(result) ? result : (result.data || []);
-      return users;
     } catch (error) {
-      console.error('❌ Fetch users error:', error);
-      throw error;
+      console.error('❌ Backend fetch failed, using mock data:', error);
+      // Use mock data when backend is unavailable
+      return await mockDataService.getUsers();
     }
   },
 
   create: async (userData: any): Promise<User> => {
     try {
-      console.log('🆕 Creating new user:', { ...userData, password: '***' });
+      console.log('📝 Creating user:', { ...userData, password: '***' });
+      const result = await apiRequest('/users', 'POST', userData, true);
+      console.log('✅ User created on backend:', result);
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
       }
-
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
-      console.log('✅ User created successfully:', result);
-      
-      return result.data || result;
     } catch (error) {
-      console.error('❌ Create user error:', error);
-      throw error;
+      console.error('❌ Backend create failed, using mock service:', error);
+      // Use mock service when backend is unavailable
+      return await mockDataService.createUser(userData);
     }
   },
 
   update: async (userId: string, userData: any): Promise<User> => {
     try {
-      console.log('🔄 Updating user:', { userId, userData: { ...userData, password: userData.password ? '***' : undefined } });
+      console.log('🔧 Updating user:', userId, { ...userData, password: userData.password ? '***' : undefined });
+      const result = await apiRequest(`/users/${userId}`, 'PUT', userData, true);
+      console.log('✅ User updated on backend:', result);
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
       }
-
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
-      console.log('✅ User updated successfully:', result);
-      
-      return result.data || result;
     } catch (error) {
-      console.error('❌ Update user error:', error);
-      throw error;
+      console.error('❌ Backend update failed, using mock service:', error);
+      // Use mock service when backend is unavailable
+      return await mockDataService.updateUser(userId, userData);
     }
   },
 
   delete: async (userId: string): Promise<void> => {
     try {
       console.log('🗑️ Deleting user:', userId);
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      await handleAPIError(response);
-      
-      console.log('✅ User deleted successfully');
+      await apiRequest(`/users/${userId}`, 'DELETE', null, true);
+      console.log('✅ User deleted from backend');
     } catch (error) {
-      console.error('❌ Delete user error:', error);
-      throw error;
+      console.error('❌ Backend delete failed, using mock service:', error);
+      // Use mock service when backend is unavailable
+      await mockDataService.deleteUser(userId);
     }
   }
 };

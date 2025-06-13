@@ -1,3 +1,4 @@
+
 export interface JobApplication {
   _id?: string;
   jobId?: string;
@@ -71,6 +72,7 @@ export interface Company {
   name: string;
   description?: string;
   location?: string;
+  address?: string;
   industry?: string;
   size?: string;
   website?: string;
