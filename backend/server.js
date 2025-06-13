@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -16,6 +15,7 @@ const healthRoutes = require('./routes/health');
 const contactRoutes = require('./routes/contact');
 const userRoutes = require('./routes/users');
 const companyRoutes = require('./routes/companies');
+const auditRoutes = require('./routes/audit');
 
 const app = express();
 
@@ -96,14 +96,15 @@ if (process.env.NODE_ENV !== 'production') {
 // Static files for uploaded resumes
 app.use('/uploads', express.static('uploads'));
 
-// Routes - Updated to match frontend API expectations
-app.use('/api/health', healthRoutes);
-app.use('/api/applications', jobApplicationRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/companies', companyRoutes);
+// Routes
+app.use('/api/health', require('./routes/health'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/companies', require('./routes/companies'));
+app.use('/api/jobs', require('./routes/jobs'));
+app.use('/api/job-applications', require('./routes/jobApplications'));
+app.use('/api/contact', require('./routes/contact'));
+app.use('/api/audit', require('./routes/audit'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

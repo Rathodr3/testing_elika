@@ -2,6 +2,16 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Password validation function
+const validatePassword = function(password) {
+  const minLength = 8;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+  return password.length >= minLength && hasUpperCase && hasNumber && hasSpecialChar;
+};
+
 const permissionSchema = new mongoose.Schema({
   create: { type: Boolean, default: false },
   read: { type: Boolean, default: false },
@@ -30,7 +40,11 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6
+    minlength: 8,
+    validate: {
+      validator: validatePassword,
+      message: 'Password must contain at least 8 characters, 1 uppercase letter, 1 number, and 1 special character'
+    }
   },
   phoneNumber: {
     type: String,

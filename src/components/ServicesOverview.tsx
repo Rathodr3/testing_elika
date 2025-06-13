@@ -18,25 +18,25 @@ const ServicesOverview = () => {
       icon: Cog,
       title: 'Engineering Solutions',
       description: 'Unlocking innovative solutions for diverse client needs with cutting-edge technology and expertise.',
-      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=250&fit=crop',
+      image: '/lovable-uploads/EngineeringSolutions.jpg?w=400&h=250&fit=crop',
     },
     {
       icon: Users,
       title: 'Human Resource Services', 
       description: 'Effective staff augmentation is the key for high growth tech companies. We find the perfect talent for your team.',
-      image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=250&fit=crop',
+      image: '/lovable-uploads/HumanResourceServices.jpg?w=400&h=250&fit=crop',
     },
     {
       icon: GraduationCap,
       title: 'Training & Development',
       description: 'Continuous learning drives growth, adaptability, and sustained success in today\'s evolving landscape.',
-      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop',
+      image: '/lovable-uploads/Training.jpg?w=400&h=250&fit=crop',
     },
     {
       icon: Monitor,
       title: 'IT Services',
       description: 'Comprehensive technology solutions including software development, cloud services, and digital transformation.',
-      image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=250&fit=crop',
+      image: '/lovable-uploads/IT.jpg?w=400&h=250&fit=crop',
     }
   ];
 

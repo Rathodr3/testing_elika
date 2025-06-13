@@ -23,6 +23,23 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const validatePassword = (password: string) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return {
+      isValid: password.length >= minLength && hasUpperCase && hasNumber && hasSpecialChar,
+      errors: [
+        ...(password.length < minLength ? ['At least 8 characters'] : []),
+        ...(!hasUpperCase ? ['At least 1 uppercase letter'] : []),
+        ...(!hasNumber ? ['At least 1 number'] : []),
+        ...(!hasSpecialChar ? ['At least 1 special character'] : [])
+      ]
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -30,6 +47,16 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      toast({
+        title: "Password requirements not met",
+        description: `Password must have: ${passwordValidation.errors.join(', ')}`,
         variant: "destructive"
       });
       return;
@@ -56,9 +83,28 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   };
 
   const generatePassword = () => {
-    const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()';
+    
+    let password = '';
+    password += upper[Math.floor(Math.random() * upper.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    const allChars = upper + lower + numbers + special;
+    for (let i = 3; i < 12; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    
+    // Shuffle the password
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    
     setFormData(prev => ({ ...prev, password }));
   };
+
+  const passwordValidation = validatePassword(formData.password);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,10 +179,33 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
             Generate
           </Button>
         </div>
+        {formData.password && (
+          <div className="mt-2 text-sm">
+            <p className="font-medium mb-1">Password requirements:</p>
+            <div className="space-y-1">
+              <div className={`flex items-center gap-2 ${formData.password.length >= 8 ? 'text-green-600' : 'text-red-600'}`}>
+                <span>{formData.password.length >= 8 ? '✓' : '✗'}</span>
+                <span>At least 8 characters</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
+                <span>{/[A-Z]/.test(formData.password) ? '✓' : '✗'}</span>
+                <span>At least 1 uppercase letter</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/\d/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
+                <span>{/\d/.test(formData.password) ? '✓' : '✗'}</span>
+                <span>At least 1 number</span>
+              </div>
+              <div className={`flex items-center gap-2 ${/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
+                <span>{/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? '✓' : '✗'}</span>
+                <span>At least 1 special character</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={loading} className="flex-1">
+        <Button type="submit" disabled={loading || !passwordValidation.isValid} className="flex-1">
           {loading ? 'Creating...' : 'Create User'}
         </Button>
       </div>

@@ -26,7 +26,7 @@ const Footer = () => {
       { label: 'Engineering Services', href: '/services' },
       { label: 'IT Services', href: '/services' },
       { label: 'Staff Augmentation', href: '/services' },
-      { label: 'Training Services', href: '/services' }
+      { label: 'Training and Development', href: '/services' }
     ],
     support: [
       { label: 'Contact Us', href: '/contact' },

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Laptop, Car, Cog, Smartphone, Plane, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -13,37 +14,37 @@ const IndustriesServed = () => {
       title: 'Information Technology',
       icon: Laptop,
       description: 'Software development, cloud solutions, and digital transformation services.',
-      image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/InformationTechnology.jpg?w=400&h=200&fit=crop'
     },
     {
       title: 'Automobile Industry',
       icon: Car,
       description: 'Automotive engineering, design, and manufacturing solutions.',
-      image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/Automobile.jpg?w=400&h=200&fit=crop'
     },
     {
       title: 'Engineering & Manufacturing',
       icon: Cog,
       description: 'Industrial automation, process optimization, and manufacturing excellence.',
-      image: 'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/Engineering.jpg?w=400&h=200&fit=crop'
     },
     {
       title: 'Telecom Industry',
       icon: Smartphone,
       description: 'Network infrastructure, 5G solutions, and telecommunications services.',
-      image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/Telecom.jpg?w=400&h=200&fit=crop'
     },
     {
       title: 'Aerospace & Aviation',
       icon: Plane,
       description: 'Aerospace engineering, aviation systems, and defense technologies.',
-      image: '/lovable-uploads/health.jpg?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/Aerospace.jpg?w=400&h=200&fit=crop'
     },
     {
       title: 'Healthcare Industry',
       icon: Heart,
       description: 'Medical technology, healthcare IT, and biomedical engineering solutions.',
-      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=200&fit=crop'
+      image: '/lovable-uploads/health.jpg?w=400&h=200&fit=crop'
     }
   ];
 
@@ -67,7 +68,6 @@ const IndustriesServed = () => {
             description={industry.description}
             image={industry.image}
             icon={industry.icon}
-            features={[industry.projects]}
             className="group"
           />
         ))}

@@ -23,6 +23,8 @@ import { useAdminData } from '@/contexts/AdminDataContext';
 import AdminHeader from './AdminHeader';
 import EnhancedFilters from './EnhancedFilters';
 import PermissionWrapper from './PermissionWrapper';
+import CreateCompanyForm from './CreateCompanyForm';
+import EditCompanyForm from './EditCompanyForm';
 
 const CompaniesTab = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -30,6 +32,9 @@ const CompaniesTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const { toast } = useToast();
   const { refreshTrigger, setRefreshing } = useAdminData();
 
@@ -108,6 +113,22 @@ const CompaniesTab = () => {
     }
   };
 
+  const handleEditCompany = (company: Company) => {
+    setEditingCompany(company);
+    setShowEditDialog(true);
+  };
+
+  const handleCreateSuccess = () => {
+    setShowCreateDialog(false);
+    fetchCompanies();
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setEditingCompany(null);
+    fetchCompanies();
+  };
+
   const getStatusColor = (isActive: boolean) => {
     return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
   };
@@ -134,10 +155,20 @@ const CompaniesTab = () => {
         description="Manage company information and settings"
       >
         <PermissionWrapper resource="companies" action="create">
-          <Button className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Create Company
-          </Button>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Create Company
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Company</DialogTitle>
+              </DialogHeader>
+              <CreateCompanyForm onSuccess={handleCreateSuccess} />
+            </DialogContent>
+          </Dialog>
         </PermissionWrapper>
       </AdminHeader>
 
@@ -220,7 +251,7 @@ const CompaniesTab = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <PermissionWrapper resource="companies" action="update" fallback={null}>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditCompany(company)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -254,6 +285,24 @@ const CompaniesTab = () => {
           </Card>
         )}
       </div>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Company</DialogTitle>
+          </DialogHeader>
+          {editingCompany && (
+            <EditCompanyForm
+              company={editingCompany}
+              onSuccess={handleEditSuccess}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingCompany(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,68 +1,91 @@
-
-import React from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import BackToTop from '@/components/BackToTop';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, Target, Award, Heart, Lightbulb, Eye, Handshake, Shield, UserCheck, Globe, ArrowRight, CheckCircle, Star, TrendingUp, Mail } from 'lucide-react';
+import React from "react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  Target,
+  Award,
+  Heart,
+  Lightbulb,
+  Eye,
+  Handshake,
+  Shield,
+  UserCheck,
+  Globe,
+  ArrowRight,
+  CheckCircle,
+  Star,
+  TrendingUp,
+  Mail,
+} from "lucide-react";
 
 const AboutUs = () => {
   const values = [
     {
       icon: Lightbulb,
-      title: 'Innovation',
-      description: 'Driving forward-thinking solutions and creative approaches to engineering challenges.'
+      title: "Innovation",
+      description:
+        "Driving forward-thinking solutions and creative approaches to engineering challenges.",
     },
     {
       icon: Target,
-      title: 'Goals',
-      description: 'Setting clear objectives and achieving measurable results for our clients and partners.'
+      title: "Goals",
+      description:
+        "Setting clear objectives and achieving measurable results for our clients and partners.",
     },
     {
       icon: Users,
-      title: 'Teamwork',
-      description: 'Fostering collaboration and unity to deliver exceptional engineering solutions.'
+      title: "Teamwork",
+      description:
+        "Fostering collaboration and unity to deliver exceptional engineering solutions.",
     },
     {
       icon: Handshake,
-      title: 'Commitment',
-      description: 'Dedicated to excellence and unwavering in our promise to deliver quality results.'
-    }
+      title: "Commitment",
+      description:
+        "Dedicated to excellence and unwavering in our promise to deliver quality results.",
+    },
   ];
 
   const additionalValues = [
     {
       icon: Shield,
-      title: 'Integrity',
-      description: 'Maintaining the highest ethical standards in all our business practices and relationships.'
+      title: "Integrity",
+      description:
+        "Maintaining the highest ethical standards in all our business practices and relationships.",
     },
     {
       icon: UserCheck,
-      title: 'Customers',
-      description: 'Putting our clients first and ensuring their success is at the heart of everything we do.'
+      title: "Customers",
+      description:
+        "Putting our clients first and ensuring their success is at the heart of everything we do.",
     },
     {
       icon: Globe,
-      title: 'Responsibility',
-      description: 'Taking accountability for our actions and their impact on society and the environment.'
-    }
+      title: "Responsibility",
+      description:
+        "Taking accountability for our actions and their impact on society and the environment.",
+    },
   ];
 
   const achievements = [
     { number: "8+", label: "Years Experience", icon: TrendingUp },
     { number: "10+", label: "Satisfied Clients", icon: Heart },
-    { number: "90%", label: "Success Rate", icon: Star }
+    { number: "90%", label: "Success Rate", icon: Star },
   ];
 
   const teamMembers = [
     {
       name: "Pankaj Watpade",
       position: "CEO & Founder",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face",
-      description: "Visionary leader with 15+ years in engineering",
-      expertise: "Strategic Leadership"
-    }
+      image:
+        "/lovable-uploads/Pankaj.jpeg?w=300&h=300&fit=crop&crop=face",
+      description: "Visionary leader with 10+ years in engineering",
+      expertise: "Strategic Leadership",
+    },
   ];
 
   return (
@@ -80,27 +103,42 @@ const AboutUs = () => {
                     About Our Company
                   </div>
                   <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-                    About <span className="text-primary">Elika Engineering Pvt Ltd</span>
+                    About{" "}
+                    <span className="text-primary">
+                      Elika Engineering Pvt Ltd
+                    </span>
                   </h1>
                   <div className="space-y-6 text-lg text-gray-700 mb-8">
                     <p className="text-2xl text-primary font-semibold">
                       Enthusiastic, Collaborative, and Transparent
                     </p>
                     <p>
-                      That's how we bring talent and clients together in the demanding world of engineering excellence.
+                      That's how we bring talent and clients together in the
+                      demanding world of engineering excellence.
                     </p>
                     <p>
-                      With 8 years of experience in Engineering Industries, we successfully deliver excellent support to our customers. Elika Engineering Pvt Ltd is a young and dynamic team delivering Human Resource, IT/Non-IT Engineering services, and Training solutions.
+                      With 8 years of experience in Engineering Industries, we
+                      successfully deliver excellent support to our customers.
+                      Elika Engineering Pvt Ltd is a young and dynamic team
+                      delivering Human Resource, IT/Non-IT Engineering services,
+                      and Training solutions.
                     </p>
                   </div>
 
                   {/* Achievement Stats */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     {achievements.map((achievement, index) => (
-                      <div key={index} className="text-center bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                      <div
+                        key={index}
+                        className="text-center bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+                      >
                         <achievement.icon className="w-8 h-8 text-primary mx-auto mb-3" />
-                        <div className="text-3xl font-bold text-gray-900 mb-1">{achievement.number}</div>
-                        <div className="text-sm text-gray-600 font-medium">{achievement.label}</div>
+                        <div className="text-3xl font-bold text-gray-900 mb-1">
+                          {achievement.number}
+                        </div>
+                        <div className="text-sm text-gray-600 font-medium">
+                          {achievement.label}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -112,20 +150,24 @@ const AboutUs = () => {
                     <div className="flex flex-col gap-6">
                       <div className="bg-primary/10 rounded-3xl p-8 h-48 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="text-6xl font-bold text-primary mb-2">8+</div>
-                          <div className="text-gray-700 font-semibold">Years of Excellence</div>
+                          <div className="text-6xl font-bold text-primary mb-2">
+                            8+
+                          </div>
+                          <div className="text-gray-700 font-semibold">
+                            Years of Excellence
+                          </div>
                         </div>
                       </div>
-                      <img 
-                        src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop" 
-                        alt="Team collaboration" 
+                      <img
+                        src="/lovable-uploads/Aboutus.jpg?w=400&h=300&fit=crop"
+                        alt="Team collaboration"
                         className="rounded-3xl shadow-xl w-full h-64 object-cover"
                       />
                     </div>
                     <div className="flex flex-col gap-6 mt-12">
-                      <img 
-                        src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=300&fit=crop" 
-                        alt="Engineering workspace" 
+                      <img
+                        src="/lovable-uploads/Workspace.jpeg?w=400&h=300&fit=crop"
+                        alt="Engineering workspace"
                         className="rounded-3xl shadow-xl w-full h-64 object-cover"
                       />
                       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-8 h-48 flex items-center justify-center text-white">
@@ -136,7 +178,7 @@ const AboutUs = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Floating Elements */}
                   <div className="absolute top-20 -left-4 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
                     <CheckCircle className="w-10 h-10 text-white" />
@@ -156,7 +198,7 @@ const AboutUs = () => {
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(99,91,255,0.1),transparent_60%)]"></div>
             <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_60%)]"></div>
-            
+
             {/* Geometric Shapes */}
             <div className="absolute top-10 left-10 w-24 h-24 border-2 border-primary/20 rounded-full animate-pulse"></div>
             <div className="absolute bottom-20 right-20 w-32 h-32 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-3xl rotate-45"></div>
@@ -168,11 +210,15 @@ const AboutUs = () => {
           <div className="container mx-auto px-4 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-8 leading-tight">
-                Make your impact with 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-600 to-blue-600"> Higher "AIM"</span>
+                Make your impact with
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-600 to-blue-600">
+                  {" "}
+                  Higher "AIM"
+                </span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Achieving excellence through innovation, dedication, and strategic vision in every engineering solution we deliver.
+                Achieving excellence through innovation, dedication, and
+                strategic vision in every engineering solution we deliver.
               </p>
             </div>
           </div>
@@ -187,7 +233,8 @@ const AboutUs = () => {
                   Our Purpose
                 </h2>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  Driving the future of engineering excellence through innovation and dedication
+                  Driving the future of engineering excellence through
+                  innovation and dedication
                 </p>
               </div>
 
@@ -198,10 +245,14 @@ const AboutUs = () => {
                       <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Eye className="w-12 h-12 text-white" />
                       </div>
-                      <h3 className="text-4xl font-bold text-gray-900 mb-6">VISION</h3>
+                      <h3 className="text-4xl font-bold text-gray-900 mb-6">
+                        VISION
+                      </h3>
                     </div>
                     <p className="text-lg text-gray-700 leading-relaxed text-center">
-                      "To be the premier engineering services company, driving brand growth and success through innovative solutions, strategic placement, and unmatched expertise."
+                      "To be the premier engineering services company, driving
+                      brand growth and success through innovative solutions,
+                      strategic placement, and unmatched expertise."
                     </p>
                   </div>
                 </div>
@@ -212,10 +263,15 @@ const AboutUs = () => {
                       <div className="w-24 h-24 bg-gradient-to-r from-orange-600 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Target className="w-12 h-12 text-white" />
                       </div>
-                      <h3 className="text-4xl font-bold text-gray-900 mb-6">MISSION</h3>
+                      <h3 className="text-4xl font-bold text-gray-900 mb-6">
+                        MISSION
+                      </h3>
                     </div>
                     <p className="text-lg text-gray-700 leading-relaxed text-center">
-                      "Our mission is to provide engineering services, seamless placement solutions, and dynamic work culture, enabling our clients to achieve their brand-building objectives with excellence, efficiency, and lasting impact."
+                      "Our mission is to provide engineering services, seamless
+                      placement solutions, and dynamic work culture, enabling
+                      our clients to achieve their brand-building objectives
+                      with excellence, efficiency, and lasting impact."
                     </p>
                   </div>
                 </div>
@@ -236,20 +292,28 @@ const AboutUs = () => {
                   CORE VALUES
                 </h2>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  The fundamental principles that guide our organization and define our character
+                  The fundamental principles that guide our organization and
+                  define our character
                 </p>
               </div>
-              
+
               {/* First 4 values */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                 {values.map((value, index) => (
-                  <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden w-full">
+                  <Card
+                    key={index}
+                    className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden w-full"
+                  >
                     <CardContent className="p-8">
                       <div className="w-20 h-20 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
                         <value.icon className="h-10 w-10 text-primary" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase">{value.title}</h3>
-                      <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                      <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase">
+                        {value.title}
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        {value.description}
+                      </p>
                     </CardContent>
                   </Card>
                 ))}
@@ -259,13 +323,20 @@ const AboutUs = () => {
               <div className="flex justify-center">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl">
                   {additionalValues.map((value, index) => (
-                    <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden w-full">
+                    <Card
+                      key={index}
+                      className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white group text-center rounded-3xl overflow-hidden w-full"
+                    >
                       <CardContent className="p-8">
                         <div className="w-20 h-20 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
                           <value.icon className="h-10 w-10 text-primary" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase">{value.title}</h3>
-                        <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase">
+                          {value.title}
+                        </h3>
+                        <p className="text-gray-600 leading-relaxed">
+                          {value.description}
+                        </p>
                       </CardContent>
                     </Card>
                   ))}
@@ -291,24 +362,34 @@ const AboutUs = () => {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-12">
+              <div className="flex justify-center">
+                {" "}
+                {/* grid md:grid-cols-3 gap-12 */}
                 {teamMembers.map((member, index) => (
                   <div key={index} className="group text-center">
                     <div className="relative mb-8">
                       <div className="w-64 h-64 mx-auto rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300">
-                        <img 
-                          src={member.image} 
+                        <img
+                          src={member.image}
                           alt={member.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                       <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-6 py-2 shadow-lg border border-gray-100">
-                        <span className="text-sm font-semibold text-primary">{member.expertise}</span>
+                        <span className="text-sm font-semibold text-primary">
+                          {member.expertise}
+                        </span>
                       </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{member.name}</h3>
-                    <p className="text-primary font-semibold mb-3">{member.position}</p>
-                    <p className="text-gray-600 leading-relaxed">{member.description}</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      {member.name}
+                    </h3>
+                    <p className="text-primary font-semibold mb-3">
+                      {member.position}
+                    </p>
+                    <p className="text-gray-600 leading-relaxed">
+                      {member.description}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -322,7 +403,7 @@ const AboutUs = () => {
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(59,130,246,0.3),transparent_60%)]"></div>
             <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.3),transparent_60%)]"></div>
-            
+
             {/* Geometric Shapes */}
             <div className="absolute top-20 left-20 w-32 h-32 border-2 border-white/10 rounded-full animate-pulse"></div>
             <div className="absolute bottom-32 right-20 w-24 h-24 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl rotate-45"></div>
@@ -339,23 +420,28 @@ const AboutUs = () => {
                   <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white/90 mb-6">
                     Get In Touch
                   </div>
-                  
+
                   <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                     Ready to Start Your
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400"> Engineering Journey?</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                      {" "}
+                      Engineering Journey?
+                    </span>
                   </h2>
-                  
+
                   <p className="text-xl text-white/80 mb-8 leading-relaxed">
-                    Let's discuss how our innovative engineering services can bring value to your project and help you achieve your goals with excellence and efficiency.
+                    Let's discuss how our innovative engineering services can
+                    bring value to your project and help you achieve your goals
+                    with excellence and efficiency.
                   </p>
 
                   {/* Key Benefits */}
                   <div className="space-y-4 mb-8">
                     {[
                       "Expert Engineering Consultation",
-                      "Tailored Solutions for Your Needs", 
+                      "Tailored Solutions for Your Needs",
                       "8+ Years of Industry Experience",
-                      "500+ Successful Projects Delivered"
+                      "500+ Successful Projects Delivered",
                     ].map((benefit, index) => (
                       <div key={index} className="flex items-center space-x-3">
                         <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -368,7 +454,10 @@ const AboutUs = () => {
 
                   {/* Contact Actions */}
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 h-auto text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 h-auto text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    >
                       Get Started Today
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
@@ -382,8 +471,12 @@ const AboutUs = () => {
                       <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <Mail className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-3">Let's Connect</h3>
-                      <p className="text-white/70 text-lg">Ready to discuss your engineering needs?</p>
+                      <h3 className="text-2xl font-bold text-white mb-3">
+                        Let's Connect
+                      </h3>
+                      <p className="text-white/70 text-lg">
+                        Ready to discuss your engineering needs?
+                      </p>
                     </div>
 
                     {/* Contact Options */}
@@ -394,8 +487,12 @@ const AboutUs = () => {
                             <Mail className="w-6 h-6 text-blue-400" />
                           </div>
                           <div>
-                            <h4 className="text-white font-semibold text-lg mb-1">Email Us</h4>
-                            <p className="text-white/70">contact@elikaengineering.com</p>
+                            <h4 className="text-white font-semibold text-lg mb-1">
+                              Email Us
+                            </h4>
+                            <p className="text-white/70">
+                              contact@elikaengineering.com
+                            </p>
                           </div>
                         </div>
                       </div>

@@ -80,7 +80,7 @@ const WelcomeSection = () => {
             </div>
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=600&q=80"
+                src="/lovable-uploads/Building.jpg?auto=format&fit=crop&w=600&q=80"
                 alt="Professional workspace"
                 className="w-full h-80 object-cover rounded-2xl"
               />
