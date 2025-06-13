@@ -53,7 +53,7 @@ const corsOptions = {
           'https://www.your-domain.com',
           // Add your actual Lightsail domain here
           'https://your-lightsail-ip',
-          'http://13.126.145.69'
+          'http://65.0.199.243'
         ]
       : [
           'http://localhost:3000', 

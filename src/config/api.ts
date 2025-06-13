@@ -1,11 +1,11 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? 'http://13.126.145.69:5000/api' : 'http://localhost:5000/api');
+  (import.meta.env.PROD ? 'http://65.0.199.243:5000/api' : 'http://localhost:5000/api');
 
 // Add fallback URLs for production
 const FALLBACK_API_URLS = [
+  'http://65.0.199.243:5000/api',
   'http://13.126.145.69:5000/api',
-  'http://13.127.4.53:5000/api',
   '/api'
 ];
 

@@ -1,8 +1,6 @@
-
-
 export interface JobApplication {
   _id?: string;
-  jobId: string;
+  jobId?: string;
   userId?: string;
   firstName: string;
   lastName: string;
@@ -14,10 +12,10 @@ export interface JobApplication {
   experienceLevel?: string;
   yearsOfExperience?: number;
   previousCompany?: string;
-  resume: string;
+  resume?: string;
   coverLetter?: string;
   notes?: string;
-  status: 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
+  status: 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected' | 'submitted' | 'under-review';
   applicationDate?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -119,4 +117,3 @@ export interface AuditLog {
   updatedAt: string;
   timestamp: string;
 }
-

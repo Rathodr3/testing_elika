@@ -1,100 +1,70 @@
 
-import { API_BASE_URL, FALLBACK_API_URLS } from '../../config/api';
+import { API_BASE_URL, FALLBACK_API_URLS } from '@/config/api';
 
-const handleAPIError = async (response: Response) => {
-  if (!response.ok) {
-    let errorMessage = 'An error occurred';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
-      console.error('API Error Response:', errorData);
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-    }
-    console.error('API Error:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url,
-      message: errorMessage
-    });
-    throw new Error(errorMessage);
-  }
-  return response;
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('adminToken');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  return headers;
-};
-
-export const tryFetchWithFallback = async (endpoint: string, config: RequestInit) => {
+export const tryFetchWithFallback = async (endpoint: string, options: RequestInit = {}) => {
   const urls = [API_BASE_URL, ...FALLBACK_API_URLS];
   
-  for (let i = 0; i < urls.length; i++) {
-    const baseUrl = urls[i];
+  for (const baseUrl of urls) {
     try {
-      console.log(`🔍 Attempting request ${i + 1}/${urls.length} to: ${baseUrl}${endpoint}`);
-      
-      const response = await fetch(`${baseUrl}${endpoint}`, config);
-      console.log(`✅ Response from ${baseUrl}: ${response.status}`);
+      console.log(`🔗 Trying API request: ${baseUrl}${endpoint}`);
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
       
       if (response.ok) {
+        console.log(`✅ API request successful: ${baseUrl}${endpoint}`);
         return response;
-      } else if (response.status >= 400 && response.status < 500) {
-        // Client error, don't try other URLs
-        await handleAPIError(response);
+      } else {
+        console.warn(`⚠️ API request failed with status ${response.status}: ${baseUrl}${endpoint}`);
       }
     } catch (error) {
-      console.warn(`❌ Failed to connect to ${baseUrl}:`, error);
-      
-      // If this is the last URL, throw the error
-      if (i === urls.length - 1) {
-        throw new Error('All backend servers are unavailable. Please try again later.');
-      }
+      console.warn(`❌ API request error for ${baseUrl}${endpoint}:`, error);
+      continue;
     }
   }
   
-  throw new Error('All backend servers are unavailable');
+  throw new Error(`All API endpoints failed for ${endpoint}`);
 };
 
-export const apiRequest = async (
-  endpoint: string, 
-  method: string, 
-  data?: any, 
-  requiresAuth = false
-) => {
+export const apiRequest = async (endpoint: string, method: string = 'GET', data?: any, requireAuth: boolean = false) => {
   try {
-    console.log(`🔍 Making ${method} request to: ${endpoint}`);
-    console.log('🔍 Request data:', data);
-    console.log('🔍 Requires auth:', requiresAuth);
-    
-    const headers = requiresAuth ? getAuthHeaders() : { 'Content-Type': 'application/json' };
-    console.log('🔍 Request headers:', headers);
-    
-    const config: RequestInit = {
+    const options: RequestInit = {
       method,
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     };
 
-    if (data && (method === 'POST' || method === 'PUT')) {
-      config.body = JSON.stringify(data);
+    if (requireAuth) {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+      };
     }
 
-    const response = await tryFetchWithFallback(endpoint, config);
-    const result = await response.json();
-    console.log('✅ API Response:', result);
+    if (data && method !== 'GET') {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await tryFetchWithFallback(endpoint, options);
     
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(errorData.message || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
     return result;
   } catch (error) {
-    console.error('❌ API Request failed:', error);
+    console.error(`🚨 API request failed: ${method} ${endpoint}`, error);
     throw error;
   }
 };

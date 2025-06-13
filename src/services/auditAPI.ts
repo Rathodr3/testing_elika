@@ -1,6 +1,7 @@
 
 import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
 import { AuditLog } from './types';
+import { API_BASE_URL } from '@/config/api';
 
 export const auditAPI = {
   log: async (auditData: any) => {
@@ -33,10 +34,22 @@ export const auditAPI = {
       const result = await apiRequest(endpoint, 'GET', null, true);
       console.log('✅ Audit logs fetched:', result);
       
-      return result.data || result;
+      // Return standardized format
+      return {
+        logs: result.data || result.logs || [],
+        total: result.total || 0,
+        page: result.page || 1,
+        totalPages: result.totalPages || 1
+      };
     } catch (error) {
       console.error('❌ Fetch audit logs error:', error);
-      throw error;
+      // Return empty data instead of throwing to prevent UI crash
+      return {
+        logs: [],
+        total: 0,
+        page: 1,
+        totalPages: 1
+      };
     }
   },
 

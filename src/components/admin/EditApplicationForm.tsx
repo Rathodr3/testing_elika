@@ -1,10 +1,12 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { JobApplication, applicationAPI } from '@/services/api';
+import { JobApplication } from '@/services/types';
+import { applicationAPI } from '@/services/applications/applicationAPI';
 import { useToast } from '@/hooks/use-toast';
 
 interface EditApplicationFormProps {
@@ -70,7 +72,7 @@ const EditApplicationForm = ({ application, onSuccess, onCancel }: EditApplicati
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({ 
       ...prev, 
-      status: value as 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected'
+      status: value as 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected' | 'submitted' | 'under-review'
     }));
   };
 
@@ -190,7 +192,9 @@ const EditApplicationForm = ({ application, onSuccess, onCancel }: EditApplicati
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="submitted">Submitted</SelectItem>
               <SelectItem value="reviewing">Reviewing</SelectItem>
+              <SelectItem value="under-review">Under Review</SelectItem>
               <SelectItem value="shortlisted">Shortlisted</SelectItem>
               <SelectItem value="interviewed">Interviewed</SelectItem>
               <SelectItem value="hired">Hired</SelectItem>

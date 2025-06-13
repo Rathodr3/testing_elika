@@ -17,7 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Plus, MoreHorizontal, Edit, Trash2, Building2, Mail, Phone, Globe } from 'lucide-react';
-import { Company, companiesAPI } from '@/services/api';
+import { Company } from '@/services/types';
+import { companiesAPI } from '@/services/companiesAPI';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/contexts/AdminDataContext';
 import AdminHeader from './AdminHeader';

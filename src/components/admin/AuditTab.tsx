@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { auditAPI } from '@/services/auditAPI';
 import { AuditLog } from '@/services/types';
 import { format } from 'date-fns';
+import AdminHeader from './AdminHeader';
 
 const AuditTab = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);

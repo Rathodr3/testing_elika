@@ -1,410 +1,287 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { JobApplication } from '@/services/types';
-import { applicationAPI } from '@/services/applications/applicationAPI';
-import { useToast } from '@/hooks/use-toast';
-import { useAdminData } from '@/contexts/AdminDataContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Download, Eye, RefreshCw, Search, Users, FileText, Clock, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import EditApplicationForm from './EditApplicationForm';
-import ApplicationsStats from './ApplicationsStats';
+import { applicationAPI } from '@/services/applications/applicationAPI';
+import { useToast } from '@/hooks/use-toast';
+import { JobApplication } from '@/services/types';
 import ApplicationCard from './ApplicationCard';
+import EditApplicationForm from './EditApplicationForm';
 import AdminHeader from './AdminHeader';
-import EnhancedFilters from './EnhancedFilters';
-import BulkOperationsBar from './BulkOperationsBar';
-import ConfirmationDialog from './ConfirmationDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ApplicationsTab = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedApplicationIds, setSelectedApplicationIds] = useState<string[]>([]);
   const { toast } = useToast();
-  const { refreshTrigger, setRefreshing } = useAdminData();
-
-  useEffect(() => {
-    fetchApplications();
-  }, [refreshTrigger]);
-
-  useEffect(() => {
-    filterApplications();
-  }, [applications, searchTerm, statusFilter]);
 
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      setRefreshing(true);
-      console.log('🔍 Fetching applications for admin dashboard...');
-      const data = await applicationAPI.getAll();
-      console.log('✅ Applications fetched:', data);
+      console.log('🔍 Fetching applications...');
       
-      const applicationsArray = Array.isArray(data) ? data : [];
-      setApplications(applicationsArray);
+      const filters: Record<string, string> = {};
+      if (statusFilter) filters.status = statusFilter;
+      if (searchTerm) filters.search = searchTerm;
+      
+      const data = await applicationAPI.getAll(filters);
+      console.log('✅ Applications loaded:', data);
+      
+      setApplications(data || []);
     } catch (error) {
       console.error('❌ Error fetching applications:', error);
       toast({
-        title: "Error fetching applications",
-        description: "Failed to load applications from the server. Please check your connection.",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to fetch applications. Please check your connection and try again.",
+        variant: "destructive",
       });
       setApplications([]);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const filterApplications = () => {
-    let filtered = applications;
+  useEffect(() => {
+    fetchApplications();
+  }, [statusFilter]);
 
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(app => {
-        const fullName = `${app.firstName || ''} ${app.lastName || ''}`.trim();
-        const name = app.name || fullName;
-        
-        return name.toLowerCase().includes(searchLower) ||
-               (app.email || '').toLowerCase().includes(searchLower) ||
-               (app.position || '').toLowerCase().includes(searchLower) ||
-               (app.department || '').toLowerCase().includes(searchLower);
-      });
-    }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(app => app.status === statusFilter);
-    }
-
-    setFilteredApplications(filtered);
+  const handleSearch = () => {
+    fetchApplications();
   };
 
-  const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
+  const handleStatusUpdate = async (id: string, status: string, notes?: string) => {
     try {
-      console.log('🔄 Updating application status:', { applicationId, newStatus });
-      await applicationAPI.updateStatus(applicationId, newStatus);
-      setApplications(prev => 
-        prev.map(app => 
-          app._id === applicationId 
-            ? { ...app, status: newStatus as JobApplication['status'] }
-            : app
-        )
-      );
+      await applicationAPI.updateStatus(id, status, notes);
       toast({
-        title: "Status updated successfully",
-        description: `Application marked as ${newStatus}`,
+        title: "Success",
+        description: "Application status updated successfully",
       });
+      fetchApplications();
     } catch (error) {
       console.error('❌ Error updating status:', error);
       toast({
-        title: "Error updating status",
-        description: "Please try again later",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to update application status",
+        variant: "destructive",
       });
     }
   };
 
-  const deleteApplication = async (applicationId: string) => {
-    try {
-      console.log('🗑️ Deleting application:', applicationId);
-      await applicationAPI.delete(applicationId);
-      setApplications(prev => prev.filter(app => app._id !== applicationId));
-      setSelectedApplications(prev => prev.filter(id => id !== applicationId));
-      toast({
-        title: "Application deleted successfully",
-        description: "The application has been removed.",
-      });
-    } catch (error) {
-      console.error('❌ Error deleting application:', error);
-      toast({
-        title: "Error deleting application",
-        description: "Please try again later",
-        variant: "destructive"
-      });
-    }
+  const handleEdit = (application: JobApplication) => {
+    setSelectedApplication(application);
+    setShowEditModal(true);
   };
 
-  const handleBulkDelete = async () => {
-    try {
-      for (const id of selectedApplications) {
-        await applicationAPI.delete(id);
-      }
-      setApplications(prev => prev.filter(app => !selectedApplications.includes(app._id!)));
-      setSelectedApplications([]);
-      toast({
-        title: "Applications deleted",
-        description: `${selectedApplications.length} applications deleted successfully`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error deleting applications",
-        description: "Some applications could not be deleted",
-        variant: "destructive"
-      });
-    }
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    setSelectedApplication(null);
+    fetchApplications();
   };
 
-  const handleBulkStatusChange = async (newStatus: string) => {
-    try {
-      for (const id of selectedApplications) {
-        await applicationAPI.updateStatus(id, newStatus);
-      }
-      setApplications(prev => 
-        prev.map(app => 
-          selectedApplications.includes(app._id!) 
-            ? { ...app, status: newStatus as JobApplication['status'] }
-            : app
-        )
-      );
-      setSelectedApplications([]);
-      toast({
-        title: "Status updated",
-        description: `${selectedApplications.length} applications updated to ${newStatus}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error updating status",
-        description: "Some applications could not be updated",
-        variant: "destructive"
-      });
-    }
+  const handleDelete = async (applicationId: string) => {
+    console.log('Delete application:', applicationId);
+    // Implementation would go here
   };
 
-  const exportToCSV = () => {
-    const dataToExport = selectedApplications.length > 0 
-      ? filteredApplications.filter(app => selectedApplications.includes(app._id!))
-      : filteredApplications;
-
-    if (dataToExport.length === 0) {
-      toast({
-        title: "No data to export",
-        description: "There are no applications to export.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const csvData = dataToExport.map(app => {
-      const fullName = `${app.firstName || ''} ${app.lastName || ''}`.trim();
-      const name = app.name || fullName;
-      
-      return {
-        Name: name,
-        Email: app.email || 'N/A',
-        Phone: app.phone || 'N/A',
-        Position: app.position || 'N/A',
-        Department: app.department || 'N/A',
-        'Experience Level': app.experienceLevel || 'N/A',
-        'Years of Experience': app.yearsOfExperience || 'N/A',
-        Status: app.status || 'pending',
-        'Applied Date': new Date(app.applicationDate || app.createdAt || Date.now()).toLocaleDateString()
-      };
-    });
-
-    const csvContent = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).map(value => `"${value}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `job_applications_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Export successful",
-      description: `${dataToExport.length} applications exported to CSV file.`,
-    });
-  };
-
-  const handleEditApplication = (application: JobApplication) => {
-    setEditingApplication(application);
-    setShowEditDialog(true);
-  };
-
-  const confirmDelete = (applicationId: string) => {
-    setApplicationToDelete(applicationId);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (applicationToDelete) {
-      deleteApplication(applicationToDelete);
-    }
-    setShowDeleteConfirm(false);
-    setApplicationToDelete(null);
-  };
-
-  const toggleSelection = (applicationId: string) => {
-    setSelectedApplications(prev => 
-      prev.includes(applicationId)
+  const handleToggleSelection = (applicationId: string) => {
+    setSelectedApplicationIds(prev => 
+      prev.includes(applicationId) 
         ? prev.filter(id => id !== applicationId)
         : [...prev, applicationId]
     );
   };
 
-  const selectAll = () => {
-    if (selectedApplications.length === filteredApplications.length) {
-      setSelectedApplications([]);
-    } else {
-      setSelectedApplications(filteredApplications.map(app => app._id!));
-    }
+  const getStatusCounts = () => {
+    const counts = {
+      total: applications.length,
+      pending: applications.filter(app => 
+        app.status === 'pending' || app.status === 'submitted'
+      ).length,
+      reviewing: applications.filter(app => 
+        app.status === 'reviewing' || app.status === 'under-review'
+      ).length,
+      interviewed: applications.filter(app => 
+        app.status === 'interviewed' || app.status === 'shortlisted'
+      ).length,
+      hired: applications.filter(app => app.status === 'hired').length,
+    };
+    return counts;
   };
+
+  const statusCounts = getStatusCounts();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-3 text-muted-foreground">Loading applications...</span>
+      <div className="space-y-6">
+        <AdminHeader title="Job Applications" description="Manage and review job applications" />
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'reviewing', label: 'Reviewing' },
-    { value: 'shortlisted', label: 'Shortlisted' },
-    { value: 'interviewed', label: 'Interviewed' },
-    { value: 'hired', label: 'Hired' },
-    { value: 'rejected', label: 'Rejected' }
-  ];
-
-  const bulkStatusOptions = statusOptions.slice(1); // Remove 'all' option
-
   return (
     <div className="space-y-6">
-      <AdminHeader
-        title="Applications Management"
-        description="Review and manage job applications"
-        onExport={exportToCSV}
+      <AdminHeader 
+        title="Job Applications" 
+        description="Manage and review job applications"
+        onRefresh={fetchApplications}
       />
 
-      <ApplicationsStats applications={applications} />
-      
-      <EnhancedFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        placeholder="Search by name, email, position, or department..."
-        filters={[
-          {
-            key: 'status',
-            label: 'Status',
-            value: statusFilter,
-            options: statusOptions,
-            onChange: setStatusFilter
-          }
-        ]}
-        onClearFilters={() => {
-          setSearchTerm('');
-          setStatusFilter('all');
-        }}
-      />
-
-      <BulkOperationsBar
-        selectedCount={selectedApplications.length}
-        onBulkDelete={handleBulkDelete}
-        onBulkExport={exportToCSV}
-        onBulkStatusChange={handleBulkStatusChange}
-        statusOptions={bulkStatusOptions}
-        onClearSelection={() => setSelectedApplications([])}
-      />
-
-      <div className="space-y-4">
-        {filteredApplications.length > 0 ? (
-          <>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Showing {filteredApplications.length} of {applications.length} applications
-              </span>
-              <button
-                onClick={selectAll}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                {selectedApplications.length === filteredApplications.length ? 'Deselect all' : 'Select all'}
-              </button>
-            </div>
-            
-            {filteredApplications.map((application) => (
-              <ApplicationCard
-                key={application._id}
-                application={application}
-                onEdit={handleEditApplication}
-                onStatusUpdate={updateApplicationStatus}
-                onDelete={confirmDelete}
-                isSelected={selectedApplications.includes(application._id!)}
-                onToggleSelection={toggleSelection}
-              />
-            ))}
-          </>
-        ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              {applications.length === 0 ? (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">No Applications Yet</h3>
-                  <p className="text-muted-foreground">
-                    No job applications have been submitted yet. 
-                    Applications will appear here when candidates apply for jobs.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">No Matching Applications</h3>
-                  <p className="text-muted-foreground">
-                    No applications found matching your current filters.
-                    Try adjusting your search criteria.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.total}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.pending}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Under Review</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.reviewing}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Hired</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.hired}</div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Search by name, email, or position..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+            <Button onClick={handleSearch} variant="outline">
+              <Search className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="under-review">Under Review</SelectItem>
+            <SelectItem value="reviewing">Reviewing</SelectItem>
+            <SelectItem value="shortlisted">Shortlisted</SelectItem>
+            <SelectItem value="interviewed">Interviewed</SelectItem>
+            <SelectItem value="hired">Hired</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Applications List */}
+      {applications.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-8">
+            <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground">No Applications Found</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {searchTerm || statusFilter 
+                ? "Try adjusting your search filters." 
+                : "No job applications have been submitted yet."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {applications.map((application) => (
+            <ApplicationCard
+              key={application._id}
+              application={application}
+              onStatusUpdate={handleStatusUpdate}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              isSelected={selectedApplicationIds.includes(application._id!)}
+              onToggleSelection={handleToggleSelection}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Application</DialogTitle>
           </DialogHeader>
-          {editingApplication && (
+          {selectedApplication && (
             <EditApplicationForm
-              application={editingApplication}
-              onSuccess={() => {
-                setShowEditDialog(false);
-                setEditingApplication(null);
-                fetchApplications();
-              }}
-              onCancel={() => {
-                setShowEditDialog(false);
-                setEditingApplication(null);
-              }}
+              application={selectedApplication}
+              onCancel={() => setShowEditModal(false)}
+              onSuccess={handleEditSuccess}
             />
           )}
         </DialogContent>
       </Dialog>
-
-      <ConfirmationDialog
-        open={showDeleteConfirm}
-        onOpenChange={setShowDeleteConfirm}
-        title="Delete Application"
-        description="Are you sure you want to delete this application? This action cannot be undone."
-        confirmText="Delete"
-        onConfirm={handleConfirmDelete}
-        variant="destructive"
-      />
     </div>
   );
 };
