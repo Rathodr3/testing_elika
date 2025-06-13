@@ -1,7 +1,6 @@
 
 import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
 import { AuditLog } from './types';
-import { API_BASE_URL } from '@/config/api';
 
 export const auditAPI = {
   log: async (auditData: any) => {
@@ -13,7 +12,7 @@ export const auditAPI = {
     } catch (error) {
       console.error('❌ Audit log error:', error);
       // Don't throw error as audit logging shouldn't break main functionality
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   },
   
@@ -31,16 +30,57 @@ export const auditAPI = {
       }
       
       const endpoint = `/audit${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      const result = await apiRequest(endpoint, 'GET', null, true);
-      console.log('✅ Audit logs fetched:', result);
       
-      // Return standardized format
-      return {
-        logs: result.data || result.logs || [],
-        total: result.total || 0,
-        page: result.page || 1,
-        totalPages: result.totalPages || 1
-      };
+      try {
+        const result = await apiRequest(endpoint, 'GET', null, true);
+        console.log('✅ Audit logs fetched:', result);
+        
+        // Handle different response formats
+        if (result?.data && result.data.logs) {
+          return {
+            logs: result.data.logs || [],
+            total: result.data.total || 0,
+            page: result.data.page || 1,
+            totalPages: result.data.totalPages || 1
+          };
+        } else if (Array.isArray(result)) {
+          return {
+            logs: result,
+            total: result.length,
+            page: 1,
+            totalPages: 1
+          };
+        } else {
+          return {
+            logs: result?.logs || [],
+            total: result?.total || 0,
+            page: result?.page || 1,
+            totalPages: result?.totalPages || 1
+          };
+        }
+      } catch (apiError) {
+        console.error('❌ API request failed, trying fallback:', apiError);
+        
+        // Try fallback approach
+        const response = await tryFetchWithFallback(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          return {
+            logs: result?.data?.logs || result?.logs || [],
+            total: result?.data?.total || result?.total || 0,
+            page: result?.data?.page || result?.page || 1,
+            totalPages: result?.data?.totalPages || result?.totalPages || 1
+          };
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
     } catch (error) {
       console.error('❌ Fetch audit logs error:', error);
       // Return empty data instead of throwing to prevent UI crash
@@ -66,15 +106,10 @@ export const auditAPI = {
         });
       }
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
       const endpoint = `/audit/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await tryFetchWithFallback(endpoint, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
       

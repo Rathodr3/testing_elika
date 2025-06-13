@@ -1,71 +1,62 @@
 
 import { Company } from './types';
-import { API_BASE_URL } from '@/config/api';
-
-const handleAPIError = async (response: Response) => {
-  if (!response.ok) {
-    let errorMessage = 'An error occurred';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-    }
-    throw new Error(errorMessage);
-  }
-  return response;
-};
+import { apiRequest, tryFetchWithFallback } from './jobs/apiUtils';
 
 export const companiesAPI = {
   getAll: async (): Promise<Company[]> => {
     try {
       console.log('🔍 Fetching companies...');
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/companies`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
+      const result = await apiRequest('/companies', 'GET', null, true);
       console.log('✅ Companies fetched:', result);
-      return result.data || result;
+      
+      // Handle different response formats
+      if (Array.isArray(result)) {
+        return result;
+      } else if (result?.data && Array.isArray(result.data)) {
+        return result.data;
+      } else if (result?.success && result?.data && Array.isArray(result.data)) {
+        return result.data;
+      } else {
+        console.warn('⚠️ Unexpected companies response format:', result);
+        return [];
+      }
     } catch (error) {
       console.error('❌ Fetch companies error:', error);
-      throw error;
+      // Try fallback approach
+      try {
+        const response = await tryFetchWithFallback('/companies', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data) ? data : (data?.data || []);
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback fetch also failed:', fallbackError);
+      }
+      
+      // Return empty array instead of throwing to prevent UI crash
+      return [];
     }
   },
 
   create: async (companyData: any): Promise<Company> => {
     try {
       console.log('📝 Creating company:', companyData);
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/companies`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(companyData),
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
+      const result = await apiRequest('/companies', 'POST', companyData, true);
       console.log('✅ Company created:', result);
-      return result.data;
+      
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Create company error:', error);
       throw error;
@@ -75,26 +66,16 @@ export const companiesAPI = {
   update: async (companyId: string, companyData: any): Promise<Company> => {
     try {
       console.log('🔧 Updating company:', companyId, companyData);
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(companyData),
-      });
-      
-      await handleAPIError(response);
-      const result = await response.json();
-      
+      const result = await apiRequest(`/companies/${companyId}`, 'PUT', companyData, true);
       console.log('✅ Company updated:', result);
-      return result.data;
+      
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('❌ Update company error:', error);
       throw error;
@@ -104,20 +85,7 @@ export const companiesAPI = {
   delete: async (companyId: string): Promise<void> => {
     try {
       console.log('🗑️ Deleting company:', companyId);
-      
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      await handleAPIError(response);
+      await apiRequest(`/companies/${companyId}`, 'DELETE', null, true);
       console.log('✅ Company deleted successfully');
     } catch (error) {
       console.error('❌ Delete company error:', error);

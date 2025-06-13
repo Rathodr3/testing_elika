@@ -1,7 +1,6 @@
 
-import { apiRequest } from '../jobs/apiUtils';
+import { apiRequest, tryFetchWithFallback } from '../jobs/apiUtils';
 import { JobApplication } from '../types';
-import { API_BASE_URL } from '@/config/api';
 
 export const applicationAPI = {
   getAll: async (filters?: any): Promise<JobApplication[]> => {
@@ -18,20 +17,39 @@ export const applicationAPI = {
       }
       
       const endpoint = `/job-applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      const result = await apiRequest(endpoint, 'GET', null, true);
       
-      console.log('✅ Applications fetched:', result);
-      
-      // Handle different response formats
-      if (Array.isArray(result)) {
-        return result;
-      } else if (result.data && Array.isArray(result.data)) {
-        return result.data;
-      } else if (result.success && result.data && Array.isArray(result.data)) {
-        return result.data;
-      } else {
-        console.warn('⚠️ Unexpected applications response format:', result);
-        return [];
+      try {
+        const result = await apiRequest(endpoint, 'GET', null, true);
+        console.log('✅ Applications fetched:', result);
+        
+        // Handle different response formats
+        if (Array.isArray(result)) {
+          return result;
+        } else if (result?.data && Array.isArray(result.data)) {
+          return result.data;
+        } else if (result?.success && result?.data && Array.isArray(result.data)) {
+          return result.data;
+        } else {
+          console.warn('⚠️ Unexpected applications response format:', result);
+          return [];
+        }
+      } catch (apiError) {
+        console.error('❌ API request failed, trying fallback:', apiError);
+        
+        // Try fallback approach
+        const response = await tryFetchWithFallback(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          return Array.isArray(result) ? result : (result?.data || []);
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
       }
     } catch (error) {
       console.error('❌ Fetch applications error:', error);
@@ -46,9 +64,9 @@ export const applicationAPI = {
       const result = await apiRequest(`/job-applications/${id}`, 'GET', null, true);
       console.log('✅ Application fetched:', result);
       
-      if (result.data) {
+      if (result?.data) {
         return result.data;
-      } else if (result.success && result.data) {
+      } else if (result?.success && result?.data) {
         return result.data;
       } else {
         return result;
@@ -65,9 +83,9 @@ export const applicationAPI = {
       const result = await apiRequest(`/job-applications/${id}/status`, 'PUT', { status, notes }, true);
       console.log('✅ Application status updated:', result);
       
-      if (result.data) {
+      if (result?.data) {
         return result.data;
-      } else if (result.success && result.data) {
+      } else if (result?.success && result?.data) {
         return result.data;
       } else {
         return result;
@@ -84,9 +102,9 @@ export const applicationAPI = {
       const result = await apiRequest(`/job-applications/${id}`, 'PUT', data, true);
       console.log('✅ Application updated:', result);
       
-      if (result.data) {
+      if (result?.data) {
         return result.data;
-      } else if (result.success && result.data) {
+      } else if (result?.success && result?.data) {
         return result.data;
       } else {
         return result;
@@ -101,7 +119,7 @@ export const applicationAPI = {
     try {
       console.log('📤 Submitting application...');
       
-      const response = await fetch(`${API_BASE_URL}/job-applications`, {
+      const response = await tryFetchWithFallback('/job-applications', {
         method: 'POST',
         body: formData,
       });
@@ -118,8 +136,8 @@ export const applicationAPI = {
       // Return a standardized response format
       return {
         success: true,
-        data: result.data || result,
-        message: result.message || 'Application submitted successfully'
+        data: result?.data || result,
+        message: result?.message || 'Application submitted successfully'
       };
     } catch (error) {
       console.error('❌ Submit application error:', error);
@@ -136,7 +154,7 @@ export const applicationAPI = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/job-applications/${id}/resume`, {
+      const response = await tryFetchWithFallback(`/job-applications/${id}/resume`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

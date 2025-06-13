@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Eye, RefreshCw, Search, Users, FileText, Clock, CheckCircle } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +19,11 @@ import ApplicationCard from './ApplicationCard';
 import EditApplicationForm from './EditApplicationForm';
 import AdminHeader from './AdminHeader';
 import { Skeleton } from '@/components/ui/skeleton';
+
+interface FilterState {
+  status: string;
+  search: string;
+}
 
 const ApplicationsTab = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -36,14 +40,15 @@ const ApplicationsTab = () => {
       setLoading(true);
       console.log('🔍 Fetching applications...');
       
-      const filters: Record<string, string> = {};
-      if (statusFilter) filters.status = statusFilter;
-      if (searchTerm) filters.search = searchTerm;
+      const filters: FilterState = {
+        status: statusFilter,
+        search: searchTerm
+      };
       
       const data = await applicationAPI.getAll(filters);
       console.log('✅ Applications loaded:', data);
       
-      setApplications(data || []);
+      setApplications(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('❌ Error fetching applications:', error);
       toast({
@@ -228,7 +233,7 @@ const ApplicationsTab = () => {
             <SelectItem value="">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="submitted">Submitted</SelectItem>
-            <SelectItem value="under-review">Under Review</SelectItem>
+            <SelectItem value="under_review">Under Review</SelectItem>
             <SelectItem value="reviewing">Reviewing</SelectItem>
             <SelectItem value="shortlisted">Shortlisted</SelectItem>
             <SelectItem value="interviewed">Interviewed</SelectItem>

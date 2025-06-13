@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, Edit, Trash2, Building2, Mail, Phone, Globe } from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Trash2, Building2, Mail, Phone, Globe, RefreshCw } from 'lucide-react';
 import { Company } from '@/services/types';
 import { companiesAPI } from '@/services/companiesAPI';
 import { useToast } from '@/hooks/use-toast';
@@ -154,6 +154,7 @@ const CompaniesTab = () => {
       <AdminHeader
         title="Companies Management"
         description="Manage company information and settings"
+        onRefresh={fetchCompanies}
       >
         <PermissionWrapper resource="companies" action="create">
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
