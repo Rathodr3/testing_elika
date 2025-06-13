@@ -1,118 +1,84 @@
+
+
 export interface JobApplication {
   _id?: string;
+  jobId: string;
+  userId?: string;
   firstName: string;
   lastName: string;
   name?: string;
   email: string;
   phone: string;
-  position: string;
-  department: string;
-  experienceLevel: string;
-  yearsOfExperience: number;
+  position?: string;
+  department?: string;
+  experienceLevel?: string;
+  yearsOfExperience?: number;
   previousCompany?: string;
-  skills: string[];
+  resume: string;
   coverLetter?: string;
-  resumeFile?: File;
-  resumePath?: string;
-  status: 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
   notes?: string;
+  status: 'pending' | 'reviewing' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
   applicationDate?: string;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Job {
   _id?: string;
-  id?: string; // For careers page compatibility
-  company?: string | {
-    _id: string;
-    name: string;
-  };
+  companyId: string;
+  company?: string | Company;
   title: string;
-  domain: string;
+  description: string;
   location: string;
+  salary?: string;
+  domain: string;
   employmentType: 'full-time' | 'part-time' | 'contract' | 'temporary' | 'internship';
   workMode: 'remote' | 'on-site' | 'hybrid';
   experienceLevel: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
   minExperience: number;
-  experience?: string; // For careers page compatibility
-  type?: string; // For careers page compatibility  
-  description: string;
   requirements: string[];
-  responsibilities: string[];
-  benefits: string[];
-  salary?: string;
-  salaryRange?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
+  responsibilities?: string[];
+  benefits?: string[];
+  type?: 'full-time' | 'part-time' | 'contract' | 'temporary' | 'internship';
+  experience?: 'entry-level' | 'mid-level' | 'senior-level';
+  category?: string;
+  tags?: string[];
+  status?: 'open' | 'closed' | 'draft';
   isActive: boolean;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
-  postedDate?: string; // For careers page compatibility
-  posted?: string; // For careers page compatibility
-  applicantsCount?: number;
-  applicants?: number; // For careers page compatibility
 }
 
 export interface User {
   _id?: string;
   firstName: string;
   lastName: string;
-  name: string;
   email: string;
-  phoneNumber: string;
+  password?: string;
+  phoneNumber?: string;
   role: 'admin' | 'hr_manager' | 'recruiter' | 'viewer';
-  isActive: boolean;
-  permissions: {
-    users: {
-      create: boolean;
-      read: boolean;
-      update: boolean;
-      delete: boolean;
-    };
-    companies: {
-      create: boolean;
-      read: boolean;
-      update: boolean;
-      delete: boolean;
-    };
-    jobs: {
-      create: boolean;
-      read: boolean;
-      update: boolean;
-      delete: boolean;
-    };
-    applications: {
-      create: boolean;
-      read: boolean;
-      update: boolean;
-      delete: boolean;
-    };
+  permissions?: {
+    users: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    companies: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    jobs: { create: boolean; read: boolean; update: boolean; delete: boolean; };
+    applications: { create: boolean; read: boolean; update: boolean; delete: boolean; };
   };
-  createdAt: string;
+  isActive?: boolean;
+  createdAt?: string;
   updatedAt?: string;
-}
-
-export interface Spokesperson {
-  name: string;
-  role: string;
-  email: string;
-  contact: string;
 }
 
 export interface Company {
   _id?: string;
   name: string;
   description?: string;
-  logo?: string;
+  location?: string;
+  industry?: string;
+  size?: string;
   website?: string;
+  logo?: string;
   contactEmail: string;
   phoneNumber: string;
-  address?: string;
-  industry?: string;
-  size?: 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
   spokespersons?: {
     primary?: {
       name?: string;
@@ -127,19 +93,13 @@ export interface Company {
       contact?: string;
     };
   };
-  isActive?: boolean;
-  foundedYear?: number;
-  socialLinks?: {
-    linkedin?: string;
-    twitter?: string;
-    facebook?: string;
-  };
+  isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface AuditLog {
-  _id?: string;
+  _id: string;
   userId: string;
   userEmail: string;
   userName: string;
@@ -154,14 +114,9 @@ export interface AuditLog {
   }[];
   ipAddress?: string;
   userAgent?: string;
-  timestamp: string;
   details?: string;
+  createdAt: string;
+  updatedAt: string;
+  timestamp: string;
 }
 
-export interface ContactFormData {
-  name: string;
-  email: string;
-  company?: string;
-  subject: string;
-  message: string;
-}

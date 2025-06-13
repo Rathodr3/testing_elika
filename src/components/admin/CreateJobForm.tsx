@@ -24,11 +24,15 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
     workMode: 'on-site',
     experienceLevel: 'mid',
     minExperience: 0,
+    type: 'full-time • on-site', // Combined type field
+    experience: '0+ years', // Experience display field
     description: '',
     requirements: '',
     responsibilities: '',
     benefits: '',
     salary: '',
+    posted: new Date().toISOString().split('T')[0], // Posted date
+    applicants: 0, // Applicants count
     isActive: true
   });
   const [loading, setLoading] = useState(false);
@@ -36,7 +40,21 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
 
   useEffect(() => {
     fetchCompanies();
+    // Set default posted date to today
+    setFormData(prev => ({
+      ...prev,
+      posted: new Date().toISOString().split('T')[0]
+    }));
   }, []);
+
+  // Update derived fields when base fields change
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      type: `${prev.employmentType} • ${prev.workMode}`,
+      experience: `${prev.minExperience}+ years`
+    }));
+  }, [formData.employmentType, formData.workMode, formData.minExperience]);
 
   const fetchCompanies = async () => {
     try {
@@ -74,7 +92,9 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
         ...formData,
         requirements: formData.requirements ? formData.requirements.split('\n').filter(req => req.trim()) : [],
         responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').filter(resp => resp.trim()) : [],
-        benefits: formData.benefits ? formData.benefits.split('\n').filter(benefit => benefit.trim()) : []
+        benefits: formData.benefits ? formData.benefits.split('\n').filter(benefit => benefit.trim()) : [],
+        applicantsCount: formData.applicants,
+        postedDate: formData.posted
       };
       
       const result = await jobsAPI.create(jobData);
@@ -211,13 +231,60 @@ const CreateJobForm = ({ onSuccess }: CreateJobFormProps) => {
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="type">Type (Auto-generated)</Label>
+            <Input
+              id="type"
+              value={formData.type}
+              readOnly
+              className="bg-gray-50"
+              placeholder="Auto-generated from employment type and work mode"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="experience">Experience Display (Auto-generated)</Label>
+            <Input
+              id="experience"
+              value={formData.experience}
+              readOnly
+              className="bg-gray-50"
+              placeholder="Auto-generated from min experience"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="salary">Salary</Label>
+            <Input
+              id="salary"
+              value={formData.salary}
+              onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
+              placeholder="e.g., $50,000 - $70,000"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="posted">Posted Date</Label>
+            <Input
+              id="posted"
+              type="date"
+              value={formData.posted}
+              onChange={(e) => setFormData(prev => ({ ...prev, posted: e.target.value }))}
+            />
+          </div>
+        </div>
+
         <div>
-          <Label htmlFor="salary">Salary</Label>
+          <Label htmlFor="applicants">Initial Applicants Count</Label>
           <Input
-            id="salary"
-            value={formData.salary}
-            onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
-            placeholder="e.g., $50,000 - $70,000"
+            id="applicants"
+            type="number"
+            min="0"
+            value={formData.applicants}
+            onChange={(e) => setFormData(prev => ({ ...prev, applicants: parseInt(e.target.value) || 0 }))}
           />
         </div>
 

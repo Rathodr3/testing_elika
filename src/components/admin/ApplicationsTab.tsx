@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { JobApplication, applicationAPI } from '@/services/api';
+import { JobApplication } from '@/services/types';
+import { applicationAPI } from '@/services/applications/applicationAPI';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/contexts/AdminDataContext';
 import {

@@ -5,13 +5,15 @@ import { apiRequest } from './apiUtils';
 export const jobsService = {
   getPublic: async (): Promise<Job[]> => {
     try {
-      console.log('🔍 Fetching public jobs...');
+      console.log('🔍 Fetching public jobs for careers page...');
       const jobs = await apiRequest('/jobs/public', 'GET');
-      console.log('✅ Public jobs fetched:', jobs.length);
+      console.log('✅ Public jobs fetched:', jobs);
       
       if (Array.isArray(jobs)) {
         return jobs.map(transformJobForCareersPage);
       } else if (jobs.data && Array.isArray(jobs.data)) {
+        return jobs.data.map(transformJobForCareersPage);
+      } else if (jobs.success && jobs.data && Array.isArray(jobs.data)) {
         return jobs.data.map(transformJobForCareersPage);
       } else {
         console.warn('⚠️ Unexpected job data format:', jobs);
@@ -19,6 +21,7 @@ export const jobsService = {
       }
     } catch (error) {
       console.error('❌ Fetch public jobs error:', error);
+      // Return empty array to let fallback data handle it
       return [];
     }
   },
@@ -119,14 +122,16 @@ export const jobsService = {
 };
 
 const transformJobForCareersPage = (job: any): Job => {
+  console.log('🔄 Transforming job for careers page:', job);
+  
   const companyName = typeof job.company === 'object' ? job.company?.name : job.company || 'Elika Engineering Pvt Ltd';
   const postedDate = job.createdAt || job.postedDate || new Date();
   
-  return {
+  const transformedJob = {
     ...job,
     id: job._id?.toString() || job.id,
     _id: job._id,
-    company: typeof job.company === 'object' ? job.company : { name: companyName },
+    company: companyName, // For careers page, just use string
     requirements: Array.isArray(job.requirements) ? job.requirements : [],
     responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
     benefits: Array.isArray(job.benefits) ? job.benefits : [],
@@ -135,8 +140,16 @@ const transformJobForCareersPage = (job: any): Job => {
     applicantsCount: job.applicantsCount || 0,
     applicants: job.applicantsCount || 0,
     experience: `${job.minExperience || 0}+ years`,
-    type: `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`
+    type: `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`,
+    salary: job.salary || 'Competitive salary',
+    title: job.title || 'Job Position',
+    location: job.location || 'Location',
+    description: job.description || 'Join our team and contribute to exciting projects.',
+    isActive: job.isActive !== false
   };
+  
+  console.log('✅ Transformed job for careers:', transformedJob);
+  return transformedJob;
 };
 
 const transformJobForAdmin = (job: any): Job => {

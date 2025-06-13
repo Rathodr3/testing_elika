@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { jobsAPI } from '@/services/jobsAPI';
+import { jobsService } from '@/services/jobs/jobsService';
 
 interface Job {
   id: string;
@@ -53,29 +53,33 @@ const useFeaturedJobs = () => {
   useEffect(() => {
     const fetchFeaturedJobs = async () => {
       try {
-        console.log('🔍 Fetching featured jobs...');
-        const jobsData = await jobsAPI.getPublic();
+        console.log('🔍 Fetching featured jobs for careers page...');
+        setLoading(true);
+        
+        const jobsData = await jobsService.getPublic();
+        console.log('📥 Jobs data received:', jobsData);
         
         if (jobsData && jobsData.length > 0) {
           const featuredJobs = jobsData.slice(0, 3).map((job: any) => ({
             id: job.id || job._id,
-            title: job.title,
-            company: typeof job.company === 'object' ? job.company?.name : job.company || 'Elika Engineering Pvt Ltd',
-            location: job.location,
+            title: job.title || 'Job Position',
+            company: job.company || 'Elika Engineering Pvt Ltd',
+            location: job.location || 'Location',
             type: job.type || `${job.employmentType || 'full-time'} • ${job.workMode || 'hybrid'}`,
             salary: job.salary || 'Competitive',
-            description: job.description || 'No description available',
-            posted: job.posted || new Date(job.postedDate || job.createdAt).toLocaleDateString()
+            description: job.description || 'Join our team and contribute to exciting projects.',
+            posted: job.posted || new Date(job.postedDate || job.createdAt || Date.now()).toLocaleDateString()
           }));
+          
+          console.log('✅ Featured jobs processed:', featuredJobs);
           setJobs(featuredJobs);
-          console.log('✅ Featured jobs loaded from API:', featuredJobs.length);
         } else {
-          console.log('No jobs found, using fallback featured jobs');
+          console.log('⚠️ No jobs found from API, using fallback featured jobs');
           setJobs(fallbackFeaturedJobs);
         }
       } catch (error) {
-        console.error('Error fetching featured jobs:', error);
-        console.log('Using fallback featured jobs data');
+        console.error('❌ Error fetching featured jobs:', error);
+        console.log('🔄 Using fallback featured jobs due to error');
         setJobs(fallbackFeaturedJobs);
       } finally {
         setLoading(false);

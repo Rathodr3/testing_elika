@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, X, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { applicationAPI } from '@/services/api';
+import { applicationAPI } from '@/services/applications/applicationAPI';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -135,7 +134,7 @@ const JobApplicationModal = ({ isOpen, onClose, jobTitle, jobId, company }: JobA
         resumeName: resume?.name
       });
 
-      // Submit to backend API
+      // Submit to backend API using the new applicationAPI
       const result = await applicationAPI.submit(submitData);
 
       if (result.success) {

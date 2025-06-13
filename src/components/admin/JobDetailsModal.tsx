@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Job } from '@/services/types';
+import { Job, Company } from '@/services/types';
 import { Calendar, MapPin, Users, Clock, DollarSign, Building } from 'lucide-react';
 
 interface JobDetailsModalProps {
@@ -17,10 +17,10 @@ interface JobDetailsModalProps {
 const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, open, onOpenChange }) => {
   if (!job) return null;
 
-  const getCompanyName = (company: string | { _id: string; name: string } | undefined): string => {
+  const getCompanyName = (company: string | Company | undefined): string => {
     if (!company) return 'N/A';
     if (typeof company === 'string') return company;
-    return company.name;
+    return company.name || 'N/A';
   };
 
   // Helper function to ensure we get an array from string or array input

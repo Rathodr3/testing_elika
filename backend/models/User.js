@@ -2,8 +2,13 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Password validation function
+// Password validation function - only validate if it's not already hashed
 const validatePassword = function(password) {
+  // If password looks like a bcrypt hash, skip validation
+  if (password && password.startsWith('$2')) {
+    return true;
+  }
+  
   const minLength = 8;
   const hasUpperCase = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);
@@ -80,21 +85,58 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
+  // Only hash if password is modified and not already hashed
   if (!this.isModified('password')) return next();
   
+  // Check if password is already hashed (bcrypt hashes start with $2)
+  if (this.password && this.password.startsWith('$2')) {
+    console.log('Password already hashed, skipping hashing');
+    return next();
+  }
+  
   try {
+    console.log('Hashing password for user:', this.email);
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
+    console.error('Password hashing error:', error);
     next(error);
+  }
+});
+
+// Hash password before update operations
+userSchema.pre('findOneAndUpdate', async function(next) {
+  const update = this.getUpdate();
+  
+  // Check if password is being updated
+  if (update.password) {
+    // Check if password is already hashed
+    if (update.password.startsWith('$2')) {
+      console.log('Password already hashed in update, skipping hashing');
+      return next();
+    }
+    
+    try {
+      console.log('Hashing password in update operation');
+      const salt = await bcrypt.genSalt(10);
+      update.password = await bcrypt.hash(update.password, salt);
+      next();
+    } catch (error) {
+      console.error('Password hashing error in update:', error);
+      next(error);
+    }
+  } else {
+    next();
   }
 });
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
-    return await bcrypt.compare(candidatePassword, this.password);
+    const result = await bcrypt.compare(candidatePassword, this.password);
+    console.log('Password comparison for user:', this.email, 'Result:', result);
+    return result;
   } catch (error) {
     console.error('Password comparison error:', error);
     return false;

@@ -1,7 +1,6 @@
 
 const express = require('express');
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 // Get all users
@@ -38,18 +37,14 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Hash password manually before creating user
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    // Create user with hashed password
+    // Create user - let the model handle password hashing
     const user = new User({
       firstName,
       lastName,
       email,
       phoneNumber,
       role,
-      password: hashedPassword
+      password // Don't hash here, let the pre-save middleware handle it
     });
     
     await user.save();
@@ -78,11 +73,10 @@ router.put('/:id', async (req, res) => {
   try {
     const { password, ...updateData } = req.body;
     
-    // If password is being updated, hash it manually
+    // If password is being updated, include it in updateData and let pre-save handle hashing
     if (password) {
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(password, salt);
-      console.log('Password updated for user:', req.params.id);
+      updateData.password = password;
+      console.log('Password will be updated for user:', req.params.id);
     }
     
     const user = await User.findByIdAndUpdate(
