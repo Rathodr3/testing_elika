@@ -95,6 +95,17 @@ export const applicationAPI = {
     }
   },
 
+  delete: async (id: string): Promise<void> => {
+    try {
+      console.log('🗑️ Deleting application:', id);
+      await apiRequest(`/job-applications/${id}`, 'DELETE', null, true);
+      console.log('✅ Application deleted successfully');
+    } catch (error) {
+      console.error('❌ Delete application error:', error);
+      throw error;
+    }
+  },
+
   submit: async (formData: FormData): Promise<{ success: boolean; message?: string; data?: JobApplication }> => {
     try {
       console.log('📤 Submitting application...');

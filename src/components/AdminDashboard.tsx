@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Building2, Briefcase, FileText, Shield } from 'lucide-react';
+import { Users, Building2, Briefcase, FileText, Shield, Settings } from 'lucide-react';
 import { AdminDataProvider } from '@/contexts/AdminDataContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import UsersTab from './admin/UsersTab';
@@ -9,6 +9,7 @@ import CompaniesTab from './admin/CompaniesTab';
 import JobsTab from './admin/JobsTab';
 import ApplicationsTab from './admin/ApplicationsTab';
 import AuditTab from './admin/AuditTab';
+import RolePermissionsTab from './admin/RolePermissionsTab';
 import PermissionWrapper from './admin/PermissionWrapper';
 
 const AdminDashboard = () => {
@@ -44,7 +45,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className={`grid w-full ${isAdmin() ? 'grid-cols-5' : 'grid-cols-4'} mb-8`}>
+          <TabsList className={`grid w-full ${isAdmin() ? 'grid-cols-6' : 'grid-cols-4'} mb-8`}>
             <PermissionWrapper resource="users" action="read" fallback={null}>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
@@ -74,10 +75,16 @@ const AdminDashboard = () => {
             </PermissionWrapper>
 
             {isAdmin() && (
-              <TabsTrigger value="audit" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Audit
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="permissions" className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Permissions
+                </TabsTrigger>
+                <TabsTrigger value="audit" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Audit
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -107,9 +114,14 @@ const AdminDashboard = () => {
             </PermissionWrapper>
 
             {isAdmin() && (
-              <TabsContent value="audit" className="mt-0">
-                <AuditTab />
-              </TabsContent>
+              <>
+                <TabsContent value="permissions" className="mt-0">
+                  <RolePermissionsTab />
+                </TabsContent>
+                <TabsContent value="audit" className="mt-0">
+                  <AuditTab />
+                </TabsContent>
+              </>
             )}
           </div>
         </Tabs>

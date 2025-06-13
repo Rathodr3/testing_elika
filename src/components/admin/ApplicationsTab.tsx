@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { applicationAPI } from '@/services/applications/applicationAPI';
+import { applicationAPI } from '@/services/applicationAPI';
 import { useToast } from '@/hooks/use-toast';
 import { JobApplication } from '@/services/types';
 import ApplicationCard from './ApplicationCard';
@@ -100,8 +100,21 @@ const ApplicationsTab = () => {
   };
 
   const handleDelete = async (applicationId: string) => {
-    console.log('Delete application:', applicationId);
-    // Implementation would go here
+    try {
+      await applicationAPI.delete(applicationId);
+      toast({
+        title: "Success",
+        description: "Application deleted successfully",
+      });
+      fetchApplications();
+    } catch (error) {
+      console.error('❌ Error deleting application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete application",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleToggleSelection = (applicationId: string) => {
@@ -250,7 +263,7 @@ const ApplicationsTab = () => {
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground">No Applications Found</h3>
             <p className="text-sm text-muted-foreground mt-2">
-              {searchTerm || statusFilter 
+              {searchTerm || statusFilter !== 'all'
                 ? "Try adjusting your search filters." 
                 : "No job applications have been submitted yet."}
             </p>

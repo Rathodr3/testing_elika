@@ -10,7 +10,8 @@ const {
   getApplicationById,
   updateApplication,
   updateApplicationStatus,
-  downloadResume
+  downloadResume,
+  deleteApplication
 } = require('../handlers/applicationHandlers');
 
 const router = express.Router();
@@ -59,6 +60,7 @@ router.get('/', getAllApplications);
 router.get('/:id', getApplicationById);
 router.put('/:id', updateApplication);
 router.put('/:id/status', updateApplicationStatus);
+router.delete('/:id', deleteApplication);
 router.get('/:id/resume', downloadResume);
 
 module.exports = router;
