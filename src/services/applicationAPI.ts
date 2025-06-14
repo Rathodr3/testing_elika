@@ -39,9 +39,10 @@ export const applicationAPI = {
       if (filters.department) queryParams.append('department', filters.department);
       
       const queryString = queryParams.toString();
-      const url = queryString ? `/applications?${queryString}` : '/applications';
+      const endpoint = queryString ? `/api/applications?${queryString}` : '/api/applications';
       
-      const result = await apiRequest(url, 'GET', null, true);
+      console.log('🔗 Making API request to:', endpoint);
+      const result = await apiRequest(endpoint, 'GET', null, true);
       console.log('✅ Applications fetched:', result);
       
       // Handle different response formats
@@ -64,7 +65,7 @@ export const applicationAPI = {
   getById: async (id: string): Promise<JobApplication> => {
     try {
       console.log('🔍 Fetching application by ID:', id);
-      const result = await apiRequest(`/applications/${id}`, 'GET', null, true);
+      const result = await apiRequest(`/api/applications/${id}`, 'GET', null, true);
       console.log('✅ Application fetched:', result);
       
       if (result?.data) {
@@ -83,7 +84,7 @@ export const applicationAPI = {
   update: async (id: string, data: Partial<JobApplication>): Promise<JobApplication> => {
     try {
       console.log('🔧 Updating application:', id, data);
-      const result = await apiRequest(`/applications/${id}`, 'PUT', data, true);
+      const result = await apiRequest(`/api/applications/${id}`, 'PUT', data, true);
       console.log('✅ Application updated:', result);
       
       if (result?.data) {
@@ -102,7 +103,7 @@ export const applicationAPI = {
   updateStatus: async (id: string, status: string, notes?: string): Promise<JobApplication> => {
     try {
       console.log('🔧 Updating application status:', id, status, notes);
-      const result = await apiRequest(`/applications/${id}/status`, 'PUT', { status, notes }, true);
+      const result = await apiRequest(`/api/applications/${id}/status`, 'PUT', { status, notes }, true);
       console.log('✅ Application status updated:', result);
       
       if (result?.data) {
@@ -121,7 +122,7 @@ export const applicationAPI = {
   delete: async (id: string): Promise<void> => {
     try {
       console.log('🗑️ Deleting application:', id);
-      await apiRequest(`/applications/${id}`, 'DELETE', null, true);
+      await apiRequest(`/api/applications/${id}`, 'DELETE', null, true);
       console.log('✅ Application deleted');
     } catch (error) {
       console.error('❌ Application deletion failed:', error);

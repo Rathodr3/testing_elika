@@ -3,7 +3,11 @@ const permissionsMiddleware = (resource, action) => {
   return (req, res, next) => {
     const user = req.user;
     
+    console.log(`🔍 Permission check: ${action} on ${resource}`);
+    console.log('User:', user ? { id: user.id || user._id, email: user.email, role: user.role } : 'None');
+    
     if (!user) {
+      console.log('❌ Permission denied: No user found');
       return res.status(401).json({
         success: false,
         message: 'Authentication required'
@@ -39,18 +43,34 @@ const permissionsMiddleware = (resource, action) => {
     };
 
     // Get user permissions (use custom permissions if set, otherwise use role-based)
-    const userPermissions = user.permissions || rolePermissions[user.role] || rolePermissions.viewer;
+    let userPermissions;
+    if (user.permissions && typeof user.permissions === 'object') {
+      console.log('📋 Using custom user permissions');
+      userPermissions = user.permissions;
+    } else {
+      console.log(`📋 Using role-based permissions for role: ${user.role}`);
+      userPermissions = rolePermissions[user.role] || rolePermissions.viewer;
+    }
+    
+    console.log('📋 Applied permissions:', JSON.stringify(userPermissions, null, 2));
     
     // Check if user has required permission
-    if (!userPermissions || !userPermissions[resource] || !userPermissions[resource][action]) {
+    if (!userPermissions || 
+        !userPermissions[resource] || 
+        userPermissions[resource][action] !== true) {
+      
       console.log(`❌ Permission denied for user ${user.email}: ${action} on ${resource}`);
-      console.log('User role:', user.role);
-      console.log('User permissions:', JSON.stringify(userPermissions, null, 2));
+      console.log('Required permission path:', `${resource}.${action}`);
+      console.log('Permission value:', userPermissions?.[resource]?.[action]);
       
       return res.status(403).json({
         success: false,
         message: `Insufficient permissions. Required: ${action} on ${resource}`,
-        details: `Your role '${user.role}' does not have permission to ${action} ${resource}`
+        details: {
+          userRole: user.role,
+          requiredPermission: `${resource}.${action}`,
+          hasPermission: false
+        }
       });
     }
 

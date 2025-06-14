@@ -15,11 +15,13 @@ export const apiRequest = async (
   };
 
   if (requireAuth) {
-    const token = localStorage.getItem('adminToken');
+    // Try both token locations for compatibility
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (!token) {
       throw new Error('No authentication token found. Please login again.');
     }
     headers['Authorization'] = `Bearer ${token}`;
+    console.log('🔑 Adding auth token to request');
   }
 
   const config: RequestInit = {
@@ -35,6 +37,7 @@ export const apiRequest = async (
       // Token expired or invalid - force re-login
       console.log('🔄 Token expired, forcing re-login');
       localStorage.removeItem('adminToken');
+      localStorage.removeItem('token');
       window.location.reload();
       throw new Error('Session expired. Please login again.');
     }
