@@ -46,7 +46,7 @@ const JobCard = ({ job, index, savedJobs, onApply, onSave }: JobCardProps) => {
 
   return (
     <Card 
-      className={`fade-in-up delay-${(index % 3 + 1) * 100} border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800 card-hover`}
+      className={`animate-fade-in-up ${['delay-100', 'delay-200', 'delay-300'][index % 3]} border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800 card-hover`}
     >
       <CardContent className="p-6 lg:p-8">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
