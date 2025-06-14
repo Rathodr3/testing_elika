@@ -21,13 +21,40 @@ const UserProfile = () => {
   const fetchCurrentUser = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Fetching current user profile...');
+      
+      // Check if user is logged in first
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('⚠️ No authentication token found');
+        setLoading(false);
+        return;
+      }
+
       const currentUser = await authAPI.getCurrentUser();
-      setUser(currentUser);
+      console.log('✅ Current user fetched:', currentUser);
+      
+      if (currentUser && currentUser.user) {
+        setUser(currentUser.user);
+      } else if (currentUser) {
+        setUser(currentUser);
+      } else {
+        console.warn('⚠️ No user data received');
+      }
     } catch (error) {
-      console.error('Error fetching current user:', error);
+      console.error('❌ Error fetching current user:', error);
+      
+      // Check if it's an authentication error
+      if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
+        console.log('🔄 Authentication error, clearing token and redirecting...');
+        localStorage.removeItem('token');
+        window.location.href = '/';
+        return;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load user profile",
+        description: "Failed to load user profile. Please try logging in again.",
         variant: "destructive"
       });
     } finally {
@@ -36,6 +63,7 @@ const UserProfile = () => {
   };
 
   const handleLogout = () => {
+    console.log('🚪 Logging out user...');
     authAPI.logout();
     window.location.href = '/';
   };
@@ -72,7 +100,10 @@ const UserProfile = () => {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">Unable to load user profile</p>
+          <p className="text-muted-foreground">Please log in to view your profile</p>
+          <Button onClick={() => window.location.href = '/'} className="mt-4">
+            Go to Login
+          </Button>
         </CardContent>
       </Card>
     );
@@ -87,13 +118,16 @@ const UserProfile = () => {
             <AvatarFallback className="text-2xl">
               {user.firstName && user.lastName ? 
                 `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
-                '?'
+                user.email ? user.email.charAt(0).toUpperCase() : '?'
               }
             </AvatarFallback>
           </Avatar>
         </div>
         <CardTitle className="text-xl">
-          {user.firstName} {user.lastName}
+          {user.firstName && user.lastName ? 
+            `${user.firstName} ${user.lastName}` : 
+            user.email
+          }
         </CardTitle>
         <div className="flex justify-center mt-2">
           <Badge className={getRoleColor(user.role)}>

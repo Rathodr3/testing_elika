@@ -3,31 +3,60 @@
 
 This is the backend API for the Elika Engineering recruitment platform.
 
+## Requirements
+
+- **Node.js**: 22 LTS or higher
+- **npm**: 11.4.2 or higher
+- **MongoDB**: 4.4 or higher
+
 ## Quick Start
 
-1. **Install dependencies:**
+1. **Check your Node.js and npm versions:**
+   ```bash
+   node --version  # Should be v22.x.x or higher
+   npm --version   # Should be 11.4.2 or higher
+   ```
+
+2. **Upgrade if needed:**
+   ```bash
+   # Install Node.js 22 LTS from https://nodejs.org/
+   # Upgrade npm
+   npm install -g npm@latest
+   ```
+
+3. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Set up environment variables:**
+4. **Set up environment variables:**
    ```bash
    cp .env.example .env
    ```
    Then edit `.env` with your actual values.
 
-3. **Start MongoDB:**
+5. **Start MongoDB:**
    Make sure MongoDB is running on your system.
 
-4. **Start the server:**
+6. **Start the server:**
    ```bash
    npm run dev
    ```
 
-5. **Seed sample data (optional):**
+7. **Seed sample data (optional):**
    ```bash
    npm run seed
    ```
+
+## Security Updates
+
+This version includes important security updates:
+
+- **Multer**: Upgraded to 2.x to patch known vulnerabilities in 1.x
+- **Express**: Updated to latest stable version
+- **Mongoose**: Updated to v8.x with latest security patches
+- **Helmet**: Updated to v8.x for enhanced security headers
+- **Express Rate Limit**: Updated to v7.x for better DDoS protection
 
 ## API Endpoints
 
@@ -76,3 +105,16 @@ Required environment variables:
 - Password: `admin123`
 
 **⚠️ Change these in production!**
+
+## Troubleshooting
+
+### Version Compatibility Issues
+If you encounter issues after upgrading:
+
+1. Clear npm cache: `npm cache clean --force`
+2. Delete node_modules: `rm -rf node_modules`
+3. Reinstall dependencies: `npm install`
+4. Restart the server: `npm run dev`
+
+### Multer 2.x Migration
+The file upload functionality has been updated for Multer 2.x compatibility. If you experience file upload issues, ensure your client is sending proper multipart/form-data requests.

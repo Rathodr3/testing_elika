@@ -75,7 +75,7 @@ const authMiddleware = async (req, res, next) => {
         });
       }
 
-      // Set permissions based on role
+      // Set permissions: use custom permissions if available, otherwise use role-based
       const userPermissions = user.permissions || rolePermissions[user.role] || rolePermissions.viewer;
       
       req.user = {
@@ -107,7 +107,7 @@ const authMiddleware = async (req, res, next) => {
         });
       }
 
-      // Set permissions based on role
+      // Set permissions: use custom permissions if available, otherwise use role-based
       const userPermissions = user.permissions || rolePermissions[user.role] || rolePermissions.viewer;
 
       req.user = {

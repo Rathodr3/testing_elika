@@ -6,25 +6,30 @@ import { RefreshCw } from 'lucide-react';
 interface AdminHeaderProps {
   title: string;
   description: string;
-  children?: React.ReactNode;
   onRefresh?: () => void;
+  action?: React.ReactNode;
 }
 
-const AdminHeader = ({ title, description, children, onRefresh }: AdminHeaderProps) => {
+const AdminHeader: React.FC<AdminHeaderProps> = ({ 
+  title, 
+  description, 
+  onRefresh,
+  action 
+}) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <p className="text-gray-600 mt-1">{description}</p>
+        <p className="text-gray-600">{description}</p>
       </div>
       <div className="flex items-center gap-2">
         {onRefresh && (
-          <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button variant="outline" onClick={onRefresh} className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
             Refresh
           </Button>
         )}
-        {children}
+        {action}
       </div>
     </div>
   );

@@ -171,24 +171,25 @@ const UsersTab = () => {
       <AdminHeader
         title="Users Management"
         description="Manage user accounts and permissions"
-      >
-        <PermissionWrapper resource="users" action="create">
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Create User
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-              </DialogHeader>
-              <CreateUserForm onSuccess={handleCreateSuccess} />
-            </DialogContent>
-          </Dialog>
-        </PermissionWrapper>
-      </AdminHeader>
+        action={
+          <PermissionWrapper resource="users" action="create">
+            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create User
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New User</DialogTitle>
+                </DialogHeader>
+                <CreateUserForm onSuccess={handleCreateSuccess} />
+              </DialogContent>
+            </Dialog>
+          </PermissionWrapper>
+        }
+      />
 
       <EnhancedFilters
         searchTerm={searchTerm}

@@ -55,6 +55,7 @@ const RolePermissionsTab = () => {
   const [permissions, setPermissions] = useState<Record<string, RolePermissions>>(defaultPermissions);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
   const { toast } = useToast();
 
   const resources = [
@@ -80,16 +81,28 @@ const RolePermissionsTab = () => {
   const fetchPermissions = async () => {
     try {
       setFetchLoading(true);
+      setApiError(false);
+      console.log('🔍 Fetching role permissions...');
+      
       const rolePermissions = await permissionsAPI.getRolePermissions();
+      console.log('✅ Received permissions:', rolePermissions);
+      
       setPermissions(rolePermissions || defaultPermissions);
+      
+      toast({
+        title: "Success",
+        description: "Role permissions loaded successfully.",
+      });
     } catch (error) {
       console.error('❌ Error fetching permissions:', error);
+      setApiError(true);
+      setPermissions(defaultPermissions);
+      
       toast({
         title: "Warning",
-        description: "Failed to fetch current permissions. Using defaults.",
+        description: "Could not fetch current permissions from server. Using default values.",
         variant: "destructive",
       });
-      setPermissions(defaultPermissions);
     } finally {
       setFetchLoading(false);
     }
@@ -157,12 +170,24 @@ const RolePermissionsTab = () => {
         onRefresh={fetchPermissions}
       />
 
+      {apiError && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <p className="text-sm text-orange-800">
+            <strong>Notice:</strong> Unable to connect to permissions API. Displaying default permissions.
+            Role-based access control is still enforced by the backend.
+          </p>
+        </div>
+      )}
+
       <div className="flex gap-4 mb-6">
-        <Button onClick={savePermissions} disabled={loading}>
+        <Button onClick={savePermissions} disabled={loading || apiError}>
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
         <Button variant="outline" onClick={resetToDefaults}>
           Reset to Defaults
+        </Button>
+        <Button variant="outline" onClick={fetchPermissions}>
+          Refresh
         </Button>
       </div>
 

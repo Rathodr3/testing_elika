@@ -1,60 +1,90 @@
 
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Building2, Globe, Mail, Phone, MapPin, Users, Edit, Trash } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { companiesAPI } from '@/services/companiesAPI';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Plus, MoreHorizontal, Edit, Trash2, Mail, Phone, Globe } from 'lucide-react';
+import { Company as CompanyType, companiesAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { Company } from '@/services/types';
-import AdminHeader from './AdminHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useAdminData } from '@/contexts/AdminDataContext';
 import CreateCompanyForm from './CreateCompanyForm';
 import EditCompanyForm from './EditCompanyForm';
-import { usePermissions } from '@/hooks/usePermissions';
+import AdminHeader from './AdminHeader';
+import EnhancedFilters from './EnhancedFilters';
 import PermissionWrapper from './PermissionWrapper';
 
 const CompaniesTab = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<CompanyType[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<CompanyType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [editingCompany, setEditingCompany] = useState<CompanyType | null>(null);
   const { toast } = useToast();
-  const { canCreate, canEdit, canDelete } = usePermissions();
+  const { refreshTrigger, setRefreshing } = useAdminData();
+
+  useEffect(() => {
+    fetchCompanies();
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    filterCompanies();
+  }, [companies, searchTerm]);
 
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching companies...');
+      setRefreshing(true);
+      console.log('🔍 Fetching companies for admin dashboard...');
       const data = await companiesAPI.getAll();
-      console.log('✅ Companies loaded:', data);
+      console.log('✅ Companies fetched:', data);
       
-      setCompanies(Array.isArray(data) ? data : []);
+      const companiesArray = Array.isArray(data) ? data : [];
+      setCompanies(companiesArray);
     } catch (error) {
       console.error('❌ Error fetching companies:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch companies. Please check your connection and try again.",
-        variant: "destructive",
+        title: "Error fetching companies",
+        description: "Failed to load companies from the server.",
+        variant: "destructive"
       });
       setCompanies([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
+  const filterCompanies = () => {
+    let filtered = companies;
+
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(company =>
+        company.name.toLowerCase().includes(searchLower) ||
+        (company.description || '').toLowerCase().includes(searchLower) ||
+        (company.location || '').toLowerCase().includes(searchLower) ||
+        company.contactEmail.toLowerCase().includes(searchLower) ||
+        company.phoneNumber.toLowerCase().includes(searchLower)
+      );
+    }
+
+    setFilteredCompanies(filtered);
+  };
 
   const handleCreateSuccess = () => {
     setShowCreateDialog(false);
@@ -63,263 +93,185 @@ const CompaniesTab = () => {
 
   const handleEditSuccess = () => {
     setShowEditDialog(false);
-    setSelectedCompany(null);
+    setEditingCompany(null);
     fetchCompanies();
   };
 
-  const handleEdit = (company: Company) => {
-    setSelectedCompany(company);
+  const handleEditCompany = (company: CompanyType) => {
+    setEditingCompany(company);
     setShowEditDialog(true);
   };
 
-  const handleDelete = async (companyId: string) => {
-    if (!window.confirm('Are you sure you want to delete this company?')) {
+  const handleDeleteCompany = async (companyId: string) => {
+    if (!confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
       return;
     }
 
     try {
+      console.log('🗑️ Deleting company:', companyId);
       await companiesAPI.delete(companyId);
+      setCompanies(prev => prev.filter(company => company._id !== companyId));
       toast({
-        title: "Success",
-        description: "Company deleted successfully",
+        title: "Company deleted successfully",
+        description: "The company has been removed.",
       });
-      fetchCompanies();
     } catch (error) {
       console.error('❌ Error deleting company:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete company",
-        variant: "destructive",
+        title: "Error deleting company",
+        description: "Please try again later",
+        variant: "destructive"
       });
     }
   };
 
-  const filteredCompanies = companies.filter(company =>
-    company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.industry?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   if (loading) {
     return (
-      <div className="space-y-6">
-        <AdminHeader title="Companies" description="Manage company information" />
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-3 text-muted-foreground">Loading companies...</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <AdminHeader 
-        title="Companies" 
-        description="Manage company information"
+      <AdminHeader
+        title="Companies Management"
+        description="Manage companies and their information"
         onRefresh={fetchCompanies}
-      >
-        <PermissionWrapper resource="companies" action="create" fallback={null}>
-          <Button 
-            onClick={() => setShowCreateDialog(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Company
-          </Button>
-        </PermissionWrapper>
-      </AdminHeader>
+        action={
+          <PermissionWrapper resource="companies" action="create">
+            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Company
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New Company</DialogTitle>
+                </DialogHeader>
+                <CreateCompanyForm onSuccess={handleCreateSuccess} />
+              </DialogContent>
+            </Dialog>
+          </PermissionWrapper>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{companies.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Companies</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.filter(c => c.isActive !== false).length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Industries</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(companies.map(c => c.industry).filter(Boolean)).size}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <EnhancedFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search by name, description, location, or contact info..."
+        filters={[]}
+        onClearFilters={() => {
+          setSearchTerm('');
+        }}
+      />
 
-      {/* Search */}
-      <div className="flex gap-4">
-        <Input
-          placeholder="Search companies by name or industry..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1"
-        />
-      </div>
-
-      {/* Companies List */}
-      {filteredCompanies.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">No Companies Found</h3>
-            <p className="text-sm text-muted-foreground mt-2">
-              {companies.length === 0 
-                ? "No companies have been added yet." 
-                : "No companies match your search criteria."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.map((company) => (
-            <Card key={company._id} className="hover:shadow-lg transition-shadow">
+      <div className="space-y-4">
+        {filteredCompanies.length > 0 ? (
+          filteredCompanies.map((company) => (
+            <Card key={company._id}>
               <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3 flex-1">
-                    <div className="p-2 bg-primary/10 rounded-full">
-                      <Building2 className="w-5 h-5 text-primary" />
-                    </div>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4 flex-1">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={company.logo} />
+                      <AvatarFallback>
+                        {company.name ? company.name.charAt(0) : '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">{company.name}</h3>
-                      {company.industry && (
-                        <Badge variant="secondary" className="mt-1">
-                          {company.industry}
-                        </Badge>
-                      )}
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {company.name}
+                        </h3>
+                      </div>
+                      
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <Globe className="w-4 h-4" />
+                          <span>{company.website || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Mail className="w-4 h-4" />
+                          <span>{company.contactEmail}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Phone className="w-4 h-4" />
+                          <span>{company.phoneNumber}</span>
+                        </div>
+                        {company.location && (
+                          <div className="text-xs text-muted-foreground">
+                            Location: {company.location}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <PermissionWrapper resource="companies" action="update" fallback={null}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(company)}
-                      >
-                        <Edit className="w-4 h-4" />
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
                       </Button>
-                    </PermissionWrapper>
-                    <PermissionWrapper resource="companies" action="delete" fallback={null}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(company._id!)}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    </PermissionWrapper>
-                  </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <PermissionWrapper resource="companies" action="update" fallback={null}>
+                        <DropdownMenuItem onClick={() => handleEditCompany(company)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      </PermissionWrapper>
+                      <PermissionWrapper resource="companies" action="delete" fallback={null}>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteCompany(company._id!)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </PermissionWrapper>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  {company.contactEmail && (
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{company.contactEmail}</span>
-                    </div>
-                  )}
-                  {company.phoneNumber && (
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4" />
-                      <span>{company.phoneNumber}</span>
-                    </div>
-                  )}
-                  {company.address && (
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
-                      <span className="truncate">{company.address}</span>
-                    </div>
-                  )}
-                  {company.website && (
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4" />
-                      <a 
-                        href={company.website} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline truncate"
-                      >
-                        {company.website}
-                      </a>
-                    </div>
-                  )}
-                </div>
-                
-                {company.description && (
-                  <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-                    {company.description}
-                  </p>
-                )}
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Create Company Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Company</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <CreateCompanyForm onSuccess={handleCreateSuccess} />
-          </div>
-        </DialogContent>
-      </Dialog>
+          ))
+        ) : (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <h3 className="text-lg font-semibold mb-2">No Companies Found</h3>
+              <p className="text-muted-foreground">
+                {companies.length === 0 
+                  ? "No companies have been created yet." 
+                  : "No companies match your current search criteria."
+                }
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Edit Company Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Company</DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
-            {selectedCompany && (
-              <EditCompanyForm
-                company={selectedCompany}
-                onSuccess={handleEditSuccess}
-                onCancel={() => {
-                  setShowEditDialog(false);
-                  setSelectedCompany(null);
-                }}
-              />
-            )}
-          </div>
+          {editingCompany && (
+            <EditCompanyForm
+              company={editingCompany}
+              onSuccess={handleEditSuccess}
+              onCancel={() => {
+                setShowEditDialog(false);
+                setEditingCompany(null);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

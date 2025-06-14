@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, Eye, RefreshCw, Search, Users, FileText, Clock, CheckCircle } from 'lucide-react';
+import { Download, Eye, RefreshCw, Search, Users, FileText, Clock, CheckCircle, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,8 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import { JobApplication } from '@/services/types';
 import ApplicationCard from './ApplicationCard';
 import EditApplicationForm from './EditApplicationForm';
+import CreateApplicationForm from './CreateApplicationForm';
 import AdminHeader from './AdminHeader';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface FilterState {
   status: string;
@@ -32,8 +33,10 @@ const ApplicationsTab = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedApplicationIds, setSelectedApplicationIds] = useState<string[]>([]);
   const { toast } = useToast();
+  const { canCreate } = usePermissions();
 
   const fetchApplications = async () => {
     try {
@@ -97,6 +100,15 @@ const ApplicationsTab = () => {
     setShowEditModal(false);
     setSelectedApplication(null);
     fetchApplications();
+  };
+
+  const handleCreateSuccess = () => {
+    setShowCreateModal(false);
+    fetchApplications();
+    toast({
+      title: "Success",
+      description: "Application created successfully",
+    });
   };
 
   const handleDelete = async (applicationId: string) => {
@@ -177,6 +189,14 @@ const ApplicationsTab = () => {
         title="Job Applications" 
         description="Manage and review job applications"
         onRefresh={fetchApplications}
+        action={
+          canCreate('applications') && (
+            <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Create Application
+            </Button>
+          )
+        }
       />
 
       {/* Stats Cards */}
@@ -284,6 +304,19 @@ const ApplicationsTab = () => {
           ))}
         </div>
       )}
+
+      {/* Create Modal */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Application</DialogTitle>
+          </DialogHeader>
+          <CreateApplicationForm
+            onCancel={() => setShowCreateModal(false)}
+            onSuccess={handleCreateSuccess}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>

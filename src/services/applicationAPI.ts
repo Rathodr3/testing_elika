@@ -1,25 +1,48 @@
+
 import { JobApplication } from './types';
 import { apiRequest } from './jobs/apiUtils';
-import { API_BASE_URL } from '@/config/api';
 
 export const applicationAPI = {
-  getAll: async (filters?: any): Promise<JobApplication[]> => {
+  submit: async (formData: FormData): Promise<any> => {
+    try {
+      console.log('📤 Submitting application via API...');
+      
+      // Make the API request with FormData
+      const result = await fetch('/api/applications', {
+        method: 'POST',
+        body: formData, // Don't set Content-Type header, let browser set it for FormData
+      });
+
+      const response = await result.json();
+      console.log('✅ Application API response:', response);
+      
+      if (!result.ok) {
+        throw new Error(response.message || `HTTP error! status: ${result.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('❌ Application submission failed:', error);
+      throw error;
+    }
+  },
+
+  getAll: async (filters: any = {}): Promise<JobApplication[]> => {
     try {
       console.log('🔍 Fetching applications with filters:', filters);
       
+      // Build query string from filters
       const queryParams = new URLSearchParams();
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value && value !== '' && value !== 'all') {
-            queryParams.append(key, value as string);
-          }
-        });
-      }
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.position) queryParams.append('position', filters.position);
+      if (filters.department) queryParams.append('department', filters.department);
       
-      const endpoint = `/job-applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      const result = await apiRequest(endpoint, 'GET', null, true);
+      const queryString = queryParams.toString();
+      const url = queryString ? `/applications?${queryString}` : '/applications';
       
-      console.log('✅ Applications fetched from backend:', result);
+      const result = await apiRequest(url, 'GET', null, true);
+      console.log('✅ Applications fetched:', result);
       
       // Handle different response formats
       if (Array.isArray(result)) {
@@ -33,7 +56,7 @@ export const applicationAPI = {
         return [];
       }
     } catch (error) {
-      console.error('❌ Fetch applications error:', error);
+      console.error('❌ Applications fetch failed:', error);
       throw error;
     }
   },
@@ -41,7 +64,7 @@ export const applicationAPI = {
   getById: async (id: string): Promise<JobApplication> => {
     try {
       console.log('🔍 Fetching application by ID:', id);
-      const result = await apiRequest(`/job-applications/${id}`, 'GET', null, true);
+      const result = await apiRequest(`/applications/${id}`, 'GET', null, true);
       console.log('✅ Application fetched:', result);
       
       if (result?.data) {
@@ -52,26 +75,7 @@ export const applicationAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Fetch application error:', error);
-      throw error;
-    }
-  },
-
-  updateStatus: async (id: string, status: string, notes?: string): Promise<JobApplication> => {
-    try {
-      console.log('🔧 Updating application status:', id, status);
-      const result = await apiRequest(`/job-applications/${id}/status`, 'PUT', { status, notes }, true);
-      console.log('✅ Application status updated:', result);
-      
-      if (result?.data) {
-        return result.data;
-      } else if (result?.success && result?.data) {
-        return result.data;
-      } else {
-        return result;
-      }
-    } catch (error) {
-      console.error('❌ Update application status error:', error);
+      console.error('❌ Application fetch failed:', error);
       throw error;
     }
   },
@@ -79,7 +83,7 @@ export const applicationAPI = {
   update: async (id: string, data: Partial<JobApplication>): Promise<JobApplication> => {
     try {
       console.log('🔧 Updating application:', id, data);
-      const result = await apiRequest(`/job-applications/${id}`, 'PUT', data, true);
+      const result = await apiRequest(`/applications/${id}`, 'PUT', data, true);
       console.log('✅ Application updated:', result);
       
       if (result?.data) {
@@ -90,7 +94,26 @@ export const applicationAPI = {
         return result;
       }
     } catch (error) {
-      console.error('❌ Update application error:', error);
+      console.error('❌ Application update failed:', error);
+      throw error;
+    }
+  },
+
+  updateStatus: async (id: string, status: string, notes?: string): Promise<JobApplication> => {
+    try {
+      console.log('🔧 Updating application status:', id, status, notes);
+      const result = await apiRequest(`/applications/${id}/status`, 'PUT', { status, notes }, true);
+      console.log('✅ Application status updated:', result);
+      
+      if (result?.data) {
+        return result.data;
+      } else if (result?.success && result?.data) {
+        return result.data;
+      } else {
+        return result;
+      }
+    } catch (error) {
+      console.error('❌ Application status update failed:', error);
       throw error;
     }
   },
@@ -98,45 +121,10 @@ export const applicationAPI = {
   delete: async (id: string): Promise<void> => {
     try {
       console.log('🗑️ Deleting application:', id);
-      await apiRequest(`/job-applications/${id}`, 'DELETE', null, true);
-      console.log('✅ Application deleted successfully');
+      await apiRequest(`/applications/${id}`, 'DELETE', null, true);
+      console.log('✅ Application deleted');
     } catch (error) {
-      console.error('❌ Delete application error:', error);
-      throw error;
-    }
-  },
-
-  submit: async (formData: FormData): Promise<{ success: boolean; message?: string; data?: JobApplication }> => {
-    try {
-      console.log('📤 Submitting application...');
-      
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/job-applications`, {
-        method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        body: formData,
-      });
-      
-      if (response.status === 401) {
-        localStorage.removeItem('adminToken');
-        throw new Error('Session expired. Please login again.');
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Application submitted:', result);
-      
-      return {
-        success: true,
-        data: result?.data || result,
-        message: result?.message || 'Application submitted successfully'
-      };
-    } catch (error) {
-      console.error('❌ Submit application error:', error);
+      console.error('❌ Application deletion failed:', error);
       throw error;
     }
   },
@@ -144,33 +132,19 @@ export const applicationAPI = {
   downloadResume: async (id: string): Promise<Blob> => {
     try {
       console.log('📥 Downloading resume for application:', id);
+      const token = localStorage.getItem('token');
       
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/job-applications/${id}/resume`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await fetch(`/api/applications/${id}/resume`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       
-      if (response.status === 401) {
-        localStorage.removeItem('adminToken');
-        throw new Error('Session expired. Please login again.');
-      }
-      
       if (!response.ok) {
-        throw new Error('Failed to download resume');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const blob = await response.blob();
-      console.log('✅ Resume downloaded successfully');
-      
-      return blob;
+      return await response.blob();
     } catch (error) {
-      console.error('❌ Download resume error:', error);
+      console.error('❌ Resume download failed:', error);
       throw error;
     }
   }

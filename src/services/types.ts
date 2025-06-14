@@ -1,3 +1,4 @@
+
 export interface JobApplication {
   _id?: string;
   jobId?: string;
@@ -30,6 +31,7 @@ export interface Job {
   location: string;
   salary?: string;
   domain: string;
+  department?: string;
   employmentType: 'full-time' | 'part-time' | 'contract' | 'temporary' | 'internship';
   workMode: 'remote' | 'on-site' | 'hybrid';
   experienceLevel: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';

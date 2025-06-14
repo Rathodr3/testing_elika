@@ -144,15 +144,16 @@ const AuditTab = () => {
   return (
     <div className="space-y-6">
       <AdminHeader 
-        title="Audit Logs" 
-        description="Track system activities and changes"
+        title="Audit Log" 
+        description="Track all user activities and system changes"
         onRefresh={fetchAuditLogs}
-      >
-        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          Export
-        </Button>
-      </AdminHeader>
+        action={
+          <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Export Log
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
