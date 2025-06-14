@@ -292,30 +292,34 @@ const CompaniesTab = () => {
 
       {/* Create Company Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Company</DialogTitle>
           </DialogHeader>
-          <CreateCompanyForm onSuccess={handleCreateSuccess} />
+          <div className="mt-4">
+            <CreateCompanyForm onSuccess={handleCreateSuccess} />
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Edit Company Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Company</DialogTitle>
           </DialogHeader>
-          {selectedCompany && (
-            <EditCompanyForm
-              company={selectedCompany}
-              onSuccess={handleEditSuccess}
-              onCancel={() => {
-                setShowEditDialog(false);
-                setSelectedCompany(null);
-              }}
-            />
-          )}
+          <div className="mt-4">
+            {selectedCompany && (
+              <EditCompanyForm
+                company={selectedCompany}
+                onSuccess={handleEditSuccess}
+                onCancel={() => {
+                  setShowEditDialog(false);
+                  setSelectedCompany(null);
+                }}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

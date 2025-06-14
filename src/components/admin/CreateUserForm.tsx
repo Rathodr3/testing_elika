@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usersAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Upload, Camera } from 'lucide-react';
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -17,10 +18,13 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
     lastName: '',
     email: '',
     phoneNumber: '',
+    employeeId: '',
+    photo: '',
     role: 'viewer',
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState('');
   const { toast } = useToast();
 
   const validatePassword = (password: string) => {
@@ -38,6 +42,19 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
         ...(!hasSpecialChar ? ['At least 1 special character'] : [])
       ]
     };
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setPhotoPreview(result);
+        setFormData(prev => ({ ...prev, photo: result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,6 +125,34 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Photo Upload Section */}
+      <div className="space-y-2">
+        <Label>Profile Photo</Label>
+        <div className="flex items-center gap-4">
+          <Avatar className="w-16 h-16">
+            <AvatarImage src={photoPreview} />
+            <AvatarFallback>
+              <Camera className="w-6 h-6 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+              id="photo-upload"
+            />
+            <Label htmlFor="photo-upload" className="cursor-pointer">
+              <div className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-gray-50">
+                <Upload className="w-4 h-4" />
+                <span className="text-sm">Upload Photo</span>
+              </div>
+            </Label>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">First Name *</Label>
@@ -140,14 +185,25 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
         />
       </div>
 
-      <div>
-        <Label htmlFor="phoneNumber">Phone Number *</Label>
-        <Input
-          id="phoneNumber"
-          value={formData.phoneNumber}
-          onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-          required
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="phoneNumber">Phone Number *</Label>
+          <Input
+            id="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="employeeId">Employee ID</Label>
+          <Input
+            id="employeeId"
+            value={formData.employeeId}
+            onChange={(e) => setFormData(prev => ({ ...prev, employeeId: e.target.value }))}
+            placeholder="EMP001"
+          />
+        </div>
       </div>
 
       <div>

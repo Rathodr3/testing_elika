@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usersAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/services/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Upload, Camera } from 'lucide-react';
 
 interface EditUserFormProps {
   user: User;
@@ -20,11 +22,27 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
     lastName: user.lastName || '',
     email: user.email || '',
     phoneNumber: user.phoneNumber || '',
+    employeeId: user.employeeId || '',
+    photo: user.photo || '',
     role: user.role || 'viewer' as 'admin' | 'hr_manager' | 'recruiter' | 'viewer',
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(user.photo || '');
   const { toast } = useToast();
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setPhotoPreview(result);
+        setFormData(prev => ({ ...prev, photo: result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +56,8 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
         lastName: formData.lastName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
+        employeeId: formData.employeeId,
+        photo: formData.photo,
         role: formData.role
       };
       
@@ -66,6 +86,37 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Photo Upload Section */}
+      <div className="space-y-2">
+        <Label>Profile Photo</Label>
+        <div className="flex items-center gap-4">
+          <Avatar className="w-16 h-16">
+            <AvatarImage src={photoPreview} />
+            <AvatarFallback>
+              {formData.firstName && formData.lastName ? 
+                `${formData.firstName.charAt(0)}${formData.lastName.charAt(0)}` : 
+                <Camera className="w-6 h-6 text-muted-foreground" />
+              }
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+              id="photo-upload"
+            />
+            <Label htmlFor="photo-upload" className="cursor-pointer">
+              <div className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-gray-50">
+                <Upload className="w-4 h-4" />
+                <span className="text-sm">Change Photo</span>
+              </div>
+            </Label>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">First Name *</Label>
@@ -98,13 +149,24 @@ const EditUserForm = ({ user, onSuccess, onCancel }: EditUserFormProps) => {
         />
       </div>
 
-      <div>
-        <Label htmlFor="phoneNumber">Phone Number</Label>
-        <Input
-          id="phoneNumber"
-          value={formData.phoneNumber}
-          onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="phoneNumber">Phone Number</Label>
+          <Input
+            id="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="employeeId">Employee ID</Label>
+          <Input
+            id="employeeId"
+            value={formData.employeeId}
+            onChange={(e) => setFormData(prev => ({ ...prev, employeeId: e.target.value }))}
+            placeholder="EMP001"
+          />
+        </div>
       </div>
 
       <div>

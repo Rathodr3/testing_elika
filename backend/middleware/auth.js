@@ -2,6 +2,34 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Define role-based permissions
+const rolePermissions = {
+  admin: {
+    users: { create: true, read: true, update: true, delete: true },
+    companies: { create: true, read: true, update: true, delete: true },
+    jobs: { create: true, read: true, update: true, delete: true },
+    applications: { create: true, read: true, update: true, delete: true }
+  },
+  hr_manager: {
+    users: { create: true, read: true, update: true, delete: false },
+    companies: { create: true, read: true, update: true, delete: false },
+    jobs: { create: true, read: true, update: true, delete: true },
+    applications: { create: false, read: true, update: true, delete: false }
+  },
+  recruiter: {
+    users: { create: false, read: true, update: false, delete: false },
+    companies: { create: false, read: true, update: false, delete: false },
+    jobs: { create: true, read: true, update: true, delete: false },
+    applications: { create: false, read: true, update: true, delete: false }
+  },
+  viewer: {
+    users: { create: false, read: true, update: false, delete: false },
+    companies: { create: false, read: true, update: false, delete: false },
+    jobs: { create: false, read: true, update: false, delete: false },
+    applications: { create: false, read: true, update: false, delete: false }
+  }
+};
+
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -21,13 +49,9 @@ const authMiddleware = async (req, res, next) => {
         role: 'admin',
         firstName: 'Admin',
         lastName: 'User',
-        permissions: {
-          users: { create: true, read: true, update: true, delete: true },
-          companies: { create: true, read: true, update: true, delete: true },
-          jobs: { create: true, read: true, update: true, delete: true },
-          applications: { create: true, read: true, update: true, delete: true }
-        }
+        permissions: rolePermissions.admin
       };
+      console.log('✅ Admin token authenticated');
       return next();
     }
 
@@ -52,37 +76,15 @@ const authMiddleware = async (req, res, next) => {
       }
 
       // Set permissions based on role
-      const rolePermissions = {
-        admin: {
-          users: { create: true, read: true, update: true, delete: true },
-          companies: { create: true, read: true, update: true, delete: true },
-          jobs: { create: true, read: true, update: true, delete: true },
-          applications: { create: true, read: true, update: true, delete: true }
-        },
-        hr_manager: {
-          users: { create: true, read: true, update: true, delete: false },
-          companies: { create: true, read: true, update: true, delete: false },
-          jobs: { create: true, read: true, update: true, delete: true },
-          applications: { create: false, read: true, update: true, delete: false }
-        },
-        recruiter: {
-          users: { create: false, read: true, update: false, delete: false },
-          companies: { create: false, read: true, update: false, delete: false },
-          jobs: { create: true, read: true, update: true, delete: false },
-          applications: { create: false, read: true, update: true, delete: false }
-        },
-        viewer: {
-          users: { create: false, read: true, update: false, delete: false },
-          companies: { create: false, read: true, update: false, delete: false },
-          jobs: { create: false, read: true, update: false, delete: false },
-          applications: { create: false, read: true, update: false, delete: false }
-        }
-      };
-
+      const userPermissions = user.permissions || rolePermissions[user.role] || rolePermissions.viewer;
+      
       req.user = {
         ...user.toObject(),
-        permissions: user.permissions || rolePermissions[user.role] || rolePermissions.viewer
+        permissions: userPermissions
       };
+      
+      console.log(`✅ User token authenticated: ${user.email} (${user.role})`);
+      console.log('User permissions:', JSON.stringify(userPermissions, null, 2));
       return next();
     }
 
@@ -106,37 +108,15 @@ const authMiddleware = async (req, res, next) => {
       }
 
       // Set permissions based on role
-      const rolePermissions = {
-        admin: {
-          users: { create: true, read: true, update: true, delete: true },
-          companies: { create: true, read: true, update: true, delete: true },
-          jobs: { create: true, read: true, update: true, delete: true },
-          applications: { create: true, read: true, update: true, delete: true }
-        },
-        hr_manager: {
-          users: { create: true, read: true, update: true, delete: false },
-          companies: { create: true, read: true, update: true, delete: false },
-          jobs: { create: true, read: true, update: true, delete: true },
-          applications: { create: false, read: true, update: true, delete: false }
-        },
-        recruiter: {
-          users: { create: false, read: true, update: false, delete: false },
-          companies: { create: false, read: true, update: false, delete: false },
-          jobs: { create: true, read: true, update: true, delete: false },
-          applications: { create: false, read: true, update: true, delete: false }
-        },
-        viewer: {
-          users: { create: false, read: true, update: false, delete: false },
-          companies: { create: false, read: true, update: false, delete: false },
-          jobs: { create: false, read: true, update: false, delete: false },
-          applications: { create: false, read: true, update: false, delete: false }
-        }
-      };
+      const userPermissions = user.permissions || rolePermissions[user.role] || rolePermissions.viewer;
 
       req.user = {
         ...user.toObject(),
-        permissions: user.permissions || rolePermissions[user.role] || rolePermissions.viewer
+        permissions: userPermissions
       };
+      
+      console.log(`✅ JWT token authenticated: ${user.email} (${user.role})`);
+      console.log('User permissions:', JSON.stringify(userPermissions, null, 2));
       next();
     } catch (jwtError) {
       console.error('JWT verification failed:', jwtError);

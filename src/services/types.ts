@@ -1,4 +1,3 @@
-
 export interface JobApplication {
   _id?: string;
   jobId?: string;
@@ -55,6 +54,8 @@ export interface User {
   email: string;
   password?: string;
   phoneNumber?: string;
+  employeeId?: string;
+  photo?: string;
   role: 'admin' | 'hr_manager' | 'recruiter' | 'viewer';
   permissions?: {
     users: { create: boolean; read: boolean; update: boolean; delete: boolean; };
@@ -63,6 +64,7 @@ export interface User {
     applications: { create: boolean; read: boolean; update: boolean; delete: boolean; };
   };
   isActive?: boolean;
+  lastLogin?: string;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const { authMiddleware } = require('../middleware/auth');
 const {
@@ -44,10 +43,19 @@ router.post('/login', async (req, res) => {
     
     const { token, user } = await authenticateUser(email, password);
     
+    // Update last login
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(user._id, { 
+      lastLogin: new Date() 
+    });
+    
     res.json({
       success: true,
       token,
-      user,
+      user: {
+        ...user,
+        lastLogin: new Date()
+      },
       message: 'Login successful'
     });
     

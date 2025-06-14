@@ -26,8 +26,10 @@ export const usePermissions = () => {
           
           // Ensure permissions are properly set
           if (userData.permissions) {
+            console.log('🔑 Using user-specific permissions:', userData.permissions);
             setUserPermissions(userData.permissions);
           } else {
+            console.log('🔑 Using role-based fallback permissions for role:', userData.role);
             // Fallback to role-based permissions if not set
             const rolePermissions = {
               admin: {
@@ -57,6 +59,7 @@ export const usePermissions = () => {
             };
             
             const permissions = rolePermissions[userData.role as keyof typeof rolePermissions] || rolePermissions.viewer;
+            console.log('🔑 Applied fallback permissions:', permissions);
             setUserPermissions(permissions);
           }
         } else {
@@ -79,8 +82,9 @@ export const usePermissions = () => {
   }, []);
 
   const hasPermission = (resource: keyof UserPermissions, action: keyof UserPermissions['users']) => {
-    if (!userPermissions) return false;
-    return userPermissions[resource]?.[action] || false;
+    const permission = userPermissions?.[resource]?.[action] || false;
+    console.log(`🔍 Permission check: ${resource}.${action} = ${permission} (role: ${userRole})`);
+    return permission;
   };
 
   const canEdit = (resource: keyof UserPermissions) => {
@@ -96,19 +100,27 @@ export const usePermissions = () => {
   };
 
   const isViewer = () => {
-    return userRole === 'viewer';
+    const result = userRole === 'viewer';
+    console.log(`🔍 isViewer check: ${result} (current role: ${userRole})`);
+    return result;
   };
 
   const isAdmin = () => {
-    return userRole === 'admin';
+    const result = userRole === 'admin';
+    console.log(`🔍 isAdmin check: ${result} (current role: ${userRole})`);
+    return result;
   };
 
   const isHRManager = () => {
-    return userRole === 'hr_manager';
+    const result = userRole === 'hr_manager';
+    console.log(`🔍 isHRManager check: ${result} (current role: ${userRole})`);
+    return result;
   };
 
   const isRecruiter = () => {
-    return userRole === 'recruiter';
+    const result = userRole === 'recruiter';
+    console.log(`🔍 isRecruiter check: ${result} (current role: ${userRole})`);
+    return result;
   };
 
   return {

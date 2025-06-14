@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Shield, Users, Building2, Briefcase, FileText } from 'lucide-react';
-import { usersAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { permissionsAPI } from '@/services/permissionsAPI';
 import AdminHeader from './AdminHeader';
 
 interface Permission {
@@ -54,6 +54,7 @@ const defaultPermissions: Record<string, RolePermissions> = {
 const RolePermissionsTab = () => {
   const [permissions, setPermissions] = useState<Record<string, RolePermissions>>(defaultPermissions);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const { toast } = useToast();
 
   const resources = [
@@ -72,6 +73,28 @@ const RolePermissionsTab = () => {
 
   const roles = ['admin', 'hr_manager', 'recruiter', 'viewer'];
 
+  useEffect(() => {
+    fetchPermissions();
+  }, []);
+
+  const fetchPermissions = async () => {
+    try {
+      setFetchLoading(true);
+      const rolePermissions = await permissionsAPI.getRolePermissions();
+      setPermissions(rolePermissions || defaultPermissions);
+    } catch (error) {
+      console.error('❌ Error fetching permissions:', error);
+      toast({
+        title: "Warning",
+        description: "Failed to fetch current permissions. Using defaults.",
+        variant: "destructive",
+      });
+      setPermissions(defaultPermissions);
+    } finally {
+      setFetchLoading(false);
+    }
+  };
+
   const handlePermissionChange = (role: string, resource: keyof RolePermissions, action: keyof Permission, value: boolean) => {
     setPermissions(prev => ({
       ...prev,
@@ -88,17 +111,16 @@ const RolePermissionsTab = () => {
   const savePermissions = async () => {
     try {
       setLoading(true);
-      // Here you would call an API to save the permissions
-      // For now, we'll just show a success message
+      await permissionsAPI.updateRolePermissions(permissions);
       toast({
         title: "Success",
-        description: "Role permissions updated successfully",
+        description: "Role permissions updated successfully. Changes will take effect on next login.",
       });
     } catch (error) {
       console.error('❌ Error saving permissions:', error);
       toast({
         title: "Error",
-        description: "Failed to save permissions",
+        description: "Failed to save permissions. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -108,13 +130,31 @@ const RolePermissionsTab = () => {
 
   const resetToDefaults = () => {
     setPermissions(defaultPermissions);
+    toast({
+      title: "Reset",
+      description: "Permissions reset to default values. Don't forget to save!",
+    });
   };
+
+  if (fetchLoading) {
+    return (
+      <div className="space-y-6">
+        <AdminHeader title="Role Permissions" description="Loading permissions..." />
+        <div className="animate-pulse space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <AdminHeader 
         title="Role Permissions" 
-        description="Manage role-based access permissions"
+        description="Manage role-based access permissions. Changes take effect on next user login."
+        onRefresh={fetchPermissions}
       />
 
       <div className="flex gap-4 mb-6">
@@ -124,6 +164,13 @@ const RolePermissionsTab = () => {
         <Button variant="outline" onClick={resetToDefaults}>
           Reset to Defaults
         </Button>
+      </div>
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <p className="text-sm text-yellow-800">
+          <strong>Note:</strong> Permission changes will take effect when users log in next time. 
+          Users currently logged in will continue with their current permissions until they re-authenticate.
+        </p>
       </div>
 
       {roles.map((role) => (

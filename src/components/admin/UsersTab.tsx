@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, Edit, Trash2, User, Mail, Phone } from 'lucide-react';
+import { Plus, MoreHorizontal, Edit, Trash2, Mail, Phone, IdCard } from 'lucide-react';
 import { User as UserType, usersAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/contexts/AdminDataContext';
@@ -78,7 +78,8 @@ const UsersTab = () => {
       filtered = filtered.filter(user =>
         `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower) ||
-        (user.phoneNumber || '').toLowerCase().includes(searchLower)
+        (user.phoneNumber || '').toLowerCase().includes(searchLower) ||
+        (user.employeeId || '').toLowerCase().includes(searchLower)
       );
     }
 
@@ -179,7 +180,7 @@ const UsersTab = () => {
                 Create User
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New User</DialogTitle>
               </DialogHeader>
@@ -192,7 +193,7 @@ const UsersTab = () => {
       <EnhancedFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder="Search by name, email, or phone..."
+        placeholder="Search by name, email, phone, or employee ID..."
         filters={[
           {
             key: 'role',
@@ -215,9 +216,15 @@ const UsersTab = () => {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
-                    <div className="p-2 bg-gray-100 rounded-full">
-                      <User className="w-5 h-5 text-gray-600" />
-                    </div>
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={user.photo} />
+                      <AvatarFallback>
+                        {user.firstName && user.lastName ? 
+                          `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
+                          '?'
+                        }
+                      </AvatarFallback>
+                    </Avatar>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
@@ -238,6 +245,17 @@ const UsersTab = () => {
                           <div className="flex items-center space-x-2">
                             <Phone className="w-4 h-4" />
                             <span>{user.phoneNumber}</span>
+                          </div>
+                        )}
+                        {user.employeeId && (
+                          <div className="flex items-center space-x-2">
+                            <IdCard className="w-4 h-4" />
+                            <span>ID: {user.employeeId}</span>
+                          </div>
+                        )}
+                        {user.lastLogin && (
+                          <div className="text-xs text-muted-foreground">
+                            Last login: {new Date(user.lastLogin).toLocaleDateString()}
                           </div>
                         )}
                       </div>
@@ -289,7 +307,7 @@ const UsersTab = () => {
 
       {/* Edit User Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>

@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -52,6 +51,16 @@ const userSchema = new mongoose.Schema({
     }
   },
   phoneNumber: {
+    type: String,
+    trim: true
+  },
+  employeeId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true
+  },
+  photo: {
     type: String,
     trim: true
   },
@@ -146,5 +155,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 // Index for better query performance
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ employeeId: 1 });
 
 module.exports = mongoose.model('User', userSchema);

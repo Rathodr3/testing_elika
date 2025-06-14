@@ -14,9 +14,10 @@ import PermissionWrapper from './admin/PermissionWrapper';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('jobs');
-  const { loading, isAdmin } = usePermissions();
+  const { loading, isAdmin, userRole } = usePermissions();
 
   console.log('🎛️ Rendering AdminDashboard with activeTab:', activeTab);
+  console.log('🎛️ User role:', userRole, 'isAdmin:', isAdmin());
 
   // Handle tab change and scroll to top
   const handleTabChange = (value: string) => {
@@ -36,16 +37,30 @@ const AdminDashboard = () => {
     );
   }
 
+  // Count available tabs for grid layout
+  const availableTabs = [];
+  
+  // Always available tabs (with permission checks)
+  availableTabs.push('users', 'companies', 'jobs', 'applications');
+  
+  // Admin-only tabs
+  if (isAdmin()) {
+    availableTabs.push('permissions', 'audit');
+  }
+
+  const gridCols = `grid-cols-${availableTabs.length}`;
+
   return (
     <AdminDataProvider>
       <div className="container mx-auto px-4 py-8 min-h-screen">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-secondary-800 mb-2">Admin Dashboard</h1>
           <p className="text-accent">Manage your organization's data and settings</p>
+          <p className="text-sm text-muted-foreground">Role: {userRole}</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className={`grid w-full ${isAdmin() ? 'grid-cols-6' : 'grid-cols-4'} mb-8`}>
+          <TabsList className={`grid w-full ${gridCols} mb-8`}>
             <PermissionWrapper resource="users" action="read" fallback={null}>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
