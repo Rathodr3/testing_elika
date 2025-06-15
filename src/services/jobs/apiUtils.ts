@@ -15,13 +15,18 @@ export const apiRequest = async (
   };
 
   if (requireAuth) {
-    // Try both token locations for compatibility
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+    // Check both token locations with priority order
+    const adminToken = localStorage.getItem('adminToken');
+    const userToken = localStorage.getItem('token');
+    const token = adminToken || userToken;
+    
     if (!token) {
+      console.log('❌ No authentication token found');
       throw new Error('No authentication token found. Please login again.');
     }
+    
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('🔑 Adding auth token to request');
+    console.log('🔑 Adding auth token to request:', token.substring(0, 20) + '...');
   }
 
   const config: RequestInit = {
@@ -35,11 +40,28 @@ export const apiRequest = async (
     
     if (response.status === 401) {
       // Token expired or invalid - force re-login
-      console.log('🔄 Token expired, forcing re-login');
+      console.log('🔄 Token expired or invalid, clearing tokens');
       localStorage.removeItem('adminToken');
       localStorage.removeItem('token');
-      window.location.reload();
       throw new Error('Session expired. Please login again.');
+    }
+    
+    if (response.status === 403) {
+      // Permission denied - get detailed error message
+      console.log('❌ Permission denied for request');
+      const errorText = await response.text();
+      try {
+        const errorData = JSON.parse(errorText);
+        console.log('❌ Permission error details:', errorData);
+        const errorMessage = errorData.message || 'Permission denied - insufficient privileges';
+        if (errorData.details) {
+          console.log('❌ Permission details:', errorData.details);
+        }
+        throw new Error(errorMessage);
+      } catch (parseError) {
+        console.log('❌ Failed to parse permission error response');
+        throw new Error('Permission denied - insufficient privileges');
+      }
     }
     
     if (!response.ok) {

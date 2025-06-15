@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { authAPI } from '@/services/api';
 
@@ -47,70 +46,97 @@ export const usePermissions = () => {
     const checkPermissions = async () => {
       try {
         setError(null);
+        setLoading(true);
         
-        if (!authAPI.isAuthenticated()) {
-          console.log('❌ User not authenticated');
+        console.log('🔍 Checking user permissions...');
+        
+        // Check if user is authenticated with proper token format
+        const adminToken = localStorage.getItem('adminToken');
+        const userToken = localStorage.getItem('token');
+        const activeToken = adminToken || userToken;
+        
+        if (!activeToken) {
+          console.log('❌ No authentication token found');
           setUserRole('');
           setUserPermissions(null);
-          setLoading(false);
           return;
         }
 
-        console.log('🔍 Checking user permissions...');
-        const userData = await authAPI.getCurrentUser();
-        console.log('✅ User data received:', userData);
-        
-        // Handle different response formats
-        const user = userData?.user || userData;
-        const role = user?.role || 'viewer';
-        
-        setUserRole(role);
-        
-        // Set permissions: use user-specific permissions if available, otherwise use role-based
-        let permissions;
-        if (user?.permissions && typeof user.permissions === 'object') {
-          console.log('🔑 Using user-specific permissions:', user.permissions);
-          permissions = user.permissions;
-        } else {
-          console.log('🔑 Using role-based permissions for role:', role);
-          permissions = defaultRolePermissions[role as keyof typeof defaultRolePermissions] || defaultRolePermissions.viewer;
+        console.log('🔑 Found token type:', activeToken.substring(0, 20) + '...');
+
+        // Handle admin token directly
+        if (activeToken.startsWith('admin-token-')) {
+          console.log('🔑 Admin token detected, applying admin permissions');
+          setUserRole('admin');
+          setUserPermissions(defaultRolePermissions.admin);
+          return;
         }
-        
-        console.log('🔑 Final permissions applied:', permissions);
-        setUserPermissions(permissions);
+
+        // Get current user data from API
+        try {
+          const userData = await authAPI.getCurrentUser();
+          console.log('✅ User data received:', userData);
+          
+          // Handle different response formats
+          const user = userData?.user || userData;
+          if (!user) {
+            console.log('❌ No user data in response');
+            throw new Error('No user data received');
+          }
+
+          const role = user.role || 'viewer';
+          console.log('🔍 User role:', role);
+          setUserRole(role);
+          
+          // Set permissions: use user-specific permissions if available, otherwise use role-based
+          let permissions;
+          if (user.permissions && typeof user.permissions === 'object' && Object.keys(user.permissions).length > 0) {
+            // Validate permission structure
+            const hasValidStructure = ['users', 'companies', 'jobs', 'applications'].every(resource => 
+              user.permissions[resource] && 
+              typeof user.permissions[resource] === 'object' &&
+              ['create', 'read', 'update', 'delete'].every(action => 
+                typeof user.permissions[resource][action] === 'boolean'
+              )
+            );
+            
+            if (hasValidStructure) {
+              console.log('🔑 Using valid user-specific permissions:', user.permissions);
+              permissions = user.permissions;
+            } else {
+              console.log('🔑 User permissions invalid, using role-based permissions for role:', role);
+              permissions = defaultRolePermissions[role as keyof typeof defaultRolePermissions] || defaultRolePermissions.viewer;
+            }
+          } else {
+            console.log('🔑 Using role-based permissions for role:', role);
+            permissions = defaultRolePermissions[role as keyof typeof defaultRolePermissions] || defaultRolePermissions.viewer;
+          }
+          
+          console.log('🔑 Final permissions applied:', permissions);
+          setUserPermissions(permissions);
+        } catch (apiError) {
+          console.warn('⚠️ API call failed, trying fallback token parsing:', apiError);
+          
+          // Try to extract role from token as fallback
+          if (activeToken.startsWith('user-token-')) {
+            console.log('🔄 Applying fallback viewer permissions from user token');
+            setUserRole('viewer');
+            setUserPermissions(defaultRolePermissions.viewer);
+          } else {
+            throw apiError;
+          }
+        }
         
       } catch (error) {
         console.error('❌ Error checking permissions:', error);
         setError(error instanceof Error ? error.message : 'Permission check failed');
         
-        // Try to get role from token as fallback
-        try {
-          const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
-          if (token) {
-            if (token.startsWith('admin-token-')) {
-              console.log('🔄 Applying fallback admin permissions');
-              setUserRole('admin');
-              setUserPermissions(defaultRolePermissions.admin);
-            } else if (token.startsWith('user-token-')) {
-              console.log('🔄 Applying fallback viewer permissions');
-              setUserRole('viewer');
-              setUserPermissions(defaultRolePermissions.viewer);
-            } else {
-              // Clear invalid tokens
-              localStorage.removeItem('token');
-              localStorage.removeItem('adminToken');
-              setUserRole('');
-              setUserPermissions(null);
-            }
-          } else {
-            setUserRole('');
-            setUserPermissions(null);
-          }
-        } catch (fallbackError) {
-          console.error('❌ Fallback permission check failed:', fallbackError);
-          setUserRole('');
-          setUserPermissions(null);
-        }
+        // Clear invalid tokens
+        console.log('🔄 Clearing invalid tokens due to error');
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
+        setUserRole('');
+        setUserPermissions(null);
       } finally {
         setLoading(false);
       }
@@ -121,11 +147,16 @@ export const usePermissions = () => {
 
   const hasPermission = (resource: keyof UserPermissions, action: keyof UserPermissions['users']) => {
     if (loading || !userPermissions) {
-      console.log(`🔍 Permission check (loading): ${resource}.${action} = false`);
+      console.log(`🔍 Permission check (loading/no permissions): ${resource}.${action} = false`);
       return false;
     }
     
-    const permission = userPermissions[resource]?.[action] || false;
+    if (!userPermissions[resource]) {
+      console.log(`🔍 Permission check (no resource permissions): ${resource}.${action} = false`);
+      return false;
+    }
+    
+    const permission = userPermissions[resource][action] || false;
     console.log(`🔍 Permission check: ${resource}.${action} = ${permission} (role: ${userRole})`);
     return permission;
   };

@@ -1,3 +1,4 @@
+
 import { apiRequest, tryFetchWithFallback } from '../jobs/apiUtils';
 import { JobApplication } from '../types';
 
@@ -15,7 +16,7 @@ export const applicationAPI = {
         });
       }
       
-      const endpoint = `/job-applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       
       try {
         const result = await apiRequest(endpoint, 'GET', null, true);
@@ -47,7 +48,7 @@ export const applicationAPI = {
   getById: async (id: string): Promise<JobApplication> => {
     try {
       console.log('🔍 Fetching application by ID:', id);
-      const result = await apiRequest(`/job-applications/${id}`, 'GET', null, true);
+      const result = await apiRequest(`/applications/${id}`, 'GET', null, true);
       console.log('✅ Application fetched:', result);
       
       if (result?.data) {
@@ -66,7 +67,7 @@ export const applicationAPI = {
   updateStatus: async (id: string, status: string, notes?: string): Promise<JobApplication> => {
     try {
       console.log('🔧 Updating application status:', id, status);
-      const result = await apiRequest(`/job-applications/${id}/status`, 'PUT', { status, notes }, true);
+      const result = await apiRequest(`/applications/${id}/status`, 'PUT', { status, notes }, true);
       console.log('✅ Application status updated:', result);
       
       if (result?.data) {
@@ -86,7 +87,7 @@ export const applicationAPI = {
   update: async (id: string, data: Partial<JobApplication>): Promise<JobApplication> => {
     try {
       console.log('🔧 Updating application:', id, data);
-      const result = await apiRequest(`/job-applications/${id}`, 'PUT', data, true);
+      const result = await apiRequest(`/applications/${id}`, 'PUT', data, true);
       console.log('✅ Application updated:', result);
       
       if (result?.data) {
@@ -103,12 +104,23 @@ export const applicationAPI = {
     }
   },
 
+  delete: async (id: string): Promise<void> => {
+    try {
+      console.log('🗑️ Deleting application:', id);
+      await apiRequest(`/applications/${id}`, 'DELETE', null, true);
+      console.log('✅ Application deleted');
+    } catch (error) {
+      console.error('❌ Application deletion failed:', error);
+      throw error;
+    }
+  },
+
   submit: async (formData: FormData): Promise<{ success: boolean; message?: string; data?: JobApplication }> => {
     try {
       console.log('📤 Submitting application...');
       
       // Try to submit to backend first
-      const response = await tryFetchWithFallback('/job-applications', {
+      const response = await tryFetchWithFallback('/applications', {
         method: 'POST',
         body: formData,
       });
@@ -166,12 +178,12 @@ export const applicationAPI = {
     try {
       console.log('📥 Downloading resume for application:', id);
       
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const response = await tryFetchWithFallback(`/job-applications/${id}/resume`, {
+      const response = await tryFetchWithFallback(`/applications/${id}/resume`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

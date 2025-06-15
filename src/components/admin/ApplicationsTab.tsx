@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { applicationAPI } from '@/services/applicationAPI';
+import { applicationAPI } from '@/services/applications/applicationAPI';
 import { useToast } from '@/hooks/use-toast';
 import { JobApplication } from '@/services/types';
 import ApplicationCard from './ApplicationCard';
@@ -43,7 +43,7 @@ const ApplicationsTab = () => {
       setLoading(true);
       console.log('🔍 Fetching applications...');
       
-      const filters: FilterState = {
+      const filters = {
         status: statusFilter === 'all' ? '' : statusFilter,
         search: searchTerm
       };

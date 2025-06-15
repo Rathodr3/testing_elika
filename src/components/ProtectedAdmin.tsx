@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from './AdminDashboard';
@@ -59,6 +58,22 @@ const ProtectedAdmin = () => {
 
     checkAuth();
   }, [toast]);
+
+  // Auto-logout when browser is closing or page is reloaded
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      console.log('🚪 Browser closing or page reloading - auto logout');
+      authAPI.logout();
+    };
+
+    // Add event listener for browser closing and page reload
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const handleLoginSuccess = async () => {
     console.log('✅ Admin login successful');
